@@ -86,14 +86,14 @@ export default function DashboardPage() {
     const monthlyData: { label: string; revenue: number; count: number }[] = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthQuotesAll = quotes.filter(q => {
+      const monthAccepted = acceptedOrPaid.filter(q => {
         const qd = new Date(q.created_at);
         return qd.getMonth() === d.getMonth() && qd.getFullYear() === d.getFullYear();
       });
       monthlyData.push({
         label: d.toLocaleDateString("fr-FR", { month: "short" }),
-        revenue: monthQuotesAll.reduce((s, q) => s + (Number(q.details?.paidAmount) || 0), 0),
-        count: monthQuotesAll.length,
+        revenue: monthAccepted.reduce((s, q) => s + (Number(q.total) || 0), 0),
+        count: monthAccepted.length,
       });
     }
 
