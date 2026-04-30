@@ -320,6 +320,34 @@ export default function CalculatorPage() {
                 </div>
               )}
 
+              {/* Fond perdu (Bleed) */}
+              {!isLargeFormat && (
+                <div className="p-3 rounded-xl bg-muted/40 border space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium text-sm">{t("calc.bleed")}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {finishedW > 0 && finishedH > 0
+                          ? `${finishedW}×${finishedH}mm → ${finishedW + bleed * 2}×${finishedH + bleed * 2}mm`
+                          : t("calc.bleed")}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={10}
+                        step={0.5}
+                        value={bleed}
+                        onChange={(e) => setBleed(+e.target.value || 0)}
+                        className="w-20 h-8 text-center text-sm font-semibold"
+                      />
+                      <span className="text-xs text-muted-foreground font-medium">mm</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {!isLargeFormat && (
                 <div className="flex items-center justify-between p-3 rounded-xl bg-muted/40 border">
                   <div>
