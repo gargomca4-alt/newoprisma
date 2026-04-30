@@ -120,9 +120,13 @@ export default function PaymentPage() {
   };
 
   // Stats
-  const totalRevenue = quotes.reduce((sum, q) => sum + getTotal(q), 0);
+  const acceptedOrPaid = quotes.filter(q => q.status === "accepted" || getPaid(q) > 0);
   const totalPaid = quotes.reduce((sum, q) => sum + getPaid(q), 0);
-  const totalRemaining = quotes.reduce((sum, q) => sum + getRemaining(q), 0);
+  const totalAcceptedValue = acceptedOrPaid.reduce((sum, q) => sum + getTotal(q), 0);
+  
+  // As requested, Chiffre d'affaires = total encaissé
+  const totalRevenue = totalPaid;
+  const totalRemaining = Math.max(0, totalAcceptedValue - totalPaid);
   const paidCount = quotes.filter((q) => getStatus(q) === "paid").length;
 
   return (
@@ -139,8 +143,8 @@ export default function PaymentPage() {
         </Card>
         <Card className="border-2 overflow-hidden">
           <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t("payment.totalPaid")}</div>
-            <div className="text-xl font-bold mt-1 tabular-nums text-emerald-600">{formatDZD(totalPaid)}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Total Facturé</div>
+            <div className="text-xl font-bold mt-1 tabular-nums text-emerald-600">{formatDZD(totalAcceptedValue)}</div>
           </CardContent>
         </Card>
         <Card className="border-2 overflow-hidden">
