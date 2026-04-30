@@ -71,37 +71,39 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="container flex gap-6 py-6">
         {/* Sidebar */}
         <aside className="hidden lg:block w-60 shrink-0 no-print">
-          <nav className="sticky top-24 space-y-1">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === "/"}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-smooth ${
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-brand"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`
-                }
-              >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
+          <div className="sticky top-24 flex flex-col h-[calc(100vh-8rem)]">
+            <nav className="space-y-1 flex-1 overflow-y-auto pr-2 pb-4">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === "/"}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-smooth ${
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-brand"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }`
+                  }
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
 
-          <div className="p-4 mt-auto">
-            <button
-              onClick={async () => {
-                await supabase.auth.signOut();
-                window.location.href = "/auth";
-              }}
-              className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-smooth"
-            >
-              <LogOut className="h-4 w-4" />
-              Déconnexion
-            </button>
+            <div className="pt-4 mt-auto border-t">
+              <button
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  window.location.href = "/auth";
+                }}
+                className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-smooth"
+              >
+                <LogOut className="h-4 w-4" />
+                Déconnexion
+              </button>
+            </div>
           </div>
         </aside>
 
