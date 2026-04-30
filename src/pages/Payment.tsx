@@ -85,9 +85,16 @@ export default function PaymentPage() {
     }
 
     const updatedDetails = { ...(payDialog.details || {}), paidAmount: newPaid };
+    
+    const updatePayload: any = { details: updatedDetails };
+    // Auto-accept if fully paid
+    if (newPaid >= total && total > 0 && payDialog.status !== "accepted") {
+      updatePayload.status = "accepted";
+    }
+
     const { error } = await supabase
       .from("quotes")
-      .update({ details: updatedDetails } as any)
+      .update(updatePayload)
       .eq("id", payDialog.id);
 
     if (error) {
