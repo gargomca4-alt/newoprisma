@@ -1,16 +1,18 @@
-import { ReactNode } from "react";
-import { NavLink, Link } from "react-router-dom";
+import { ReactNode, useState } from "react";
+import { NavLink, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Calculator, Package, Layers, Printer, Sparkles, FileText, Settings, Moon, Sun, Globe, Wallet, Users, LogOut } from "lucide-react";
+import { Calculator, Package, Layers, Printer, Sparkles, FileText, Settings, Moon, Sun, Globe, Wallet, Users, LogOut, Menu } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import logo from "@/assets/oprisma-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
     { to: "/", icon: Calculator, label: t("nav.calculator") },
@@ -118,22 +120,71 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {/* Mobile nav */}
         <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass border-t no-print">
-          <div className="flex justify-around py-2">
-            {navItems.slice(0, 5).map((item) => (
+          <div className="flex justify-around py-2 px-1">
+            {navItems.slice(0, 4).map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 end={item.to === "/"}
                 className={({ isActive }) =>
-                  `flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] ${
-                    isActive ? "text-primary" : "text-muted-foreground"
+                  `flex flex-col items-center gap-1 w-16 py-1 rounded-lg text-[10px] transition-smooth ${
+                    isActive ? "text-primary bg-primary/10" : "text-muted-foreground"
                   }`
                 }
               >
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
+                <item.icon className="h-5 w-5 shrink-0" />
+                <span className="truncate w-full text-center px-1">{item.label}</span>
               </NavLink>
             ))}
+            
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <button
+                  className={`flex flex-col items-center gap-1 w-16 py-1 rounded-lg text-[10px] transition-smooth text-muted-foreground hover:text-primary ${isMobileMenuOpen ? "text-primary bg-primary/10" : ""}`}
+                >
+                  <Menu className="h-5 w-5 shrink-0" />
+                  <span className="truncate w-full text-center px-1">Plus</span>
+                </button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-[75vh] rounded-t-3xl flex flex-col pt-10 px-0 pb-0 no-print">
+                <SheetHeader className="px-6 pb-4 border-b text-left">
+                  <SheetTitle>Menu Principal</SheetTitle>
+                </SheetHeader>
+                <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 scrollbar-thin">
+                  {navItems.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      end={item.to === "/"}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={({ isActive }) =>
+                        `flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-semibold transition-smooth ${
+                          isActive
+                            ? "text-primary bg-primary/10"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        }`
+                      }
+                    >
+                      <item.icon className="h-5 w-5" />
+                      <span>{item.label}</span>
+                    </NavLink>
+                  ))}
+                  
+                  <div className="pt-4 mt-4 border-t border-border/50">
+                    <button
+                      onClick={async () => {
+                        await supabase.auth.signOut();
+                        window.location.href = "/auth";
+                      }}
+                      className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-sm font-semibold text-destructive hover:bg-destructive/10 transition-smooth"
+                    >
+                      <LogOut className="h-5 w-5" />
+                      Déconnexion
+                    </button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </nav>
 
