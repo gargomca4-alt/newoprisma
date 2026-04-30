@@ -9,6 +9,7 @@ import { formatDZD } from "@/lib/calc";
 import { PageHeader } from "@/components/PageHeader";
 import { Search, Wallet, CheckCircle2, AlertCircle, Clock, X } from "lucide-react";
 import { toast } from "sonner";
+import { showSuccess } from "@/lib/alerts";
 import {
   Dialog,
   DialogContent,
@@ -94,7 +95,7 @@ export default function PaymentPage() {
       return;
     }
 
-    toast.success(`Paiement de ${formatDZD(amount)} enregistré`);
+    showSuccess("Success", `Paiement de ${formatDZD(amount)} enregistré`);
     setPayDialog(null);
     setPayAmount("");
     load();
@@ -112,7 +113,7 @@ export default function PaymentPage() {
       return;
     }
 
-    toast.success("Paiement réinitialisé");
+    showSuccess("Success", "Paiement réinitialisé");
     load();
   };
 
@@ -127,7 +128,7 @@ export default function PaymentPage() {
       <PageHeader icon={Wallet} title={t("payment.title")} action={null} />
 
       {/* Stats cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-2 overflow-hidden">
           <CardContent className="p-4">
             <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t("payment.totalRevenue")}</div>

@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Trash2, Pencil, Package } from "lucide-react";
 import { toast } from "sonner";
+import { showSuccess, confirmDelete } from "@/lib/alerts";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader, Field, Stat } from "@/components/PageHeader";
 
@@ -28,18 +29,19 @@ export default function ProductsPage() {
   const save = async (form: any) => {
     if (editing?.id) {
       await supabase.from("products").update(form).eq("id", editing.id);
-      toast.success("Mis à jour");
+      showSuccess("Success", "Mis à jour");
     } else {
       await supabase.from("products").insert(form);
-      toast.success("Ajouté");
+      showSuccess("Success", "Ajouté");
     }
     setOpen(false); setEditing(null); load();
   };
 
   const remove = async (id: string) => {
+    if (!(await confirmDelete())) return;
     const { error } = await supabase.from("products").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
-    toast.success("Supprimé"); load();
+    showSuccess("Success", "Supprimé"); load();
   };
 
   return (
@@ -95,11 +97,11 @@ function ProductDialog({ open, onOpenChange, editing, onSave }: any) {
         <DialogHeader><DialogTitle>{editing ? t("common.edit") : t("products.new")}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <Field label={t("common.name")}><Input value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-2 gap-3">
             <Field label="Nom (AR)"><Input value={form.name_ar || ""} onChange={(e) => setForm({ ...form, name_ar: e.target.value })} /></Field>
             <Field label="Nom (EN)"><Input value={form.name_en || ""} onChange={(e) => setForm({ ...form, name_en: e.target.value })} /></Field>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-2 gap-3">
             <Field label={t("products.category")}>
               <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -111,7 +113,7 @@ function ProductDialog({ open, onOpenChange, editing, onSave }: any) {
             </Field>
             <Field label={t("products.minWeight")}><Input type="number" value={form.min_paper_weight || 0} onChange={(e) => setForm({ ...form, min_paper_weight: +e.target.value })} /></Field>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-2 gap-3">
             <Field label="Largeur défaut (mm)"><Input type="number" value={form.default_size_w_mm || ""} onChange={(e) => setForm({ ...form, default_size_w_mm: +e.target.value || null })} /></Field>
             <Field label="Hauteur défaut (mm)"><Input type="number" value={form.default_size_h_mm || ""} onChange={(e) => setForm({ ...form, default_size_h_mm: +e.target.value || null })} /></Field>
           </div>

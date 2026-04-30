@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Trash2, Pencil, Layers, X } from "lucide-react";
 import { toast } from "sonner";
+import { showSuccess, confirmDelete } from "@/lib/alerts";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/PageHeader";
 
@@ -34,11 +35,12 @@ export default function PaperPage() {
     };
     if (editing?.id) await supabase.from("paper_types").update(payload).eq("id", editing.id);
     else await supabase.from("paper_types").insert(payload);
-    toast.success(t("common.save"));
+    showSuccess("Success", t("common.save"));
     setOpen(false); setEditing(null); load();
   };
 
   const remove = async (id: string) => {
+    if (!(await confirmDelete())) return;
     const { error } = await supabase.from("paper_types").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
     load();

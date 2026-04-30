@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Pencil, Printer } from "lucide-react";
 import { toast } from "sonner";
+import { showSuccess, confirmDelete } from "@/lib/alerts";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/PageHeader";
 
@@ -27,14 +28,15 @@ export default function PrintPage() {
   const save = async (form: any) => {
     if (editing?.id) await supabase.from("print_types").update(form).eq("id", editing.id);
     else await supabase.from("print_types").insert(form);
-    toast.success(t("common.save"));
+    showSuccess("Success", t("common.save"));
     setOpen(false); setEditing(null); load();
   };
 
   const remove = async (id: string) => {
+    if (!(await confirmDelete())) return;
     const { error } = await supabase.from("print_types").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
-    toast.success(t("common.save"));
+    showSuccess("Success", t("common.save"));
     load();
   };
 
@@ -93,7 +95,7 @@ function PrintForm({ editing, onSave, onCancel }: any) {
             </SelectContent>
           </Select>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid sm:grid-cols-3 gap-3">
           <div className="space-y-1.5"><Label className="text-xs">{t("print.setupCost")}</Label><Input type="number" value={form.setup_cost} onChange={(e) => setForm({ ...form, setup_cost: +e.target.value })} /></div>
           <div className="space-y-1.5"><Label className="text-xs">{t("print.costPerSheet")}</Label><Input type="number" step="0.1" value={form.cost_per_sheet} onChange={(e) => setForm({ ...form, cost_per_sheet: +e.target.value })} /></div>
           <div className="space-y-1.5"><Label className="text-xs">×R/V</Label><Input type="number" step="0.1" value={form.recto_verso_multiplier} onChange={(e) => setForm({ ...form, recto_verso_multiplier: +e.target.value })} /></div>

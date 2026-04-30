@@ -143,15 +143,16 @@ export default function DevisPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black p-4 sm:p-8 print:p-12 font-sans">
-      <div className="no-print mb-6 flex justify-end gap-2 max-w-4xl mx-auto">
+    <div className="min-h-screen bg-white text-black p-4 sm:p-8 print:p-0 font-sans">
+      <div className="no-print mb-6 flex flex-wrap justify-end gap-2 max-w-4xl mx-auto">
         <Button variant="outline" onClick={() => window.print()}><Printer className="w-4 h-4 mr-1.5" />Imprimer</Button>
         <Button onClick={exportPDF} disabled={exporting} className="gradient-brand text-white border-0">
           {exporting ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Download className="w-4 h-4 mr-1.5" />}
           {exporting ? "Génération..." : "Télécharger PDF"}
         </Button>
       </div>
-      <div ref={sheetRef} className="max-w-4xl mx-auto bg-white p-8 sm:p-12">
+      <div className="overflow-x-auto pb-8 print:pb-0 print:overflow-visible">
+        <div ref={sheetRef} className="w-full min-w-[800px] max-w-4xl mx-auto bg-white p-8 sm:p-12 print:p-0 shadow-sm print:shadow-none rounded-lg print:rounded-none">
         {/* Header */}
         <div className="flex items-start justify-between border-b-4 pb-6" style={{ borderColor: "hsl(220 75% 22%)" }}>
           <div className="flex items-center gap-4">
@@ -334,6 +335,7 @@ export default function DevisPage() {
         </div>
         <div className="text-center text-[10px] text-gray-400 mt-8">Oprisma Design — Évènementiel · Print · Marketing Digital</div>
       </div>
+    </div>
     </div>
   );
 }

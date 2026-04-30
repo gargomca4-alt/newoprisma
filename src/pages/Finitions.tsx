@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Plus, Trash2, Pencil, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { showSuccess, confirmDelete } from "@/lib/alerts";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/PageHeader";
 
@@ -46,11 +47,12 @@ function FinitionList({ table }: { table: "finitions" | "pelliculages" }) {
   const save = async (form: any) => {
     if (editing?.id) await supabase.from(table).update(form).eq("id", editing.id);
     else await supabase.from(table).insert(form);
-    toast.success(t("common.save"));
+    showSuccess("Success", t("common.save"));
     setOpen(false); setEditing(null); load();
   };
 
   const remove = async (id: string) => {
+    if (!(await confirmDelete())) return;
     const { error } = await supabase.from(table).delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
     load();
@@ -102,7 +104,7 @@ function FinitionForm({ editing, isPellic, onSave, onCancel }: any) {
         {isPellic ? (
           <div className="space-y-1.5"><Label>Prix / m² (DA)</Label><Input type="number" value={form.price_per_sqm} onChange={(e) => setForm({ ...form, price_per_sqm: +e.target.value })} /></div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-1.5"><Label>{t("common.price")} (DA)</Label><Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: +e.target.value })} /></div>
             <div className="space-y-1.5"><Label>{t("finitions.priceUnit")}</Label>
               <Select value={form.price_unit} onValueChange={(v) => setForm({ ...form, price_unit: v })}>

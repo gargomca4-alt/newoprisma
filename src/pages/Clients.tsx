@@ -13,6 +13,7 @@ import {
   ChevronDown, ChevronUp, Trash2, Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
+import { showSuccess, confirmDelete } from "@/lib/alerts";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -91,7 +92,7 @@ export default function ClientsPage() {
     if (editing) {
       const updated = clients.map(c => c.id === editing.id ? { ...c, ...form } : c);
       await saveClients(updated);
-      toast.success(t("clients.updated"));
+      showSuccess("Success", t("clients.updated"));
     } else {
       const newClient: Client = {
         id: crypto.randomUUID(),
@@ -99,7 +100,7 @@ export default function ClientsPage() {
         created_at: new Date().toISOString(),
       };
       await saveClients([...clients, newClient]);
-      toast.success(t("clients.added"));
+      showSuccess("Success", t("clients.added"));
     }
     setDialogOpen(false);
     setEditing(null);
@@ -107,6 +108,7 @@ export default function ClientsPage() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!(await confirmDelete())) return;
     const updated = clients.filter(c => c.id !== id);
     await saveClients(updated);
     toast.success(t("clients.deleted"));
@@ -164,7 +166,7 @@ export default function ClientsPage() {
       } />
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="border-2">
           <CardContent className="p-4">
             <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t("clients.totalClients")}</div>

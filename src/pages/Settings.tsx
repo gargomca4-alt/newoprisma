@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Settings as SettingsIcon, Save } from "lucide-react";
 import { toast } from "sonner";
+import { showSuccess } from "@/lib/alerts";
 import { PageHeader } from "@/components/PageHeader";
 
 export default function SettingsPage() {
@@ -32,7 +33,7 @@ export default function SettingsPage() {
       supabase.from("settings").upsert({ key: "company_name", value: JSON.stringify(companyName) as any }),
       supabase.from("settings").upsert({ key: "default_bleed_mm", value: bleed as any }),
     ]);
-    toast.success(t("common.save"));
+    showSuccess("Success", t("common.save"));
   };
 
   return (
@@ -44,7 +45,7 @@ export default function SettingsPage() {
             <Label>{t("settings.companyName")}</Label>
             <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>{t("settings.designPercentage")}</Label>
               <Input type="number" min={0} max={100} value={designPct} onChange={(e) => setDesignPct(+e.target.value)} />

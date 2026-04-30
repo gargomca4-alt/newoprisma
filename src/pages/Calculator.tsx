@@ -13,6 +13,7 @@ import { CalculatorFinitions } from "@/components/calculator/CalculatorFinitions
 import { Calculator, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { showSuccess } from "@/lib/alerts";
 import { localName } from "@/lib/localName";
 
 type Product = any;
@@ -215,7 +216,7 @@ export default function CalculatorPage() {
       },
     } as any);
     if (error) toast.error("Erreur: " + error.message);
-    else toast.success("Devis enregistré");
+    else showSuccess("Success", "Devis enregistré");
   };
 
   const printDevis = () => {
@@ -513,7 +514,7 @@ export default function CalculatorPage() {
               <Label>Nom</Label>
               <Input placeholder="ex: SRA2, 50×70…" value={newSize.name} onChange={(e) => setNewSize({ ...newSize, name: e.target.value })} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Largeur (mm)</Label>
                 <Input type="number" value={newSize.width_mm} onChange={(e) => setNewSize({ ...newSize, width_mm: e.target.value })} />

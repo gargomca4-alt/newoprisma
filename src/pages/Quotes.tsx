@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { formatDZD } from "@/lib/calc";
 import { PageHeader } from "@/components/PageHeader";
+import { confirmDelete } from "@/lib/alerts";
 
 export default function QuotesPage() {
   const { t } = useTranslation();
@@ -28,6 +29,7 @@ export default function QuotesPage() {
   useEffect(() => { load(); }, []);
 
   const remove = async (id: string) => {
+    if (!(await confirmDelete())) return;
     const { error } = await supabase.from("quotes").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
     load();
@@ -55,18 +57,22 @@ export default function QuotesPage() {
         <div className="space-y-3">
           {filteredItems.map((q) => (
             <Card key={q.id} className="border-2 hover:shadow-md transition-smooth">
-              <CardContent className="p-4 flex items-center justify-between gap-4">
-                <div className="flex-1 min-w-0">
+              <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex-1 min-w-0 w-full">
                   <div className="font-semibold">{q.client_name}{q.client_company ? ` · ${q.client_company}` : ""}</div>
                   <div className="text-xs text-muted-foreground mt-0.5">
                     {q.product_name} · {q.quantity} {t("calc.units")} · {new Date(q.created_at).toLocaleDateString()}
                   </div>
                 </div>
-                <Badge className="gradient-brand text-white border-0 text-sm tabular-nums">{formatDZD(Number(q.total))}</Badge>
-                <Button asChild variant="outline" size="sm">
-                  <Link to={`/devis?id=${q.id}`}><ExternalLink className="w-4 h-4 mr-1.5" />Ouvrir</Link>
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => remove(q.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                  <Badge className="gradient-brand text-white border-0 text-sm tabular-nums">{formatDZD(Number(q.total))}</Badge>
+                  <div className="flex items-center gap-2">
+                    <Button asChild variant="outline" size="sm">
+                      <Link to={`/devis?id=${q.id}`}><ExternalLink className="w-4 h-4 mr-1.5" /><span className="hidden sm:inline">Ouvrir</span></Link>
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => remove(q.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           ))}

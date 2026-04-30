@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { showSuccess, showError } from "@/lib/alerts";
 import { Loader2 } from "lucide-react";
 
 export default function Auth() {
@@ -34,7 +35,7 @@ export default function Auth() {
           password,
         });
         if (error) throw error;
-        toast.success("Connexion réussie");
+        showSuccess("Success", "Connexion réussie");
         navigate("/");
       } else if (view === 'signup') {
         const { error } = await supabase.auth.signUp({
@@ -42,7 +43,7 @@ export default function Auth() {
           password,
         });
         if (error) throw error;
-        toast.success("Inscription réussie. Vérifiez votre boîte mail si nécessaire.");
+        showSuccess("Success", "Inscription réussie. Vérifiez votre boîte mail si nécessaire.");
         if (!error) {
            const { data: { session } } = await supabase.auth.getSession();
            if (session) navigate("/");
@@ -53,11 +54,11 @@ export default function Auth() {
           redirectTo: window.location.origin + "/",
         });
         if (error) throw error;
-        toast.success("Lien de réinitialisation envoyé ! Vérifiez votre boîte mail.");
+        showSuccess("Success", "Lien de réinitialisation envoyé ! Vérifiez votre boîte mail.");
         setView('login');
       }
     } catch (error: any) {
-      toast.error(error.message || "Une erreur est survenue");
+      showError("Erreur", error.message || "Une erreur est survenue");
     } finally {
       setLoading(false);
     }
