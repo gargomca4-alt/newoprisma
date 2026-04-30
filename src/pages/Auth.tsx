@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [view, setView] = useState<'login' | 'signup' | 'forgot'>('login');
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,7 +28,7 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (view === 'login') {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -36,7 +36,7 @@ export default function Auth() {
         if (error) throw error;
         toast.success("Connexion réussie");
         navigate("/");
-      } else {
+      } else if (view === 'signup') {
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -44,11 +44,17 @@ export default function Auth() {
         if (error) throw error;
         toast.success("Inscription réussie. Vérifiez votre boîte mail si nécessaire.");
         if (!error) {
-           // Supabase sign up might autologin if email confirmation is off
            const { data: { session } } = await supabase.auth.getSession();
            if (session) navigate("/");
-           else setIsLogin(true); // Switch back to login if confirmation needed
+           else setView('login');
         }
+      } else if (view === 'forgot') {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + "/",
+        });
+        if (error) throw error;
+        toast.success("Lien de réinitialisation envoyé ! Vérifiez votre boîte mail.");
+        setView('login');
       }
     } catch (error: any) {
       toast.error(error.message || "Une erreur est survenue");
@@ -97,10 +103,12 @@ export default function Auth() {
               <img src="/logo.png" alt="Oprisma Design" className="h-12" />
             </div>
             <CardTitle className="text-2xl text-center">
-              {isLogin ? "Connexion" : "Créer un compte"}
+              {view === 'login' ? "Connexion" : view === 'signup' ? "Créer un compte" : "Mot de passe oublié"}
             </CardTitle>
             <CardDescription className="text-center">
-              {isLogin ? "Entrez vos identifiants pour accéder à votre espace" : "Remplissez les champs pour créer un nouvel accès"}
+              {view === 'login' && "Entrez vos identifiants pour accéder à votre espace"}
+              {view === 'signup' && "Remplissez les champs pour créer un nouvel accès"}
+              {view === 'forgot' && "Entrez votre email pour recevoir un lien de réinitialisation"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -117,40 +125,57 @@ export default function Auth() {
                   className="h-11"
                 />
               </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Mot de passe</Label>
-                  {isLogin && (
-                    <a href="#" className="text-xs text-primary hover:underline font-medium">
-                      Mot de passe oublié ?
-                    </a>
-                  )}
+              
+              {view !== 'forgot' && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Mot de passe</Label>
+                    {view === 'login' && (
+                      <button type="button" onClick={() => setView('forgot')} className="text-xs text-primary hover:underline font-medium">
+                        Mot de passe oublié ?
+                      </button>
+                    )}
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="h-11"
+                  />
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="h-11"
-                />
-              </div>
+              )}
+              
               <Button type="submit" className="w-full h-11 gradient-brand text-white border-0 shadow-md font-semibold mt-6" disabled={loading}>
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (isLogin ? "Se connecter" : "S'inscrire")}
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
+                  view === 'login' ? "Se connecter" : 
+                  view === 'signup' ? "S'inscrire" : 
+                  "Envoyer le lien"
+                )}
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="pb-8 justify-center">
-            <p className="text-sm text-muted-foreground">
-              {isLogin ? "Vous n'avez pas de compte ?" : "Vous avez déjà un compte ?"}
-              <button
-                type="button"
-                onClick={() => setIsLogin(!isLogin)}
-                className="ml-1 text-primary font-semibold hover:underline"
-              >
-                {isLogin ? "S'inscrire" : "Se connecter"}
-              </button>
-            </p>
+          <CardFooter className="pb-8 justify-center flex-col gap-2">
+            {view === 'forgot' ? (
+              <p className="text-sm text-muted-foreground">
+                Vous vous souvenez de votre mot de passe ?
+                <button type="button" onClick={() => setView('login')} className="ml-1 text-primary font-semibold hover:underline">
+                  Retour à la connexion
+                </button>
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {view === 'login' ? "Vous n'avez pas de compte ?" : "Vous avez déjà un compte ?"}
+                <button
+                  type="button"
+                  onClick={() => setView(view === 'login' ? 'signup' : 'login')}
+                  className="ml-1 text-primary font-semibold hover:underline"
+                >
+                  {view === 'login' ? "S'inscrire" : "Se connecter"}
+                </button>
+              </p>
+            )}
           </CardFooter>
         </Card>
       </div>
