@@ -121,14 +121,6 @@ export default function DashboardPage() {
 
   const maxMonthRevenue = Math.max(...stats.monthlyData.map(m => m.revenue), 1);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[40vh]">
-        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
   if (roleLoading || dataLoading) {
     return (
       <div className="flex justify-center p-8">
