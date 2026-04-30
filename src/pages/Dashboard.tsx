@@ -47,9 +47,21 @@ export default function DashboardPage() {
       return d.getMonth() === lm.getMonth() && d.getFullYear() === lm.getFullYear();
     });
 
-    const totalRevenue = quotes.reduce((s, q) => s + (Number(q.total) || 0), 0);
-    const monthRevenue = thisMonth.reduce((s, q) => s + (Number(q.total) || 0), 0);
-    const lastMonthRevenue = lastMonth.reduce((s, q) => s + (Number(q.total) || 0), 0);
+    const acceptedOrPaid = quotes.filter(q => q.status === "accepted" || Number(q.details?.paidAmount) > 0);
+
+    const thisMonthAccepted = acceptedOrPaid.filter(q => {
+      const d = new Date(q.created_at);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+    const lastMonthAccepted = acceptedOrPaid.filter(q => {
+      const d = new Date(q.created_at);
+      const lm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      return d.getMonth() === lm.getMonth() && d.getFullYear() === lm.getFullYear();
+    });
+
+    const totalRevenue = acceptedOrPaid.reduce((s, q) => s + (Number(q.total) || 0), 0);
+    const monthRevenue = thisMonthAccepted.reduce((s, q) => s + (Number(q.total) || 0), 0);
+    const lastMonthRevenue = lastMonthAccepted.reduce((s, q) => s + (Number(q.total) || 0), 0);
     const revenueGrowth = lastMonthRevenue > 0 ? ((monthRevenue - lastMonthRevenue) / lastMonthRevenue * 100) : 0;
 
     const totalPaid = quotes.reduce((s, q) => s + (Number(q.details?.paidAmount) || 0), 0);
@@ -59,9 +71,9 @@ export default function DashboardPage() {
     const accepted = quotes.filter(q => q.status === "accepted").length;
     const rejected = quotes.filter(q => q.status === "rejected").length;
 
-    // Top products
+    // Top products (based on accepted quotes only)
     const productMap: Record<string, { count: number; revenue: number }> = {};
-    quotes.forEach(q => {
+    acceptedOrPaid.forEach(q => {
       const name = q.product_name || "Autre";
       if (!productMap[name]) productMap[name] = { count: 0, revenue: 0 };
       productMap[name].count++;
@@ -82,14 +94,14 @@ export default function DashboardPage() {
     const monthlyData: { label: string; revenue: number; count: number }[] = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthQuotes = quotes.filter(q => {
+      const monthAccepted = acceptedOrPaid.filter(q => {
         const qd = new Date(q.created_at);
         return qd.getMonth() === d.getMonth() && qd.getFullYear() === d.getFullYear();
       });
       monthlyData.push({
         label: d.toLocaleDateString("fr-FR", { month: "short" }),
-        revenue: monthQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0),
-        count: monthQuotes.length,
+        revenue: monthAccepted.reduce((s, q) => s + (Number(q.total) || 0), 0),
+        count: monthAccepted.length,
       });
     }
 
