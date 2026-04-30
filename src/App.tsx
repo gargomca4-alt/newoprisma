@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -8,6 +8,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AppShell } from "@/components/AppShell";
 
 import { AuthGuard } from "@/components/AuthGuard";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // Lazy-loaded page components for code-splitting
 const Auth = lazy(() => import("./pages/Auth"));
@@ -32,6 +34,43 @@ function PageFallback() {
       <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
   );
+}
+
+function OfflineSyncManager() {
+  useEffect(() => {
+    const handleOnline = async () => {
+      try {
+        const queueStr = localStorage.getItem("offline_quotes_queue");
+        if (!queueStr) return;
+        const queue = JSON.parse(queueStr);
+        if (!Array.isArray(queue) || queue.length === 0) return;
+
+        toast.info(`Synchronisation de ${queue.length} devis hors ligne...`);
+        let successCount = 0;
+        
+        for (const q of queue) {
+          const { _id, ...payload } = q;
+          const { error } = await supabase.from("quotes").insert(payload);
+          if (!error) successCount++;
+        }
+
+        if (successCount > 0) {
+          toast.success(`${successCount} devis synchronisés avec succès !`);
+        }
+        
+        localStorage.removeItem("offline_quotes_queue");
+      } catch (e) {
+        console.error("Erreur de synchronisation hors ligne", e);
+      }
+    };
+
+    window.addEventListener("online", handleOnline);
+    if (navigator.onLine) handleOnline();
+
+    return () => window.removeEventListener("online", handleOnline);
+  }, []);
+
+  return null;
 }
 
 function ShellRoutes() {
@@ -86,6 +125,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <TooltipProvider>
+        <OfflineSyncManager />
         <Toaster />
         <Sonner />
         <BrowserRouter>

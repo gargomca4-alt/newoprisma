@@ -21,6 +21,8 @@ export default function SettingsPage() {
   const [designPct, setDesignPct] = useState(35);
   const [companyName, setCompanyName] = useState("Oprisma Design");
   const [bleed, setBleed] = useState(3);
+  const [terms, setTerms] = useState("Le présent devis est valable 30 jours. Un acompte de 50% est exigé à la commande.");
+  const [watermark, setWatermark] = useState("OPRISMA DESIGN");
 
   // Role management
   const [roles, setRoles] = useState<RoleEntry[]>([]);
@@ -34,6 +36,8 @@ export default function SettingsPage() {
         if (s.key === "design_percentage") setDesignPct(Number(s.value));
         if (s.key === "company_name") setCompanyName(String(s.value).replace(/"/g, ""));
         if (s.key === "default_bleed_mm") setBleed(Number(s.value));
+        if (s.key === "terms_conditions") setTerms(String(s.value).replace(/"/g, ""));
+        if (s.key === "watermark_text") setWatermark(String(s.value).replace(/"/g, ""));
         if (s.key === "user_roles") {
           try {
             const map = typeof s.value === "string" ? JSON.parse(s.value) : s.value;
@@ -52,6 +56,8 @@ export default function SettingsPage() {
       supabase.from("settings").upsert({ key: "design_percentage", value: designPct as any }),
       supabase.from("settings").upsert({ key: "company_name", value: JSON.stringify(companyName) as any }),
       supabase.from("settings").upsert({ key: "default_bleed_mm", value: bleed as any }),
+      supabase.from("settings").upsert({ key: "terms_conditions", value: JSON.stringify(terms) as any }),
+      supabase.from("settings").upsert({ key: "watermark_text", value: JSON.stringify(watermark) as any }),
     ]);
     showSuccess("Success", t("common.save"));
   };
@@ -119,6 +125,14 @@ export default function SettingsPage() {
               <Label>Bleed défaut (mm)</Label>
               <Input type="number" min={0} value={bleed} onChange={(e) => setBleed(+e.target.value)} />
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Filigrane (Watermark) PDF</Label>
+            <Input value={watermark} onChange={(e) => setWatermark(e.target.value)} placeholder="OPRISMA DESIGN" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Conditions générales (Devis)</Label>
+            <Input value={terms} onChange={(e) => setTerms(e.target.value)} placeholder="Ex: Acompte de 50%..." />
           </div>
           <Button onClick={save} className="gradient-brand text-white border-0">
             <Save className="w-4 h-4 mr-1.5" />{t("common.save")}

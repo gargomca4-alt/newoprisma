@@ -260,12 +260,14 @@ export default function CalculatorPage() {
   const saveQuote = async () => {
     if (!breakdown || !product) return;
     if (!clientName.trim()) { toast.error("Nom du client requis"); return; }
-    const { error } = await supabase.from("quotes").insert({
+    
+    const payload = {
       client_name: clientName,
       client_company: clientCompany || null,
       product_name: product.name,
       quantity,
       total: breakdown.total,
+      status: "pending",
       details: { 
         clientName, clientCompany, product, printType, paperType, paperSize,
         finishedW, finishedH, quantity, rectoVerso, innerPages, paperWeight,
@@ -273,7 +275,23 @@ export default function CalculatorPage() {
         selectedPelliculagesData: selectedPelliculages.map((id) => pelliculages.find((p) => p.id === id)),
         breakdown, addDesign
       },
-    } as any);
+    };
+
+    if (!navigator.onLine) {
+      // Save offline
+      try {
+        const queue = JSON.parse(localStorage.getItem("offline_quotes_queue") || "[]");
+        queue.push({ ...payload, _id: Date.now() });
+        localStorage.setItem("offline_quotes_queue", JSON.stringify(queue));
+        localStorage.removeItem(DRAFT_KEY);
+        showSuccess("Mode Hors Ligne", "Devis sauvegardé localement. Il sera synchronisé à la reconnexion.");
+      } catch (e) {
+        toast.error("Erreur de sauvegarde hors ligne");
+      }
+      return;
+    }
+
+    const { error } = await supabase.from("quotes").insert(payload as any);
     if (error) toast.error("Erreur: " + error.message);
     else { localStorage.removeItem(DRAFT_KEY); showSuccess("Success", "Devis enregistré"); }
   };

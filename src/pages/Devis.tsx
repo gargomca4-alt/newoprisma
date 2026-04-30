@@ -12,12 +12,25 @@ import { Link } from "react-router-dom";
 export default function DevisPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [data, setData] = useState<any>(null);
+  const [settings, setSettings] = useState({ terms: "", watermark: "", company: "Oprisma Design" });
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     (async () => {
+      // Load settings
+      const { data: sData } = await supabase.from("settings").select("*");
+      let terms = "Le présent devis est valable 30 jours.";
+      let watermark = "";
+      let company = "Oprisma Design";
+      sData?.forEach(s => {
+        if (s.key === "terms_conditions") terms = String(s.value).replace(/"/g, "");
+        if (s.key === "watermark_text") watermark = String(s.value).replace(/"/g, "");
+        if (s.key === "company_name") company = String(s.value).replace(/"/g, "");
+      });
+      setSettings({ terms, watermark, company });
+
       const params = new URLSearchParams(window.location.search);
       const id = params.get("id");
       // 1) If ?id= → load from DB
@@ -174,13 +187,22 @@ export default function DevisPage() {
         </Button>
       </div>
       <div className="overflow-x-auto pb-8 print:pb-0 print:overflow-visible">
-        <div ref={sheetRef} className="w-full min-w-[800px] max-w-4xl mx-auto bg-white p-8 sm:p-12 print:p-0 shadow-sm print:shadow-none rounded-lg print:rounded-none">
+        <div ref={sheetRef} className="relative w-full min-w-[800px] max-w-4xl mx-auto bg-white p-8 sm:p-12 print:p-0 shadow-sm print:shadow-none rounded-lg print:rounded-none">
+          {/* Watermark */}
+          {settings.watermark && (
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden z-0 select-none opacity-[0.03]">
+              <div className="text-[120px] font-black tracking-widest text-black -rotate-45 whitespace-nowrap">
+                {settings.watermark}
+              </div>
+            </div>
+          )}
+
         {/* Header */}
-        <div className="flex items-start justify-between border-b-4 pb-6 print:pb-4" style={{ borderColor: "hsl(220 75% 22%)" }}>
+        <div className="flex items-start justify-between border-b-4 pb-6 print:pb-4 relative z-10" style={{ borderColor: "hsl(220 75% 22%)" }}>
           <div className="flex items-center gap-4">
             <img src={logo} alt="Oprisma" className="h-20 w-auto" />
             <div>
-              <h1 className="text-2xl font-bold" style={{ color: "hsl(220 75% 22%)" }}>Oprisma Design</h1>
+              <h1 className="text-2xl font-bold" style={{ color: "hsl(220 75% 22%)" }}>{settings.company}</h1>
               <p className="text-xs text-gray-800 font-medium">Évènementiel · Print · Marketing Digital</p>
             </div>
           </div>
@@ -192,7 +214,7 @@ export default function DevisPage() {
         </div>
 
         {/* Client */}
-        <div className="grid grid-cols-2 gap-6 mt-8 print:mt-4">
+        <div className="grid grid-cols-2 gap-6 mt-8 print:mt-4 relative z-10">
           <div>
             <div className="text-xs uppercase tracking-wider text-gray-700 mb-1 font-semibold">Client</div>
             <div className="font-semibold text-lg">{clientName}</div>
@@ -205,7 +227,7 @@ export default function DevisPage() {
         </div>
 
         {/* Détail */}
-        <table className="w-full mt-8 print:mt-4 border-collapse">
+        <table className="w-full mt-8 print:mt-4 border-collapse relative z-10">
           <thead>
             <tr className="text-white text-sm" style={{ background: "linear-gradient(135deg, hsl(220 75% 22%), hsl(145 65% 42%))" }}>
               <th className="text-left p-3 font-semibold">Désignation</th>
@@ -341,23 +363,17 @@ export default function DevisPage() {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="mt-10 print:mt-6 pt-6 print:pt-4 border-t-2 grid grid-cols-2 gap-6 text-xs text-gray-800 break-inside-avoid">
-          <div>
-            <div className="font-semibold text-gray-800 mb-2">Conditions</div>
-            <ul className="space-y-0.5">
-              <li>• Acompte 50% à la commande</li>
-              <li>• Délai: 5-10 jours ouvrables</li>
-              <li>• Bon à tirer obligatoire avant impression</li>
-              <li>• Devis valable 15 jours</li>
-            </ul>
+        {/* Footer (Terms & Signature) */}
+        <div className="pt-8 mt-12 border-t grid grid-cols-2 gap-8 relative z-10 break-inside-avoid">
+          <div className="text-[11px] text-muted-foreground">
+            <div className="font-semibold text-black mb-1">Conditions :</div>
+            <p className="whitespace-pre-wrap leading-relaxed">{settings.terms}</p>
           </div>
           <div className="text-right">
-            <div className="font-semibold text-gray-800 mb-2">Signature client</div>
-            <div className="h-16 border-2 border-dashed rounded" />
+            <div className="font-semibold text-[11px] text-black mb-12">Cachet et Signature</div>
+            <div className="inline-block w-48 border-b border-dashed border-gray-300"></div>
           </div>
         </div>
-        <div className="text-center text-[10px] text-gray-400 mt-8">Oprisma Design — Évènementiel · Print · Marketing Digital</div>
       </div>
     </div>
     </div>
