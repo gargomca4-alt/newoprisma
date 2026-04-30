@@ -259,7 +259,7 @@ export default function CalculatorPage() {
           {/* Client */}
           <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-[1.5rem] overflow-hidden">
             <CardHeader className="pb-3"><CardTitle className="text-base">{t("calc.client")}</CardTitle></CardHeader>
-            <CardContent className="grid sm:grid-cols-2 gap-4">
+            <CardContent className="grid md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>{t("calc.clientName")} *</Label>
                 <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Ahmed Benali" />
@@ -275,7 +275,7 @@ export default function CalculatorPage() {
           <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-[1.5rem] overflow-hidden">
             <CardHeader className="pb-3"><CardTitle className="text-base">{t("calc.product")}</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label>{t("calc.product")} *</Label>
                   <Select value={productId} onValueChange={setProductId}>
@@ -296,7 +296,7 @@ export default function CalculatorPage() {
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-3 gap-4">
+              <div className="grid md:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
                   <Label>{t("common.quantity")}</Label>
                   <Input type="number" min={1} value={quantity} onChange={(e) => setQuantity(Math.max(1, +e.target.value || 1))} />
@@ -315,7 +315,7 @@ export default function CalculatorPage() {
               </div>
 
               {(useCustomSize || isLargeFormat) && (
-                <div className="grid sm:grid-cols-2 gap-4 p-4 rounded-xl bg-muted/30 border-dashed border-2">
+                <div className="grid md:grid-cols-2 gap-4 p-4 rounded-xl bg-muted/30 border-dashed border-2">
                   <div className="space-y-1.5">
                     <Label>{t("calc.widthMm")}</Label>
                     <Input type="number" value={customW} onChange={(e) => setCustomW(+e.target.value || 0)} />
@@ -400,7 +400,7 @@ export default function CalculatorPage() {
                         <div className="w-1 h-5 rounded-full gradient-brand" />
                         <h4 className="text-sm font-semibold">Couverture extérieure</h4>
                       </div>
-                      <div className="grid sm:grid-cols-3 gap-4">
+                      <div className="grid md:grid-cols-3 gap-4">
                         <div className="space-y-1.5">
                           <Label>{t("calc.coverPaper")}</Label>
                           <Select value={coverPaperTypeId} onValueChange={setCoverPaperTypeId}>
@@ -430,7 +430,7 @@ export default function CalculatorPage() {
                         <div className="w-1 h-5 rounded-full bg-primary/60" />
                         <h4 className="text-sm font-semibold">Pages intérieures</h4>
                       </div>
-                      <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="grid md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                           <Label>Papier des pages intérieures</Label>
                           <Select value={paperTypeId} onValueChange={setPaperTypeId} disabled={!productId}>
@@ -453,7 +453,7 @@ export default function CalculatorPage() {
                     </div>
                   </>
                 ) : (
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label>{t("calc.paperType")}</Label>
                       <Select value={paperTypeId} onValueChange={setPaperTypeId} disabled={!productId}>
@@ -514,7 +514,7 @@ export default function CalculatorPage() {
               <Label>Nom</Label>
               <Input placeholder="ex: SRA2, 50×70…" value={newSize.name} onChange={(e) => setNewSize({ ...newSize, name: e.target.value })} />
             </div>
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid md:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Largeur (mm)</Label>
                 <Input type="number" value={newSize.width_mm} onChange={(e) => setNewSize({ ...newSize, width_mm: e.target.value })} />

@@ -25,7 +25,7 @@ export function CalculatorFinitions({
       <CardContent className="space-y-5">
         <div>
           <Label className="text-xs text-muted-foreground uppercase tracking-wider">{t("calc.finitions")}</Label>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
             {finitions.map((f: any) => (
               <label key={f.id} className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-smooth ${selectedFinitions.includes(f.id) ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
                 <Checkbox checked={selectedFinitions.includes(f.id)} onCheckedChange={(c) => setSelectedFinitions(c ? [...selectedFinitions, f.id] : selectedFinitions.filter((id: string) => id !== f.id))} />
@@ -40,7 +40,7 @@ export function CalculatorFinitions({
         <Separator />
         <div>
           <Label className="text-xs text-muted-foreground uppercase tracking-wider">{t("calc.pelliculages")}</Label>
-          <div className="grid sm:grid-cols-2 gap-2 mt-2">
+          <div className="grid md:grid-cols-2 gap-2 mt-2">
             {pelliculages.map((p: any) => (
               <label key={p.id} className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-smooth ${selectedPelliculages.includes(p.id) ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
                 <Checkbox checked={selectedPelliculages.includes(p.id)} onCheckedChange={(c) => setSelectedPelliculages(c ? [...selectedPelliculages, p.id] : selectedPelliculages.filter((id: string) => id !== p.id))} />

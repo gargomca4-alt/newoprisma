@@ -127,12 +127,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                 to={item.to}
                 end={item.to === "/"}
                 className={({ isActive }) =>
-                  `flex flex-col items-center gap-1 w-16 py-1 rounded-lg text-[10px] transition-smooth ${
+                  `flex flex-col items-center gap-1 w-16 py-1.5 rounded-lg text-[11px] transition-smooth ${
                     isActive ? "text-primary bg-primary/10" : "text-muted-foreground"
                   }`
                 }
               >
-                <item.icon className="h-5 w-5 shrink-0" />
+                <item.icon className="h-[22px] w-[22px] shrink-0" />
                 <span className="truncate w-full text-center px-1">{item.label}</span>
               </NavLink>
             ))}
@@ -140,9 +140,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <button
-                  className={`flex flex-col items-center gap-1 w-16 py-1 rounded-lg text-[10px] transition-smooth text-muted-foreground hover:text-primary ${isMobileMenuOpen ? "text-primary bg-primary/10" : ""}`}
+                  className={`flex flex-col items-center gap-1 w-16 py-1.5 rounded-lg text-[11px] transition-smooth text-muted-foreground hover:text-primary ${isMobileMenuOpen ? "text-primary bg-primary/10" : ""}`}
                 >
-                  <Menu className="h-5 w-5 shrink-0" />
+                  <Menu className="h-[22px] w-[22px] shrink-0" />
                   <span className="truncate w-full text-center px-1">Plus</span>
                 </button>
               </SheetTrigger>
