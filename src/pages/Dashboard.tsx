@@ -49,23 +49,15 @@ export default function DashboardPage() {
 
     const acceptedOrPaid = quotes.filter(q => q.status === "accepted" || Number(q.details?.paidAmount) > 0);
 
-    const thisMonthAccepted = acceptedOrPaid.filter(q => {
-      const d = new Date(q.created_at);
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    });
-    const lastMonthAccepted = acceptedOrPaid.filter(q => {
-      const d = new Date(q.created_at);
-      const lm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      return d.getMonth() === lm.getMonth() && d.getFullYear() === lm.getFullYear();
-    });
-
-    const totalRevenue = acceptedOrPaid.reduce((s, q) => s + (Number(q.total) || 0), 0);
-    const monthRevenue = thisMonthAccepted.reduce((s, q) => s + (Number(q.total) || 0), 0);
-    const lastMonthRevenue = lastMonthAccepted.reduce((s, q) => s + (Number(q.total) || 0), 0);
-    const revenueGrowth = lastMonthRevenue > 0 ? ((monthRevenue - lastMonthRevenue) / lastMonthRevenue * 100) : 0;
-
+    // Revenue = only what has actually been paid (paidAmount)
     const totalPaid = quotes.reduce((s, q) => s + (Number(q.details?.paidAmount) || 0), 0);
-    const totalRemaining = Math.max(0, totalRevenue - totalPaid);
+    const monthPaid = thisMonth.reduce((s, q) => s + (Number(q.details?.paidAmount) || 0), 0);
+    const lastMonthPaid = lastMonth.reduce((s, q) => s + (Number(q.details?.paidAmount) || 0), 0);
+    const revenueGrowth = lastMonthPaid > 0 ? ((monthPaid - lastMonthPaid) / lastMonthPaid * 100) : 0;
+
+    // Outstanding = accepted/paid quotes total minus what's been paid
+    const totalAcceptedValue = acceptedOrPaid.reduce((s, q) => s + (Number(q.total) || 0), 0);
+    const totalRemaining = Math.max(0, totalAcceptedValue - totalPaid);
 
     const pending = quotes.filter(q => q.status === "pending").length;
     const accepted = quotes.filter(q => q.status === "accepted").length;
@@ -94,14 +86,14 @@ export default function DashboardPage() {
     const monthlyData: { label: string; revenue: number; count: number }[] = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthAccepted = acceptedOrPaid.filter(q => {
+      const monthQuotesAll = quotes.filter(q => {
         const qd = new Date(q.created_at);
         return qd.getMonth() === d.getMonth() && qd.getFullYear() === d.getFullYear();
       });
       monthlyData.push({
         label: d.toLocaleDateString("fr-FR", { month: "short" }),
-        revenue: monthAccepted.reduce((s, q) => s + (Number(q.total) || 0), 0),
-        count: monthAccepted.length,
+        revenue: monthQuotesAll.reduce((s, q) => s + (Number(q.details?.paidAmount) || 0), 0),
+        count: monthQuotesAll.length,
       });
     }
 
@@ -117,7 +109,7 @@ export default function DashboardPage() {
     });
 
     return {
-      totalRevenue, monthRevenue, lastMonthRevenue, revenueGrowth,
+      totalRevenue: totalPaid, monthRevenue: monthPaid, lastMonthRevenue: lastMonthPaid, revenueGrowth,
       totalPaid, totalRemaining,
       totalQuotes: quotes.length, monthQuotes: thisMonth.length,
       pending, accepted, rejected,
