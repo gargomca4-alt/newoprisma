@@ -11,6 +11,7 @@ import { AuthGuard } from "@/components/AuthGuard";
 
 // Lazy-loaded page components for code-splitting
 const Auth = lazy(() => import("./pages/Auth"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Calculator = lazy(() => import("./pages/Calculator"));
 const Products = lazy(() => import("./pages/Products"));
 const Paper = lazy(() => import("./pages/Paper"));
@@ -63,7 +64,8 @@ function ShellRoutes() {
       <AppShell>
         <Suspense fallback={<PageFallback />}>
           <Routes>
-            <Route path="/" element={<Calculator />} />
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/calculator" element={<Calculator />} />
             <Route path="/products" element={<Products />} />
             <Route path="/paper" element={<Paper />} />
             <Route path="/print" element={<Print />} />

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { formatDZD } from "@/lib/calc";
 import logo from "@/assets/oprisma-logo.png";
 import { Button } from "@/components/ui/button";
-import { Printer, Download, Loader2, ArrowLeft } from "lucide-react";
+import { Printer, Download, Loader2, ArrowLeft, MessageCircle } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
@@ -149,6 +149,25 @@ export default function DevisPage() {
     <div className="min-h-screen bg-white text-black p-4 sm:p-8 print:p-0 font-sans">
       <div className="no-print mb-6 flex flex-wrap justify-end gap-2 max-w-4xl mx-auto">
         <Button variant="outline" onClick={() => window.print()}><Printer className="w-4 h-4 mr-1.5" />Imprimer</Button>
+        <Button
+          variant="outline"
+          className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/30"
+          onClick={() => {
+            const lines = [
+              `📋 *Devis Oprisma Design*`,
+              `👤 Client: ${clientName || "—"}${clientCompany ? ` (${clientCompany})` : ""}`,
+              `📦 Produit: ${product?.name || "—"}`,
+              `📊 Quantité: ${quantity}`,
+              `💰 *Total: ${formatDZD(breakdown?.total || 0)}*`,
+              `📅 Date: ${today}`,
+              ``,
+              `_Oprisma Design — Évènementiel · Print · Marketing Digital_`,
+            ];
+            window.open(`https://wa.me/?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
+          }}
+        >
+          <MessageCircle className="w-4 h-4 mr-1.5" />WhatsApp
+        </Button>
         <Button onClick={exportPDF} disabled={exporting} className="gradient-brand text-white border-0">
           {exporting ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Download className="w-4 h-4 mr-1.5" />}
           {exporting ? "Génération..." : "Télécharger PDF"}

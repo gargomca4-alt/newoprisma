@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +15,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import { showSuccess } from "@/lib/alerts";
 import { localName } from "@/lib/localName";
+
+const DRAFT_KEY = "oprisma_calc_draft";
 
 type Product = any;
 type PaperType = any;
@@ -59,6 +61,63 @@ export default function CalculatorPage() {
   const [newSizeOpen, setNewSizeOpen] = useState(false);
   const [newSize, setNewSize] = useState({ name: "", width_mm: "", height_mm: "" });
   const [layoutPreference, setLayoutPreference] = useState<'horizontal' | 'vertical' | 'optimal'>('optimal');
+  const draftLoaded = useRef(false);
+
+  // Auto-save draft to localStorage
+  const saveDraft = useCallback(() => {
+    const draft = {
+      clientName, clientCompany, productId, printTypeId, paperTypeId,
+      paperWeight, paperSizeId, coverPaperTypeId, coverWeight, quantity,
+      bleed, rectoVerso, innerPages, useCustomSize, customW, customH,
+      selectedFinitions, selectedPelliculages, addDesign, layoutPreference,
+      savedAt: Date.now(),
+    };
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch {}
+  }, [clientName, clientCompany, productId, printTypeId, paperTypeId, paperWeight, paperSizeId, coverPaperTypeId, coverWeight, quantity, bleed, rectoVerso, innerPages, useCustomSize, customW, customH, selectedFinitions, selectedPelliculages, addDesign, layoutPreference]);
+
+  // Save draft on every change (debounced)
+  useEffect(() => {
+    if (!draftLoaded.current) return;
+    const timer = setTimeout(saveDraft, 500);
+    return () => clearTimeout(timer);
+  }, [saveDraft]);
+
+  // Restore draft on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) { draftLoaded.current = true; return; }
+      const draft = JSON.parse(raw);
+      // Only restore if saved within 24 hours
+      if (Date.now() - draft.savedAt > 24 * 60 * 60 * 1000) {
+        localStorage.removeItem(DRAFT_KEY);
+        draftLoaded.current = true;
+        return;
+      }
+      if (draft.clientName) setClientName(draft.clientName);
+      if (draft.clientCompany) setClientCompany(draft.clientCompany);
+      if (draft.productId) setProductId(draft.productId);
+      if (draft.printTypeId) setPrintTypeId(draft.printTypeId);
+      if (draft.paperTypeId) setPaperTypeId(draft.paperTypeId);
+      if (draft.paperWeight) setPaperWeight(draft.paperWeight);
+      if (draft.paperSizeId) setPaperSizeId(draft.paperSizeId);
+      if (draft.coverPaperTypeId) setCoverPaperTypeId(draft.coverPaperTypeId);
+      if (draft.coverWeight) setCoverWeight(draft.coverWeight);
+      if (draft.quantity) setQuantity(draft.quantity);
+      if (draft.bleed !== undefined) setBleed(draft.bleed);
+      if (draft.rectoVerso !== undefined) setRectoVerso(draft.rectoVerso);
+      if (draft.innerPages) setInnerPages(draft.innerPages);
+      if (draft.useCustomSize !== undefined) setUseCustomSize(draft.useCustomSize);
+      if (draft.customW) setCustomW(draft.customW);
+      if (draft.customH) setCustomH(draft.customH);
+      if (draft.selectedFinitions?.length) setSelectedFinitions(draft.selectedFinitions);
+      if (draft.selectedPelliculages?.length) setSelectedPelliculages(draft.selectedPelliculages);
+      if (draft.addDesign !== undefined) setAddDesign(draft.addDesign);
+      if (draft.layoutPreference) setLayoutPreference(draft.layoutPreference);
+      toast.info("Brouillon restauré automatiquement", { duration: 3000 });
+      draftLoaded.current = true;
+    } catch { draftLoaded.current = true; }
+  }, []);
 
   const createPaperSize = async () => {
     const w = Number(newSize.width_mm);
@@ -216,7 +275,7 @@ export default function CalculatorPage() {
       },
     } as any);
     if (error) toast.error("Erreur: " + error.message);
-    else showSuccess("Success", "Devis enregistré");
+    else { localStorage.removeItem(DRAFT_KEY); showSuccess("Success", "Devis enregistré"); }
   };
 
   const printDevis = () => {

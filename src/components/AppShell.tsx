@@ -1,7 +1,7 @@
 import { ReactNode, useState } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Calculator, Package, Layers, Printer, Sparkles, FileText, Settings, Moon, Sun, Globe, Wallet, Users, LogOut, Menu } from "lucide-react";
+import { BarChart3, Calculator, Package, Layers, Printer, Sparkles, FileText, Settings, Moon, Sun, Globe, Wallet, Users, LogOut, Menu } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -15,7 +15,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { to: "/", icon: Calculator, label: t("nav.calculator") },
+    { to: "/", icon: BarChart3, label: t("nav.dashboard") },
+    { to: "/calculator", icon: Calculator, label: t("nav.calculator") },
     { to: "/products", icon: Package, label: t("nav.products") },
     { to: "/paper", icon: Layers, label: t("nav.paper") },
     { to: "/print", icon: Printer, label: t("nav.print") },
