@@ -60,6 +60,7 @@ export default function CalculatorPage() {
   const [addDesign, setAddDesign] = useState(false);
   const [newSizeOpen, setNewSizeOpen] = useState(false);
   const [newSize, setNewSize] = useState({ name: "", width_mm: "", height_mm: "" });
+  const [recentClients, setRecentClients] = useState<{name: string, company: string}[]>([]);
   const [layoutPreference, setLayoutPreference] = useState<'horizontal' | 'vertical' | 'optimal'>('optimal');
   const draftLoaded = useRef(false);
 
@@ -141,7 +142,7 @@ export default function CalculatorPage() {
 
   useEffect(() => {
     (async () => {
-      const [p, pt, ps, prt, fi, pe, ppl, ppr, st] = await Promise.all([
+      const [p, pt, ps, prt, fi, pe, ppl, ppr, st, qt] = await Promise.all([
         supabase.from("products").select("*").eq("active", true).order("display_order"),
         supabase.from("paper_types").select("*").eq("active", true).order("display_order"),
         supabase.from("paper_sizes").select("*").eq("active", true).order("display_order"),
@@ -151,6 +152,7 @@ export default function CalculatorPage() {
         supabase.from("product_paper_types").select("*"),
         supabase.from("product_print_types").select("*"),
         supabase.from("settings").select("*").eq("key", "design_percentage").maybeSingle(),
+        supabase.from("quotes").select("client_name, client_company").order("created_at", { ascending: false }).limit(200),
       ]);
       setProducts(p.data || []);
       setPaperTypes(pt.data || []);
@@ -160,6 +162,17 @@ export default function CalculatorPage() {
       setPelliculages(pe.data || []);
       setProductLinks({ paper: ppl.data || [], print: ppr.data || [] });
       if (st.data?.value) setDesignPct(Number(st.data.value));
+
+      // Extract unique clients
+      if (qt.data) {
+        const unique = new Map<string, string>();
+        qt.data.forEach(q => {
+          if (q.client_name && !unique.has(q.client_name.toLowerCase())) {
+            unique.set(q.client_name.toLowerCase(), { name: q.client_name, company: q.client_company || "" } as any);
+          }
+        });
+        setRecentClients(Array.from(unique.values()) as any);
+      }
     })();
   }, []);
 
@@ -339,11 +352,22 @@ export default function CalculatorPage() {
             <CardContent className="grid md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>{t("calc.clientName")} *</Label>
-                <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Ahmed Benali" />
+                <Input list="client-names" value={clientName} onChange={(e) => {
+                  const val = e.target.value;
+                  setClientName(val);
+                  const found = recentClients.find(c => c.name.toLowerCase() === val.toLowerCase());
+                  if (found && found.company && !clientCompany) setClientCompany(found.company);
+                }} placeholder="Ahmed Benali" />
+                <datalist id="client-names">
+                  {recentClients.map((c, i) => <option key={i} value={c.name} />)}
+                </datalist>
               </div>
               <div className="space-y-1.5">
                 <Label>{t("calc.clientCompany")}</Label>
-                <Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} placeholder="SARL ..." />
+                <Input list="client-companies" value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} placeholder="SARL ..." />
+                <datalist id="client-companies">
+                  {Array.from(new Set(recentClients.map(c => c.company).filter(Boolean))).map((comp, i) => <option key={i} value={comp} />)}
+                </datalist>
               </div>
             </CardContent>
           </Card>

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDZD } from "@/lib/calc";
 import {
   BarChart3, TrendingUp, FileText, Users, DollarSign,
-  ArrowUpRight, ArrowDownRight, Package, Clock, CheckCircle2, XCircle,
+  ArrowUpRight, ArrowDownRight, Package, Clock, CheckCircle2, XCircle, AlertTriangle
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -93,12 +93,23 @@ export default function DashboardPage() {
       });
     }
 
+    // Outstanding Debts (> 15 days, unpaid)
+    const outstandingDebts = quotes.filter(q => {
+      // Don't show if rejected
+      if (q.status === "rejected") return false;
+      const remaining = Math.max(0, (Number(q.total) || 0) - (Number(q.details?.paidAmount) || 0));
+      if (remaining <= 0) return false;
+      const diffTime = Math.abs(now.getTime() - new Date(q.created_at).getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+      return diffDays > 15;
+    });
+
     return {
       totalRevenue, monthRevenue, lastMonthRevenue, revenueGrowth,
       totalPaid, totalRemaining,
       totalQuotes: quotes.length, monthQuotes: thisMonth.length,
       pending, accepted, rejected,
-      topProducts, uniqueClients, recent, monthlyData,
+      topProducts, uniqueClients, recent, monthlyData, outstandingDebts
     };
   }, [quotes]);
 
@@ -134,6 +145,40 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Outstanding Debts Alert */}
+      {stats.outstandingDebts.length > 0 && (
+        <Card className="border-2 border-red-200 dark:border-red-900 bg-red-50/50 dark:bg-red-900/10 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <CardContent className="p-5 flex items-start gap-4">
+            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-red-800 dark:text-red-400 text-lg">Dettes en retard ({stats.outstandingDebts.length})</h3>
+              <p className="text-sm text-red-700/80 dark:text-red-300/80 mb-4">Ces devis ont un reste à payer et datent de plus de 15 jours.</p>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {stats.outstandingDebts.slice(0, 6).map(q => {
+                  const remaining = Math.max(0, (Number(q.total) || 0) - (Number(q.details?.paidAmount) || 0));
+                  return (
+                    <Link to="/payment" key={q.id} className="bg-white dark:bg-background border border-red-100 dark:border-red-900/50 p-3 rounded-xl hover:shadow-md transition-smooth">
+                      <div className="font-semibold text-sm truncate">{q.client_name}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{new Date(q.created_at).toLocaleDateString("fr-FR")}</div>
+                      <div className="mt-2 text-red-600 dark:text-red-400 font-bold tabular-nums text-sm">
+                        Reste : {formatDZD(remaining)}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+              {stats.outstandingDebts.length > 6 && (
+                <div className="mt-3 text-sm text-red-700 dark:text-red-400 font-medium">
+                  <Link to="/payment" className="hover:underline">+ {stats.outstandingDebts.length - 6} autres dettes à recouvrir</Link>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
