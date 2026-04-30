@@ -17,7 +17,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const allNavItems = [
-    { to: "/", icon: BarChart3, label: t("nav.dashboard"), adminOnly: false },
+    { to: "/", icon: BarChart3, label: t("nav.dashboard"), adminOnly: true },
     { to: "/calculator", icon: Calculator, label: t("nav.calculator"), adminOnly: false },
     { to: "/products", icon: Package, label: t("nav.products"), adminOnly: true },
     { to: "/paper", icon: Layers, label: t("nav.paper"), adminOnly: true },

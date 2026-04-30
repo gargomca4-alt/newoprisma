@@ -8,7 +8,8 @@ import {
   BarChart3, TrendingUp, FileText, Users, DollarSign,
   ArrowUpRight, ArrowDownRight, Package, Clock, CheckCircle2, XCircle, AlertTriangle
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import { useRole } from "@/lib/useRole";
 
 type Quote = {
   id: string;
@@ -24,14 +25,15 @@ type Quote = {
 
 export default function DashboardPage() {
   const { t } = useTranslation();
+  const { isAdmin, loading: roleLoading } = useRole();
   const [quotes, setQuotes] = useState<Quote[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       const { data } = await supabase.from("quotes").select("*").order("created_at", { ascending: false });
       setQuotes((data as Quote[]) || []);
-      setLoading(false);
+      setDataLoading(false);
     })();
   }, []);
 
@@ -125,6 +127,18 @@ export default function DashboardPage() {
         <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
+  }
+
+  if (roleLoading || dataLoading) {
+    return (
+      <div className="flex justify-center p-8">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/calculator" replace />;
   }
 
   return (
