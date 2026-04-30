@@ -388,8 +388,8 @@ export function calculate(input: CalcInput): CalcBreakdown {
     layout: {
       rows: fit.rows,
       cols: fit.cols,
-      pieceW: mainPieceW,
-      pieceH: mainPieceH,
+      pieceW: mainPieceW + input.bleed * 2,
+      pieceH: mainPieceH + input.bleed * 2,
       sheetW: input.sheetW,
       sheetH: input.sheetH,
       rotated: fit.rotated,

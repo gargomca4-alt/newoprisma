@@ -70,7 +70,7 @@ export function MontageVisual({ layout }: { layout: CalcBreakdown["layout"] }) {
           <div className="font-semibold">{layout.sheetW} × {layout.sheetH} mm</div>
         </div>
         <div className="px-3 py-2 rounded-lg bg-muted">
-          <div className="text-muted-foreground text-[10px]">Pièce</div>
+          <div className="text-muted-foreground text-[10px]">Pièce (+ bleed)</div>
           <div className="font-semibold">{layout.pieceW} × {layout.pieceH} mm</div>
         </div>
         <div className="px-3 py-2 rounded-lg gradient-brand-soft">
