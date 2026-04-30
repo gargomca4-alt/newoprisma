@@ -1,27 +1,26 @@
 /* Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cairo:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Oprisma Design System - inspired by the logo (deep blue, vibrant green, warm yellow) */
-/* All colors MUST be HSL */
+/* Oprisma Design System - Luxurious Variant */
 
 @layer base {
   :root {
-    --background: 0 0% 99%;
-    --foreground: 220 60% 12%;
+    --background: 220 33% 98%;
+    --foreground: 220 40% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 60% 12%;
+    --card-foreground: 220 40% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 60% 12%;
+    --popover-foreground: 220 40% 12%;
 
     /* Brand: deep navy blue from logo */
     --primary: 220 75% 22%;
-    --primary-foreground: 50 100% 96%;
+    --primary-foreground: 0 0% 100%;
     --primary-glow: 215 80% 35%;
 
     /* Brand: green from logo */
@@ -29,36 +28,36 @@
     --secondary-foreground: 0 0% 100%;
 
     /* Brand: yellow from logo */
-    --accent: 50 95% 55%;
+    --accent: 50 95% 50%;
     --accent-foreground: 220 75% 18%;
 
-    --muted: 220 25% 96%;
+    --muted: 220 15% 95%;
     --muted-foreground: 220 15% 42%;
 
-    --destructive: 0 75% 55%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     --success: 145 65% 42%;
     --warning: 38 92% 55%;
 
-    --border: 220 20% 90%;
-    --input: 220 20% 92%;
+    --border: 220 15% 90%;
+    --input: 220 15% 92%;
     --ring: 220 75% 22%;
 
-    --radius: 0.875rem;
+    --radius: 1rem; /* Softer, more luxurious radius */
 
     /* Brand gradient (logo triangle) */
-    --gradient-brand: linear-gradient(135deg, hsl(220 75% 22%) 0%, hsl(145 65% 42%) 50%, hsl(50 95% 60%) 100%);
-    --gradient-brand-soft: linear-gradient(135deg, hsl(220 75% 22% / 0.08) 0%, hsl(145 65% 42% / 0.08) 50%, hsl(50 95% 60% / 0.12) 100%);
+    --gradient-brand: linear-gradient(135deg, hsl(220 75% 22%) 0%, hsl(145 65% 42%) 60%, hsl(50 95% 55%) 100%);
+    --gradient-brand-soft: linear-gradient(135deg, hsl(220 75% 22% / 0.05) 0%, hsl(145 65% 42% / 0.05) 60%, hsl(50 95% 55% / 0.08) 100%);
     --gradient-primary: linear-gradient(135deg, hsl(220 75% 22%), hsl(215 80% 35%));
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 25% 98%));
 
     /* Premium shadows */
-    --shadow-sm: 0 1px 2px hsl(220 60% 12% / 0.04);
-    --shadow-md: 0 4px 16px -4px hsl(220 60% 12% / 0.08);
-    --shadow-lg: 0 12px 32px -8px hsl(220 60% 12% / 0.12);
-    --shadow-glow: 0 0 40px hsl(50 95% 60% / 0.25);
-    --shadow-brand: 0 8px 24px -8px hsl(220 75% 22% / 0.35);
+    --shadow-sm: 0 2px 8px -2px hsl(220 40% 12% / 0.04), 0 1px 2px -1px hsl(220 40% 12% / 0.02);
+    --shadow-md: 0 8px 24px -4px hsl(220 40% 12% / 0.06), 0 4px 8px -2px hsl(220 40% 12% / 0.04);
+    --shadow-lg: 0 20px 40px -8px hsl(220 40% 12% / 0.1), 0 8px 16px -4px hsl(220 40% 12% / 0.06);
+    --shadow-glow: 0 0 40px hsl(50 95% 50% / 0.15);
+    --shadow-brand: 0 8px 24px -4px hsl(220 75% 22% / 0.25);
 
     --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
 
