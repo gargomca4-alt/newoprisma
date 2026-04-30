@@ -1,7 +1,7 @@
 import { ReactNode, useState } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { BarChart3, Calculator, Package, Layers, Printer, Sparkles, FileText, Settings, Moon, Sun, Globe, Wallet, Users, LogOut, Menu } from "lucide-react";
+import { BarChart3, Calculator, Package, Layers, Printer, Sparkles, FileText, Settings, Moon, Sun, Globe, Wallet, Users, LogOut, Menu, History } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -26,6 +26,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/quotes", icon: FileText, label: t("nav.quotes"), adminOnly: false },
     { to: "/clients", icon: Users, label: t("nav.clients"), adminOnly: false },
     { to: "/payment", icon: Wallet, label: t("nav.payment"), adminOnly: true },
+    { to: "/logs", icon: History, label: "Logs", adminOnly: true },
     { to: "/settings", icon: Settings, label: t("nav.settings"), adminOnly: true },
   ];
 

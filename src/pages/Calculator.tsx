@@ -15,6 +15,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import { showSuccess } from "@/lib/alerts";
 import { localName } from "@/lib/localName";
+import { useRole } from "@/lib/useRole";
+import { logAction } from "@/lib/logger";
 
 const DRAFT_KEY = "oprisma_calc_draft";
 
@@ -27,6 +29,7 @@ type Pelliculage = any;
 
 export default function CalculatorPage() {
   const { t } = useTranslation();
+  const { email, role } = useRole();
 
   // Data from DB
   const [products, setProducts] = useState<Product[]>([]);
@@ -313,7 +316,11 @@ export default function CalculatorPage() {
 
     const { error } = await supabase.from("quotes").insert(payload as any);
     if (error) toast.error("Erreur: " + error.message);
-    else { localStorage.removeItem(DRAFT_KEY); showSuccess("Success", "Devis enregistré"); }
+    else { 
+      localStorage.removeItem(DRAFT_KEY); 
+      showSuccess("Success", "Devis enregistré"); 
+      await logAction(email, role, "Création Devis", `Client: ${clientName} - Total: ${formatDZD(breakdown.finalPrice)}`);
+    }
   };
 
   const printDevis = () => {

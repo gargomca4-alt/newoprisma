@@ -10,6 +10,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { Search, Wallet, CheckCircle2, AlertCircle, Clock, X } from "lucide-react";
 import { toast } from "sonner";
 import { showSuccess, confirmDelete } from "@/lib/alerts";
+import { useRole } from "@/lib/useRole";
+import { logAction } from "@/lib/logger";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +23,7 @@ import { Label } from "@/components/ui/label";
 
 export default function PaymentPage() {
   const { t } = useTranslation();
+  const { email, role } = useRole();
   const [quotes, setQuotes] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [payDialog, setPayDialog] = useState<any>(null);
@@ -103,6 +106,7 @@ export default function PaymentPage() {
     }
 
     showSuccess("Success", `Paiement de ${formatDZD(amount)} enregistré`);
+    await logAction(email, role, "Ajout Paiement", `Client: ${payDialog.client_name} - Montant: ${formatDZD(amount)}`);
     setPayDialog(null);
     setPayAmount("");
     load();
@@ -123,6 +127,7 @@ export default function PaymentPage() {
     }
 
     toast.success("Paiement réinitialisé avec succès");
+    await logAction(email, role, "Réinitialisation Paiement", `Client: ${q.client_name}`);
     load();
   };
 

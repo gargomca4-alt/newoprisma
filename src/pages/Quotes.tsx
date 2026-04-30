@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { formatDZD } from "@/lib/calc";
 import { PageHeader } from "@/components/PageHeader";
 import { confirmDelete } from "@/lib/alerts";
+import { useRole } from "@/lib/useRole";
+import { logAction } from "@/lib/logger";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -39,6 +41,7 @@ function StatusBadge({ status, onClick }: { status: string; onClick?: () => void
 
 export default function QuotesPage() {
   const { t } = useTranslation();
+  const { email, role } = useRole();
   const [items, setItems] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -66,16 +69,20 @@ export default function QuotesPage() {
 
   const remove = async (id: string) => {
     if (!(await confirmDelete())) return;
+    const q = items.find(i => i.id === id);
     const { error } = await supabase.from("quotes").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
+    if (q) await logAction(email, role, "Suppression Devis", `Client: ${q.client_name}`);
     load();
   };
 
   const updateStatus = async (id: string, status: string) => {
+    const q = items.find(i => i.id === id);
     const { error } = await supabase.from("quotes").update({ status } as any).eq("id", id);
     if (error) { toast.error(error.message); return; }
-    setItems(items.map(q => q.id === id ? { ...q, status } : q));
+    setItems(items.map(i => i.id === id ? { ...i, status } : i));
     toast.success(`Statut modifié: ${STATUS_CONFIG[status]?.label || status}`);
+    if (q) await logAction(email, role, "Modification Statut Devis", `Client: ${q.client_name} -> ${status}`);
   };
 
   const shareWhatsApp = (q: any) => {

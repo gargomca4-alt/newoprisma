@@ -18,6 +18,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
+import { useRole } from "@/lib/useRole";
+import { logAction } from "@/lib/logger";
 
 type Client = {
   id: string;
@@ -52,6 +54,7 @@ type ClientAgg = {
 
 export default function ClientsPage() {
   const { t } = useTranslation();
+  const { email, role } = useRole();
   const [clients, setClients] = useState<Client[]>([]);
   const [quotes, setQuotes] = useState<QuoteRow[]>([]);
   const [search, setSearch] = useState("");
@@ -93,6 +96,7 @@ export default function ClientsPage() {
       const updated = clients.map(c => c.id === editing.id ? { ...c, ...form } : c);
       await saveClients(updated);
       showSuccess("Success", t("clients.updated"));
+      await logAction(email, role, "Modification Client", `Client: ${form.name}`);
     } else {
       const newClient: Client = {
         id: crypto.randomUUID(),
@@ -101,6 +105,7 @@ export default function ClientsPage() {
       };
       await saveClients([...clients, newClient]);
       showSuccess("Success", t("clients.added"));
+      await logAction(email, role, "Ajout Client", `Client: ${form.name}`);
     }
     setDialogOpen(false);
     setEditing(null);
@@ -109,9 +114,11 @@ export default function ClientsPage() {
 
   const handleDelete = async (id: string) => {
     if (!(await confirmDelete())) return;
+    const client = clients.find(c => c.id === id);
     const updated = clients.filter(c => c.id !== id);
     await saveClients(updated);
     toast.success(t("clients.deleted"));
+    if (client) await logAction(email, role, "Suppression Client", `Client: ${client.name}`);
   };
 
   const openEdit = (c: Client) => {

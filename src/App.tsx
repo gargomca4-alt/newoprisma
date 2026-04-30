@@ -24,6 +24,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const Payment = lazy(() => import("./pages/Payment"));
 const Clients = lazy(() => import("./pages/Clients"));
 const Devis = lazy(() => import("./pages/Devis"));
+const Logs = lazy(() => import("./pages/Logs"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -113,6 +114,7 @@ function ShellRoutes() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/clients" element={<Clients />} />
+            <Route path="/logs" element={<Logs />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
