@@ -1,11 +1,12 @@
 import { ReactNode } from "react";
 import { NavLink, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Calculator, Package, Layers, Printer, Sparkles, FileText, Settings, Moon, Sun, Globe, Wallet, Users } from "lucide-react";
+import { Calculator, Package, Layers, Printer, Sparkles, FileText, Settings, Moon, Sun, Globe, Wallet, Users, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import logo from "@/assets/oprisma-logo.png";
+import { supabase } from "@/integrations/supabase/client";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t, i18n } = useTranslation();
@@ -89,6 +90,19 @@ export function AppShell({ children }: { children: ReactNode }) {
               </NavLink>
             ))}
           </nav>
+
+          <div className="p-4 mt-auto">
+            <button
+              onClick={async () => {
+                await supabase.auth.signOut();
+                window.location.href = "/auth";
+              }}
+              className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-smooth"
+            >
+              <LogOut className="h-4 w-4" />
+              Déconnexion
+            </button>
+          </div>
         </aside>
 
         {/* Mobile nav */}

@@ -7,7 +7,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AppShell } from "@/components/AppShell";
 
+import { AuthGuard } from "@/components/AuthGuard";
+
 // Lazy-loaded page components for code-splitting
+const Auth = lazy(() => import("./pages/Auth"));
 const Calculator = lazy(() => import("./pages/Calculator"));
 const Products = lazy(() => import("./pages/Products"));
 const Paper = lazy(() => import("./pages/Paper"));
@@ -35,30 +38,45 @@ function ShellRoutes() {
   // Devis page renders fullscreen for printing
   if (location.pathname === "/devis") {
     return (
+      <AuthGuard>
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
+            <Route path="/devis" element={<Devis />} />
+          </Routes>
+        </Suspense>
+      </AuthGuard>
+    );
+  }
+  
+  if (location.pathname === "/auth") {
+    return (
       <Suspense fallback={<PageFallback />}>
         <Routes>
-          <Route path="/devis" element={<Devis />} />
+          <Route path="/auth" element={<Auth />} />
         </Routes>
       </Suspense>
     );
   }
+
   return (
-    <AppShell>
-      <Suspense fallback={<PageFallback />}>
-        <Routes>
-          <Route path="/" element={<Calculator />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/paper" element={<Paper />} />
-          <Route path="/print" element={<Print />} />
-          <Route path="/finitions" element={<Finitions />} />
-          <Route path="/quotes" element={<Quotes />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/payment" element={<Payment />} />
-          <Route path="/clients" element={<Clients />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
-    </AppShell>
+    <AuthGuard>
+      <AppShell>
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
+            <Route path="/" element={<Calculator />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/paper" element={<Paper />} />
+            <Route path="/print" element={<Print />} />
+            <Route path="/finitions" element={<Finitions />} />
+            <Route path="/quotes" element={<Quotes />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/payment" element={<Payment />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </AppShell>
+    </AuthGuard>
   );
 }
 
