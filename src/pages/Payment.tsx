@@ -9,7 +9,7 @@ import { formatDZD } from "@/lib/calc";
 import { PageHeader } from "@/components/PageHeader";
 import { Search, Wallet, CheckCircle2, AlertCircle, Clock, X } from "lucide-react";
 import { toast } from "sonner";
-import { showSuccess } from "@/lib/alerts";
+import { showSuccess, confirmDelete } from "@/lib/alerts";
 import {
   Dialog,
   DialogContent,
@@ -102,6 +102,8 @@ export default function PaymentPage() {
   };
 
   const resetPayment = async (q: any) => {
+    if (!(await confirmDelete("Voulez-vous vraiment réinitialiser le paiement pour ce devis ?"))) return;
+    
     const updatedDetails = { ...(q.details || {}), paidAmount: 0 };
     const { error } = await supabase
       .from("quotes")
@@ -113,7 +115,7 @@ export default function PaymentPage() {
       return;
     }
 
-    showSuccess("Success", "Paiement réinitialisé");
+    toast.success("Paiement réinitialisé avec succès");
     load();
   };
 
@@ -256,7 +258,7 @@ export default function PaymentPage() {
                     {/* Total + actions */}
                     <div className="text-right shrink-0 space-y-2">
                       <div className="text-lg font-bold tabular-nums">{formatDZD(total)}</div>
-                      <div className="flex gap-1.5">
+                      <div className="flex gap-1.5 justify-end">
                         {status !== "paid" && (
                           <Button
                             size="sm"
