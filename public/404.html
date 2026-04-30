@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+  // SPA redirect for hosts that don't support rewrites
+  var path = window.location.pathname;
+  if (path !== '/' && path !== '/index.html') {
+    window.location.replace('/?redirect=' + encodeURIComponent(path + window.location.search));
+  }
+</script>
+</head>
+</html>
