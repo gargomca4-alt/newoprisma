@@ -61,6 +61,7 @@ export default function CalculatorPage() {
   const [newSizeOpen, setNewSizeOpen] = useState(false);
   const [newSize, setNewSize] = useState({ name: "", width_mm: "", height_mm: "" });
   const [recentClients, setRecentClients] = useState<{name: string, company: string}[]>([]);
+  const [showClientSuggestions, setShowClientSuggestions] = useState(false);
   const [layoutPreference, setLayoutPreference] = useState<'horizontal' | 'vertical' | 'optimal'>('optimal');
   const draftLoaded = useRef(false);
 
@@ -356,24 +357,49 @@ export default function CalculatorPage() {
           <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-[1.5rem] overflow-hidden">
             <CardHeader className="pb-3"><CardTitle className="text-base">{t("calc.client")}</CardTitle></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 relative">
                 <Label>{t("calc.clientName")} *</Label>
-                <Input list="client-names" value={clientName} onChange={(e) => {
-                  const val = e.target.value;
-                  setClientName(val);
-                  const found = recentClients.find(c => c.name.toLowerCase() === val.toLowerCase());
-                  if (found && found.company && clientCompany !== found.company) setClientCompany(found.company);
-                }} placeholder="Ahmed Benali" />
-                <datalist id="client-names">
-                  {recentClients.map((c, i) => <option key={i} value={c.name} />)}
-                </datalist>
+                <Input 
+                  value={clientName} 
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setClientName(val);
+                    if (!val.trim()) {
+                      setClientCompany("");
+                    } else {
+                      const found = recentClients.find(c => c.name.toLowerCase() === val.toLowerCase());
+                      if (found && found.company) setClientCompany(found.company);
+                    }
+                  }} 
+                  onFocus={() => setShowClientSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)}
+                  placeholder="Ahmed Benali" 
+                />
+                
+                {showClientSuggestions && recentClients.filter(c => c.name.toLowerCase().includes(clientName.toLowerCase())).length > 0 && (
+                  <div className="absolute top-[64px] left-0 z-50 w-full bg-white dark:bg-background border border-border rounded-xl shadow-xl max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2 p-1">
+                    {recentClients
+                      .filter(c => c.name.toLowerCase().includes(clientName.toLowerCase()))
+                      .map((c, i) => (
+                        <div 
+                          key={i} 
+                          className="px-3 py-2 cursor-pointer hover:bg-muted dark:hover:bg-muted/50 rounded-lg flex flex-col transition-colors"
+                          onClick={() => {
+                            setClientName(c.name);
+                            setClientCompany(c.company || "");
+                            setShowClientSuggestions(false);
+                          }}
+                        >
+                          <span className="font-medium text-sm">{c.name}</span>
+                          {c.company && <span className="text-xs text-muted-foreground">{c.company}</span>}
+                        </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 relative">
                 <Label>{t("calc.clientCompany")}</Label>
-                <Input list="client-companies" value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} placeholder="SARL ..." />
-                <datalist id="client-companies">
-                  {Array.from(new Set(recentClients.map(c => c.company).filter(Boolean))).map((comp, i) => <option key={i} value={comp} />)}
-                </datalist>
+                <Input value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} placeholder="SARL ..." />
               </div>
             </CardContent>
           </Card>
