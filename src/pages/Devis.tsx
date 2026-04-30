@@ -157,7 +157,7 @@ export default function DevisPage() {
       <div className="overflow-x-auto pb-8 print:pb-0 print:overflow-visible">
         <div ref={sheetRef} className="w-full min-w-[800px] max-w-4xl mx-auto bg-white p-8 sm:p-12 print:p-0 shadow-sm print:shadow-none rounded-lg print:rounded-none">
         {/* Header */}
-        <div className="flex items-start justify-between border-b-4 pb-6" style={{ borderColor: "hsl(220 75% 22%)" }}>
+        <div className="flex items-start justify-between border-b-4 pb-6 print:pb-4" style={{ borderColor: "hsl(220 75% 22%)" }}>
           <div className="flex items-center gap-4">
             <img src={logo} alt="Oprisma" className="h-20 w-auto" />
             <div>
@@ -173,7 +173,7 @@ export default function DevisPage() {
         </div>
 
         {/* Client */}
-        <div className="grid grid-cols-2 gap-6 mt-8">
+        <div className="grid grid-cols-2 gap-6 mt-8 print:mt-4">
           <div>
             <div className="text-xs uppercase tracking-wider text-gray-700 mb-1 font-semibold">Client</div>
             <div className="font-semibold text-lg">{clientName}</div>
@@ -186,7 +186,7 @@ export default function DevisPage() {
         </div>
 
         {/* Détail */}
-        <table className="w-full mt-8 border-collapse">
+        <table className="w-full mt-8 print:mt-4 border-collapse">
           <thead>
             <tr className="text-white text-sm" style={{ background: "linear-gradient(135deg, hsl(220 75% 22%), hsl(145 65% 42%))" }}>
               <th className="text-left p-3 font-semibold">Désignation</th>
@@ -296,8 +296,8 @@ export default function DevisPage() {
           </tfoot>
         </table>
 
-        {/* Détails techniques du calcul */}
-        <div className="mt-8 p-5 rounded-lg border-2" style={{ borderColor: "hsl(220 75% 22% / 0.3)", background: "hsl(220 75% 22% / 0.03)" }}>
+        {/* Détails techniques du calcul (Caché à l'impression pour le client) */}
+        <div className="mt-8 p-5 rounded-lg border-2 print:hidden" style={{ borderColor: "hsl(220 75% 22% / 0.3)", background: "hsl(220 75% 22% / 0.03)" }}>
           <div className="text-sm font-bold mb-3" style={{ color: "hsl(220 75% 22%)" }}>📋 Détails techniques du calcul</div>
           <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs">
             <DetailRow label="Format fini (cm)" value={`${(finishedW / 10).toFixed(1)} × ${(finishedH / 10).toFixed(1)} cm`} />
@@ -323,7 +323,7 @@ export default function DevisPage() {
         </div>
 
         {/* Footer */}
-        <div className="mt-10 pt-6 border-t-2 grid grid-cols-2 gap-6 text-xs text-gray-800">
+        <div className="mt-10 print:mt-6 pt-6 print:pt-4 border-t-2 grid grid-cols-2 gap-6 text-xs text-gray-800 break-inside-avoid">
           <div>
             <div className="font-semibold text-gray-800 mb-2">Conditions</div>
             <ul className="space-y-0.5">
