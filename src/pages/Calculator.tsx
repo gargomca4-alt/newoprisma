@@ -354,7 +354,7 @@ export default function CalculatorPage() {
         {/* Left: form */}
         <div className="space-y-8">
           {/* Client */}
-          <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-[1.5rem] overflow-hidden">
+          <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-[1.5rem] overflow-visible">
             <CardHeader className="pb-3"><CardTitle className="text-base">{t("calc.client")}</CardTitle></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
               <div className="space-y-1.5 relative">
@@ -377,7 +377,7 @@ export default function CalculatorPage() {
                 />
                 
                 {showClientSuggestions && recentClients.filter(c => c.name.toLowerCase().includes(clientName.toLowerCase())).length > 0 && (
-                  <div className="absolute top-[64px] left-0 z-50 w-full bg-white dark:bg-background border border-border rounded-xl shadow-xl max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2 p-1">
+                  <div className="absolute top-[calc(100%+4px)] left-0 z-50 w-full bg-white dark:bg-zinc-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2 p-1">
                     {recentClients
                       .filter(c => c.name.toLowerCase().includes(clientName.toLowerCase()))
                       .map((c, i) => (
