@@ -152,7 +152,7 @@ export default function CalculatorPage() {
         supabase.from("product_paper_types").select("*"),
         supabase.from("product_print_types").select("*"),
         supabase.from("settings").select("*").eq("key", "design_percentage").maybeSingle(),
-        supabase.from("clients").select("name, company").order("created_at", { ascending: false }).limit(500),
+        supabase.from("settings").select("*").eq("key", "clients_list").maybeSingle(),
       ]);
       setProducts(p.data || []);
       setPaperTypes(pt.data || []);
@@ -163,15 +163,21 @@ export default function CalculatorPage() {
       setProductLinks({ paper: ppl.data || [], print: ppr.data || [] });
       if (st.data?.value) setDesignPct(Number(st.data.value));
 
-      // Extract unique clients
-      if (qt.data) {
-        const unique = new Map<string, string>();
-        qt.data.forEach(q => {
-          if (q.name && !unique.has(q.name.toLowerCase())) {
-            unique.set(q.name.toLowerCase(), { name: q.name, company: q.company || "" } as any);
+      if (qt.data?.value) {
+        try {
+          const parsed = typeof qt.data.value === "string" ? JSON.parse(qt.data.value) : qt.data.value;
+          if (Array.isArray(parsed)) {
+            const unique = new Map<string, string>();
+            parsed.forEach((c: any) => {
+              if (c.name && !unique.has(c.name.toLowerCase())) {
+                unique.set(c.name.toLowerCase(), { name: c.name, company: c.company || "" } as any);
+              }
+            });
+            setRecentClients(Array.from(unique.values()) as any);
           }
-        });
-        setRecentClients(Array.from(unique.values()) as any);
+        } catch (e) {
+          console.error(e);
+        }
       }
     })();
   }, []);
@@ -356,7 +362,7 @@ export default function CalculatorPage() {
                   const val = e.target.value;
                   setClientName(val);
                   const found = recentClients.find(c => c.name.toLowerCase() === val.toLowerCase());
-                  if (found && found.company && !clientCompany) setClientCompany(found.company);
+                  if (found && found.company && clientCompany !== found.company) setClientCompany(found.company);
                 }} placeholder="Ahmed Benali" />
                 <datalist id="client-names">
                   {recentClients.map((c, i) => <option key={i} value={c.name} />)}
