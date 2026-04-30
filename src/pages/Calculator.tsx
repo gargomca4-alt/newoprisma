@@ -152,7 +152,7 @@ export default function CalculatorPage() {
         supabase.from("product_paper_types").select("*"),
         supabase.from("product_print_types").select("*"),
         supabase.from("settings").select("*").eq("key", "design_percentage").maybeSingle(),
-        supabase.from("quotes").select("client_name, client_company").order("created_at", { ascending: false }).limit(200),
+        supabase.from("clients").select("name, company").order("created_at", { ascending: false }).limit(500),
       ]);
       setProducts(p.data || []);
       setPaperTypes(pt.data || []);
@@ -167,8 +167,8 @@ export default function CalculatorPage() {
       if (qt.data) {
         const unique = new Map<string, string>();
         qt.data.forEach(q => {
-          if (q.client_name && !unique.has(q.client_name.toLowerCase())) {
-            unique.set(q.client_name.toLowerCase(), { name: q.client_name, company: q.client_company || "" } as any);
+          if (q.name && !unique.has(q.name.toLowerCase())) {
+            unique.set(q.name.toLowerCase(), { name: q.name, company: q.company || "" } as any);
           }
         });
         setRecentClients(Array.from(unique.values()) as any);
