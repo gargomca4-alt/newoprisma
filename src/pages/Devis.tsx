@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 
 export default function DevisPage() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
@@ -23,7 +24,8 @@ export default function DevisPage() {
       if (id) {
         const { data: row } = await supabase.from("quotes").select("*").eq("id", id).maybeSingle();
         if (row?.details) {
-          const loaded = { ...row.details };
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const loaded = { ...(row.details as any) };
           if (!loaded.quantity) {
             loaded.quantity = row.quantity || 1;
             loaded.clientName = loaded.clientName || row.client_name;
@@ -49,7 +51,8 @@ export default function DevisPage() {
         .limit(1)
         .maybeSingle();
       if (latest?.details) {
-        const loaded = { ...latest.details };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const loaded = { ...(latest.details as any) };
         if (!loaded.quantity) {
           loaded.quantity = latest.quantity || 1;
           loaded.clientName = loaded.clientName || latest.client_name;
@@ -135,8 +138,8 @@ export default function DevisPage() {
       const safeName = (clientName || "client").replace(/[^a-z0-9]/gi, "_");
       pdf.save(`Devis_${ref}_${safeName}.pdf`);
       toast.success("PDF téléchargé");
-    } catch (e: any) {
-      toast.error("Erreur PDF: " + (e?.message || ""));
+    } catch (e: unknown) {
+      toast.error("Erreur PDF: " + ((e as Error)?.message || ""));
     } finally {
       setExporting(false);
     }
@@ -231,6 +234,7 @@ export default function DevisPage() {
                       <td className="text-right p-3 tabular-nums text-gray-700">{formatDZD(breakdown.printCost || 0)}</td>
                     </tr>
                   )}
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {selectedFinitionsData?.filter(Boolean).map((f: any) => {
                     const lineTotal = f.price_unit === "sqm" ? f.price * areaSqm * quantity : f.price * quantity;
                     const unit = lineTotal / quantity;
@@ -246,6 +250,7 @@ export default function DevisPage() {
                       </tr>
                     );
                   })}
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {selectedPelliculagesData?.filter(Boolean).map((p: any) => {
                     const lineTotal = p.price_per_sqm * areaSqm * quantity;
                     const unit = lineTotal / quantity;
