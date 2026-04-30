@@ -48,7 +48,7 @@ export function CalculatorResult({
 
   return (
     <div className="space-y-4 lg:sticky lg:top-24 self-start">
-      <Card className="border-2 shadow-elegant overflow-hidden">
+      <Card className="glass-card border-white/50 dark:border-white/10 shadow-xl rounded-[1.5rem] overflow-hidden">
         <div className="gradient-brand p-5 text-white">
           <div className="text-xs uppercase tracking-wider opacity-90">{t("calc.finalTotal")}</div>
           <div className="text-4xl font-bold mt-1 tabular-nums">{breakdown ? formatDZD(breakdown.total) : "— DA"}</div>
@@ -120,7 +120,7 @@ export function CalculatorResult({
       </Card>
 
       {breakdown && !isLargeFormat && (
-        <Card className="border-2">
+        <Card className="glass-card border-white/50 dark:border-white/10 shadow-lg rounded-[1.5rem] overflow-hidden">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               {t("calc.montage")} <Badge variant="secondary" className="text-[10px]">+{bleed}mm bleed</Badge>

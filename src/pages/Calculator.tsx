@@ -229,28 +229,34 @@ export default function CalculatorPage() {
     }));
     window.open("/devis", "_blank");
   };
-
   return (
-    <div className="space-y-6 max-w-7xl">
+    <div className="space-y-8 max-w-[1400px] mx-auto animate-fade-in relative pb-10">
+      {/* Luxurious Abstract Background */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] -z-10 pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
+      <div className="absolute top-40 left-0 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[100px] -z-10 pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
+
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-3xl gradient-brand-soft border p-6 sm:p-8">
-        <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full gradient-brand opacity-10 blur-3xl" />
-        <div className="relative flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl gradient-brand flex items-center justify-center shadow-brand">
-            <Calculator className="w-7 h-7 text-white" />
+      <div className="relative overflow-hidden rounded-[2rem] glass-card border border-white/50 dark:border-white/10 p-8 sm:p-12 shadow-lg">
+        <div className="absolute top-0 right-0 w-[40%] h-full bg-gradient-to-l from-primary/10 to-transparent pointer-events-none" />
+        <div className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full gradient-brand opacity-20 blur-3xl pointer-events-none" />
+        <div className="relative flex flex-col md:flex-row md:items-center gap-6 z-10">
+          <div className="w-20 h-20 rounded-[1.5rem] gradient-brand flex items-center justify-center shadow-brand transform rotate-3 transition-transform hover:rotate-6 duration-500">
+            <Calculator className="w-10 h-10 text-white drop-shadow-md" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t("calc.title")}</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">{t("calc.subtitle")}</p>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-secondary drop-shadow-sm pb-2">
+              {t("calc.title")}
+            </h1>
+            <p className="text-base sm:text-lg text-muted-foreground font-medium max-w-2xl mt-1">{t("calc.subtitle")}</p>
           </div>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-[1fr,400px] gap-6">
+      <div className="grid xl:grid-cols-[1fr,450px] gap-8">
         {/* Left: form */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Client */}
-          <Card className="border-2 shadow-sm">
+          <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-[1.5rem] overflow-hidden">
             <CardHeader className="pb-3"><CardTitle className="text-base">{t("calc.client")}</CardTitle></CardHeader>
             <CardContent className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
@@ -265,7 +271,7 @@ export default function CalculatorPage() {
           </Card>
 
           {/* Product */}
-          <Card className="border-2 shadow-sm">
+          <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-[1.5rem] overflow-hidden">
             <CardHeader className="pb-3"><CardTitle className="text-base">{t("calc.product")}</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
@@ -362,7 +368,7 @@ export default function CalculatorPage() {
 
           {/* Paper */}
           {!isLargeFormat && (
-            <Card className="border-2 shadow-sm">
+            <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-[1.5rem] overflow-hidden">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">
                   {product?.has_cover ? "Papiers du catalogue" : t("calc.paperType")}

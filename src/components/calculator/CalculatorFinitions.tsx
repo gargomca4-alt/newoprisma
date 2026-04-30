@@ -20,7 +20,7 @@ export function CalculatorFinitions({
   const { t } = useTranslation();
 
   return (
-    <Card className="border-2 shadow-sm">
+    <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-[1.5rem] overflow-hidden">
       <CardHeader className="pb-3"><CardTitle className="text-base">{t("calc.finitions")} &amp; {t("calc.pelliculages")}</CardTitle></CardHeader>
       <CardContent className="space-y-5">
         <div>
