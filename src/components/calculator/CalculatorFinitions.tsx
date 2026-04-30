@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Sparkles } from "lucide-react";
+import { localName } from "@/lib/localName";
 
 export function CalculatorFinitions({
   finitions,
@@ -29,7 +30,7 @@ export function CalculatorFinitions({
               <label key={f.id} className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-smooth ${selectedFinitions.includes(f.id) ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
                 <Checkbox checked={selectedFinitions.includes(f.id)} onCheckedChange={(c) => setSelectedFinitions(c ? [...selectedFinitions, f.id] : selectedFinitions.filter((id: string) => id !== f.id))} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-medium truncate">{f.name}</div>
+                  <div className="text-xs font-medium truncate">{localName(f)}</div>
                   <div className="text-[10px] text-muted-foreground">{f.price} DA / {f.price_unit === 'sqm' ? 'm²' : 'pc'}</div>
                 </div>
               </label>
@@ -44,7 +45,7 @@ export function CalculatorFinitions({
               <label key={p.id} className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-smooth ${selectedPelliculages.includes(p.id) ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
                 <Checkbox checked={selectedPelliculages.includes(p.id)} onCheckedChange={(c) => setSelectedPelliculages(c ? [...selectedPelliculages, p.id] : selectedPelliculages.filter((id: string) => id !== p.id))} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-medium truncate">{p.name}</div>
+                  <div className="text-xs font-medium truncate">{localName(p)}</div>
                   <div className="text-[10px] text-muted-foreground">{p.price_per_sqm} DA / m²</div>
                 </div>
               </label>

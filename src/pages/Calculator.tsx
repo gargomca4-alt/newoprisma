@@ -13,6 +13,7 @@ import { CalculatorFinitions } from "@/components/calculator/CalculatorFinitions
 import { Calculator, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { localName } from "@/lib/localName";
 
 type Product = any;
 type PaperType = any;
@@ -273,7 +274,7 @@ export default function CalculatorPage() {
                   <Select value={productId} onValueChange={setProductId}>
                     <SelectTrigger><SelectValue placeholder={t("calc.chooseProduct")} /></SelectTrigger>
                     <SelectContent>
-                      {products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                      {products.map((p) => <SelectItem key={p.id} value={p.id}>{localName(p)}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -282,7 +283,7 @@ export default function CalculatorPage() {
                   <Select value={printTypeId} onValueChange={setPrintTypeId} disabled={!productId}>
                     <SelectTrigger><SelectValue placeholder="..." /></SelectTrigger>
                     <SelectContent>
-                      {filteredPrintTypes.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                      {filteredPrintTypes.map((p) => <SelectItem key={p.id} value={p.id}>{localName(p)}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -351,7 +352,7 @@ export default function CalculatorPage() {
                   <Select value={paperSizeId} onValueChange={setPaperSizeId}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {paperSizes.map((s) => <SelectItem key={s.id} value={s.id}>{s.name} ({s.width_mm}×{s.height_mm})</SelectItem>)}
+                      {paperSizes.map((s) => <SelectItem key={s.id} value={s.id}>{localName(s)} ({s.width_mm}×{s.height_mm})</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -369,7 +370,7 @@ export default function CalculatorPage() {
                           <Label>{t("calc.coverPaper")}</Label>
                           <Select value={coverPaperTypeId} onValueChange={setCoverPaperTypeId}>
                             <SelectTrigger><SelectValue placeholder="..." /></SelectTrigger>
-                            <SelectContent>{paperTypes.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                            <SelectContent>{paperTypes.map((p) => <SelectItem key={p.id} value={p.id}>{localName(p)}</SelectItem>)}</SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-1.5">
@@ -399,7 +400,7 @@ export default function CalculatorPage() {
                           <Label>Papier des pages intérieures</Label>
                           <Select value={paperTypeId} onValueChange={setPaperTypeId} disabled={!productId}>
                             <SelectTrigger><SelectValue placeholder="..." /></SelectTrigger>
-                            <SelectContent>{filteredPaperTypes.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                            <SelectContent>{filteredPaperTypes.map((p) => <SelectItem key={p.id} value={p.id}>{localName(p)}</SelectItem>)}</SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-1.5">
@@ -422,7 +423,7 @@ export default function CalculatorPage() {
                       <Label>{t("calc.paperType")}</Label>
                       <Select value={paperTypeId} onValueChange={setPaperTypeId} disabled={!productId}>
                         <SelectTrigger><SelectValue placeholder="..." /></SelectTrigger>
-                        <SelectContent>{filteredPaperTypes.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                        <SelectContent>{filteredPaperTypes.map((p) => <SelectItem key={p.id} value={p.id}>{localName(p)}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-1.5">
