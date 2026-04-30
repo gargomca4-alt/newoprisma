@@ -258,11 +258,11 @@ export default function DashboardPage() {
                 <h3 className="font-bold text-sm">{t("dashboard.revenueChart")}</h3>
                 <Badge variant="secondary" className="text-[10px]">{t("dashboard.last6Months")}</Badge>
               </div>
-              <div className="flex items-end gap-3 h-40">
+              <div className="flex gap-3 h-40">
                 {stats.monthlyData.map((m, i) => {
                   const h = Math.max(8, (m.revenue / maxMonthRevenue) * 100);
                   return (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                    <div key={i} className="flex-1 flex flex-col items-center justify-end gap-2 h-full">
                       <div className="text-[10px] tabular-nums font-medium text-muted-foreground">{m.count}</div>
                       <div className="w-full rounded-t-lg gradient-brand transition-all duration-500 relative group cursor-default"
                         style={{ height: `${h}%` }}>
