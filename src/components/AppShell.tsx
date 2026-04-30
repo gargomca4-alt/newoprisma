@@ -8,24 +8,28 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import logo from "@/assets/oprisma-logo.png";
 import { supabase } from "@/integrations/supabase/client";
+import { useRole } from "@/lib/useRole";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
+  const { isAdmin } = useRole();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navItems = [
-    { to: "/", icon: BarChart3, label: t("nav.dashboard") },
-    { to: "/calculator", icon: Calculator, label: t("nav.calculator") },
-    { to: "/products", icon: Package, label: t("nav.products") },
-    { to: "/paper", icon: Layers, label: t("nav.paper") },
-    { to: "/print", icon: Printer, label: t("nav.print") },
-    { to: "/finitions", icon: Sparkles, label: t("nav.finitions") },
-    { to: "/quotes", icon: FileText, label: t("nav.quotes") },
-    { to: "/clients", icon: Users, label: t("nav.clients") },
-    { to: "/payment", icon: Wallet, label: t("nav.payment") },
-    { to: "/settings", icon: Settings, label: t("nav.settings") },
+  const allNavItems = [
+    { to: "/", icon: BarChart3, label: t("nav.dashboard"), adminOnly: false },
+    { to: "/calculator", icon: Calculator, label: t("nav.calculator"), adminOnly: false },
+    { to: "/products", icon: Package, label: t("nav.products"), adminOnly: true },
+    { to: "/paper", icon: Layers, label: t("nav.paper"), adminOnly: true },
+    { to: "/print", icon: Printer, label: t("nav.print"), adminOnly: true },
+    { to: "/finitions", icon: Sparkles, label: t("nav.finitions"), adminOnly: true },
+    { to: "/quotes", icon: FileText, label: t("nav.quotes"), adminOnly: false },
+    { to: "/clients", icon: Users, label: t("nav.clients"), adminOnly: false },
+    { to: "/payment", icon: Wallet, label: t("nav.payment"), adminOnly: true },
+    { to: "/settings", icon: Settings, label: t("nav.settings"), adminOnly: true },
   ];
+
+  const navItems = allNavItems.filter(item => !item.adminOnly || isAdmin);
 
   const langs = [
     { code: "fr", label: "Français" },
