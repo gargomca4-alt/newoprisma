@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { calculate, CalcInput } from "@/lib/calc";
+import { calculate, CalcInput, formatDZD } from "@/lib/calc";
 import { CalculatorResult } from "@/components/calculator/CalculatorResult";
 import { CalculatorFinitions } from "@/components/calculator/CalculatorFinitions";
 import { Calculator, Plus } from "lucide-react";
@@ -319,7 +319,7 @@ export default function CalculatorPage() {
     else { 
       localStorage.removeItem(DRAFT_KEY); 
       showSuccess("Success", "Devis enregistré"); 
-      await logAction(email, role, "Création Devis", `Client: ${clientName} - Total: ${formatDZD(breakdown.finalPrice)}`);
+      await logAction(email, role, "Création Devis", `Client: ${clientName} - Total: ${formatDZD(breakdown.total)}`);
     }
   };
 
