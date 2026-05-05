@@ -60,7 +60,7 @@ export function CalculatorResult({
           {breakdown ? (
             <>
               <div className="space-y-2 text-sm">
-                <Row label={t("calc.paperCost")} value={formatDZD(breakdown.paperCost + breakdown.coverPaperCost)} />
+                <Row label={t("calc.paperCost")} value={formatDZD(breakdown.totalPaperCost)} />
                 <Row label={t("calc.printCost")} value={formatDZD(breakdown.printCost)} />
                 {breakdown.finitionCost > 0 && <Row label={t("calc.finitionCost")} value={formatDZD(breakdown.finitionCost)} />}
                 {breakdown.pelliculageCost > 0 && <Row label={t("calc.pelliculages")} value={formatDZD(breakdown.pelliculageCost)} />}

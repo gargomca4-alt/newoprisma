@@ -377,6 +377,7 @@ export function calculate(input: CalcInput): CalcBreakdown {
     upPerSheet,
     sheetsNeeded: totalSheets,
     paperCost: input.hasCover ? coverPaperCost : paperCost + innerPaperCost,
+    totalPaperCost: totalPaperCost,
     coverSheetsNeeded: input.hasCover ? totalSheets : 0,
     coverPaperCost,
     printCost,
