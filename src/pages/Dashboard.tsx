@@ -10,6 +10,16 @@ import {
 } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { useRole } from "@/lib/useRole";
+import {
+  startOfDay, endOfDay, subDays, subMonths, format, isSameDay, isSameMonth,
+  eachDayOfInterval, eachMonthOfInterval, addHours
+} from "date-fns";
+import { fr } from "date-fns/locale";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 type Quote = {
   id: string;
@@ -28,6 +38,9 @@ export default function DashboardPage() {
   const { isAdmin, loading: roleLoading } = useRole();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [chartRange, setChartRange] = useState<"today" | "month" | "6months" | "custom">("6months");
+  const [customStart, setCustomStart] = useState<Date>(subDays(new Date(), 7));
+  const [customEnd, setCustomEnd] = useState<Date>(new Date());
 
   useEffect(() => {
     (async () => {
@@ -63,7 +76,6 @@ export default function DashboardPage() {
 
     const pending = quotes.filter(q => q.status === "pending").length;
     const accepted = quotes.filter(q => q.status === "accepted").length;
-    const rejected = quotes.filter(q => q.status === "rejected").length;
 
     // Top products (based on accepted quotes only)
     const productMap: Record<string, { count: number; revenue: number }> = {};
@@ -84,19 +96,67 @@ export default function DashboardPage() {
     // Recent quotes
     const recent = quotes.slice(0, 8);
 
-    // Monthly chart data (last 6 months)
-    const monthlyData: { label: string; revenue: number; count: number }[] = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthAccepted = acceptedOrPaid.filter(q => {
-        const qd = new Date(q.created_at);
-        return qd.getMonth() === d.getMonth() && qd.getFullYear() === d.getFullYear();
-      });
-      monthlyData.push({
-        label: d.toLocaleDateString("fr-FR", { month: "short" }),
-        revenue: monthAccepted.reduce((s, q) => s + (Number(q.total) || 0), 0),
-        count: monthAccepted.length,
-      });
+    // Chart data based on selected range
+    const chartData: { label: string; revenue: number; count: number }[] = [];
+    
+    if (chartRange === "today") {
+      const start = startOfDay(now);
+      for (let i = 0; i < 24; i += 4) {
+        const hStart = addHours(start, i);
+        const hEnd = addHours(start, i + 4);
+        const intervalQuotes = acceptedOrPaid.filter(q => {
+          const qd = new Date(q.created_at);
+          return qd >= hStart && qd < hEnd;
+        });
+        chartData.push({
+          label: `${i}h`,
+          revenue: intervalQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0),
+          count: intervalQuotes.length,
+        });
+      }
+    } else if (chartRange === "month") {
+      for (let i = 29; i >= 0; i--) {
+        const d = subDays(now, i);
+        const dayQuotes = acceptedOrPaid.filter(q => isSameDay(new Date(q.created_at), d));
+        chartData.push({
+          label: format(d, "dd/MM"),
+          revenue: dayQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0),
+          count: dayQuotes.length,
+        });
+      }
+    } else if (chartRange === "6months") {
+      for (let i = 5; i >= 0; i--) {
+        const d = subMonths(now, i);
+        const monthAccepted = acceptedOrPaid.filter(q => isSameMonth(new Date(q.created_at), d));
+        chartData.push({
+          label: format(d, "MMM", { locale: fr }),
+          revenue: monthAccepted.reduce((s, q) => s + (Number(q.total) || 0), 0),
+          count: monthAccepted.length,
+        });
+      }
+    } else if (chartRange === "custom" && customStart && customEnd) {
+      const daysDiff = Math.ceil(Math.abs(customEnd.getTime() - customStart.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysDiff <= 45) {
+        const days = eachDayOfInterval({ start: customStart, end: customEnd });
+        days.forEach(d => {
+          const dayQuotes = acceptedOrPaid.filter(q => isSameDay(new Date(q.created_at), d));
+          chartData.push({
+            label: format(d, "dd/MM"),
+            revenue: dayQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0),
+            count: dayQuotes.length,
+          });
+        });
+      } else {
+        const months = eachMonthOfInterval({ start: customStart, end: customEnd });
+        months.forEach(m => {
+          const monthQuotes = acceptedOrPaid.filter(q => isSameMonth(new Date(q.created_at), m));
+          chartData.push({
+            label: format(m, "MMM yy", { locale: fr }),
+            revenue: monthQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0),
+            count: monthQuotes.length,
+          });
+        });
+      }
     }
 
     // Outstanding Debts (> 15 days, unpaid)
@@ -114,12 +174,12 @@ export default function DashboardPage() {
       totalRevenue: totalPaid, monthRevenue: monthPaid, lastMonthRevenue: lastMonthPaid, revenueGrowth,
       totalPaid, totalRemaining,
       totalQuotes: quotes.length, monthQuotes: thisMonth.length,
-      pending, accepted, rejected,
-      topProducts, uniqueClients, recent, monthlyData, outstandingDebts
+      pending, accepted,
+      topProducts, uniqueClients, recent, chartData, outstandingDebts
     };
-  }, [quotes]);
+  }, [quotes, chartRange, customStart, customEnd]);
 
-  const maxMonthRevenue = Math.max(...stats.monthlyData.map(m => m.revenue), 1);
+  const maxChartRevenue = Math.max(...stats.chartData.map(m => m.revenue), 1);
 
   if (roleLoading || dataLoading) {
     return (
@@ -260,23 +320,59 @@ export default function DashboardPage() {
           {/* Monthly Revenue Chart */}
           <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-2xl overflow-hidden">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                 <h3 className="font-bold text-sm">{t("dashboard.revenueChart")}</h3>
-                <Badge variant="secondary" className="text-[10px]">{t("dashboard.last6Months")}</Badge>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Tabs value={chartRange} onValueChange={(v: any) => setChartRange(v)} className="w-auto">
+                    <TabsList className="h-8 p-1 bg-muted/50 rounded-lg">
+                      <TabsTrigger value="today" className="text-[10px] px-2 h-6">Aujourd'hui</TabsTrigger>
+                      <TabsTrigger value="month" className="text-[10px] px-2 h-6">Mois</TabsTrigger>
+                      <TabsTrigger value="6months" className="text-[10px] px-2 h-6">6 Mois</TabsTrigger>
+                      <TabsTrigger value="custom" className="text-[10px] px-2 h-6">Perso</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+
+                  {chartRange === "custom" && (
+                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-300">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" size="sm" className={cn("h-8 text-[10px] px-2 justify-start font-normal", !customStart && "text-muted-foreground")}>
+                            <Clock className="mr-2 h-3 w-3" />
+                            {customStart ? format(customStart, "dd/MM/yy") : "Début"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="end">
+                          <Calendar mode="single" selected={customStart} onSelect={(d) => d && setCustomStart(d)} initialFocus />
+                        </PopoverContent>
+                      </Popover>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" size="sm" className={cn("h-8 text-[10px] px-2 justify-start font-normal", !customEnd && "text-muted-foreground")}>
+                            <Clock className="mr-2 h-3 w-3" />
+                            {customEnd ? format(customEnd, "dd/MM/yy") : "Fin"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="end">
+                          <Calendar mode="single" selected={customEnd} onSelect={(d) => d && setCustomEnd(d)} initialFocus />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex gap-3 h-40">
-                {stats.monthlyData.map((m, i) => {
-                  const h = Math.max(8, (m.revenue / maxMonthRevenue) * 100);
+              <div className="flex gap-3 h-40 overflow-x-auto pb-2 scrollbar-none">
+                {stats.chartData.map((m, i) => {
+                  const h = Math.max(8, (m.revenue / maxChartRevenue) * 100);
                   return (
-                    <div key={i} className="flex-1 flex flex-col items-center justify-end gap-2 h-full">
-                      <div className="text-[10px] tabular-nums font-medium text-muted-foreground">{m.count}</div>
+                    <div key={i} className="flex-1 min-w-[30px] flex flex-col items-center justify-end gap-2 h-full">
+                      <div className="text-[9px] tabular-nums font-medium text-muted-foreground">{m.count > 0 ? m.count : ""}</div>
                       <div className="w-full rounded-t-lg gradient-brand transition-all duration-500 relative group cursor-default"
                         style={{ height: `${h}%` }}>
-                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-foreground text-background text-[10px] px-2 py-1 rounded-md whitespace-nowrap tabular-nums font-medium pointer-events-none">
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-foreground text-background text-[9px] px-2 py-1 rounded-md whitespace-nowrap tabular-nums font-medium pointer-events-none z-20">
                           {formatDZD(m.revenue)}
                         </div>
                       </div>
-                      <div className="text-[10px] font-medium text-muted-foreground capitalize">{m.label}</div>
+                      <div className="text-[9px] font-medium text-muted-foreground capitalize whitespace-nowrap">{m.label}</div>
                     </div>
                   );
                 })}
@@ -285,7 +381,7 @@ export default function DashboardPage() {
           </Card>
 
           {/* Quote Status Summary */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <Card className="border-2 border-amber-200 dark:border-amber-800/30 rounded-2xl">
               <CardContent className="p-4 text-center">
                 <Clock className="w-6 h-6 text-amber-500 mx-auto mb-2" />
@@ -293,18 +389,11 @@ export default function DashboardPage() {
                 <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mt-1">{t("dashboard.pending")}</div>
               </CardContent>
             </Card>
-            <Card className="border-2 border-emerald-200 dark:border-emerald-800/30 rounded-2xl">
+            <Card className="border-2 border-emerald-200 dark:border-emerald-800/30 rounded-2xl col-span-1.5 md:col-span-1">
               <CardContent className="p-4 text-center">
                 <CheckCircle2 className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
                 <div className="text-2xl font-bold text-emerald-600">{stats.accepted}</div>
                 <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mt-1">{t("dashboard.accepted")}</div>
-              </CardContent>
-            </Card>
-            <Card className="border-2 border-red-200 dark:border-red-800/30 rounded-2xl">
-              <CardContent className="p-4 text-center">
-                <XCircle className="w-6 h-6 text-red-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-red-500">{stats.rejected}</div>
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mt-1">{t("dashboard.rejected")}</div>
               </CardContent>
             </Card>
           </div>

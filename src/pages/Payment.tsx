@@ -33,6 +33,7 @@ export default function PaymentPage() {
     const { data } = await supabase
       .from("quotes")
       .select("*")
+      .neq("status", "rejected")
       .order("created_at", { ascending: false });
     setQuotes(data || []);
   };

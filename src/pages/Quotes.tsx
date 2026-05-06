@@ -78,11 +78,21 @@ export default function QuotesPage() {
 
   const updateStatus = async (id: string, status: string) => {
     const q = items.find(i => i.id === id);
-    const { error } = await supabase.from("quotes").update({ status } as any).eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    setItems(items.map(i => i.id === id ? { ...i, status } : i));
-    toast.success(`Statut modifié: ${STATUS_CONFIG[status]?.label || status}`);
-    if (q) await logAction(email, role, "Modification Statut Devis", `Client: ${q.client_name} -> ${status}`);
+    if (!q) return;
+
+    if (status === "rejected") {
+      const { error } = await supabase.from("quotes").delete().eq("id", id);
+      if (error) { toast.error(error.message); return; }
+      setItems(items.filter(i => i.id !== id));
+      toast.success("Devis refusé et supprimé automatiquement");
+      await logAction(email, role, "Suppression Devis (Refusé)", `Client: ${q.client_name}`);
+    } else {
+      const { error } = await supabase.from("quotes").update({ status } as any).eq("id", id);
+      if (error) { toast.error(error.message); return; }
+      setItems(items.map(i => i.id === id ? { ...i, status } : i));
+      toast.success(`Statut modifié: ${STATUS_CONFIG[status]?.label || status}`);
+      await logAction(email, role, "Modification Statut Devis", `Client: ${q.client_name} -> ${status}`);
+    }
   };
 
   const shareWhatsApp = (q: any) => {
@@ -107,7 +117,7 @@ export default function QuotesPage() {
       {/* Status tabs */}
       {items.length > 0 && (
         <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 h-10 rounded-xl">
+          <TabsList className="grid w-full grid-cols-3 h-10 rounded-xl">
             <TabsTrigger value="all" className="text-xs gap-1.5 rounded-lg">
               Tous <Badge variant="secondary" className="text-[10px] ml-1 px-1.5 py-0">{statusCounts.all}</Badge>
             </TabsTrigger>
@@ -116,9 +126,6 @@ export default function QuotesPage() {
             </TabsTrigger>
             <TabsTrigger value="accepted" className="text-xs gap-1.5 rounded-lg">
               <CheckCircle2 className="w-3.5 h-3.5" /> <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">{statusCounts.accepted}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="rejected" className="text-xs gap-1.5 rounded-lg">
-              <XCircle className="w-3.5 h-3.5" /> <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">{statusCounts.rejected}</Badge>
             </TabsTrigger>
           </TabsList>
         </Tabs>
