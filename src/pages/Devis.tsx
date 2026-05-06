@@ -100,7 +100,7 @@ export default function DevisPage() {
     );
   }
 
-  const { clientName, clientCompany, product, printType, paperType, paperSize, finishedW = 0, finishedH = 0, quantity = 1, rectoVerso, paperWeight, selectedFinitionsData, selectedPelliculagesData, breakdown, addDesign, innerPages } = data;
+  const { clientName, clientCompany, product, printType, paperType, paperSize, finishedW = 0, finishedH = 0, quantity = 1, rectoVerso, paperWeight, coverPaperType, coverWeight, selectedFinitionsData, selectedPelliculagesData, breakdown, addDesign, innerPages } = data;
 
   // Guard: if critical data is missing, show fallback
   if (!breakdown || !product) {
@@ -259,12 +259,20 @@ export default function DevisPage() {
                     <td className="text-right p-3 tabular-nums">{formatDZD(productUnit)}</td>
                     <td className="text-right p-3 tabular-nums font-semibold">{formatDZD(productTotal)}</td>
                   </tr>
+                  {coverPaperType && (
+                    <tr className="border-b">
+                      <td className="p-3 pl-6 text-gray-700">↳ Papier Couverture: {coverPaperType.name} {coverWeight} g/m²</td>
+                      <td className="text-center p-3 tabular-nums text-gray-700">{quantity}</td>
+                      <td className="text-right p-3 tabular-nums text-gray-700">{formatDZD((breakdown.coverPaperCost || 0) / quantity)}</td>
+                      <td className="text-right p-3 tabular-nums text-gray-700">{formatDZD(breakdown.coverPaperCost || 0)}</td>
+                    </tr>
+                  )}
                   {paperType && (
                     <tr className="border-b">
-                      <td className="p-3 pl-6 text-gray-700">↳ Papier: {paperType.name} {paperWeight} g/m²</td>
+                      <td className="p-3 pl-6 text-gray-700">↳ Papier {product?.has_cover ? "Intérieur" : ""}: {paperType.name} {paperWeight} g/m²</td>
                       <td className="text-center p-3 tabular-nums text-gray-700">{quantity}</td>
-                      <td className="text-right p-3 tabular-nums text-gray-700">{formatDZD(paperUnit)}</td>
-                      <td className="text-right p-3 tabular-nums text-gray-700">{formatDZD(paperTotal)}</td>
+                      <td className="text-right p-3 tabular-nums text-gray-700">{formatDZD((breakdown.paperCost || 0) / quantity)}</td>
+                      <td className="text-right p-3 tabular-nums text-gray-700">{formatDZD(breakdown.paperCost || 0)}</td>
                     </tr>
                   )}
                   {printType && (
@@ -348,7 +356,8 @@ export default function DevisPage() {
             {breakdown.layout && <DetailRow label="Disposition (montage)" value={`${breakdown.layout.cols} × ${breakdown.layout.rows}${breakdown.layout.rotated ? " (rotation 90°)" : ""}`} />}
             <DetailRow label="Poses par feuille" value={`${breakdown.upPerSheet}`} />
             <DetailRow label="Feuilles nécessaires (+5% gâche)" value={`${breakdown.sheetsNeeded}`} />
-            {paperType && <DetailRow label="Papier" value={`${paperType.name} ${paperWeight} g/m²`} />}
+            {coverPaperType && <DetailRow label="Papier couverture" value={`${coverPaperType.name} ${coverWeight} g/m²`} />}
+            {paperType && <DetailRow label={product?.has_cover ? "Papier intérieur" : "Papier"} value={`${paperType.name} ${paperWeight} g/m²`} />}
             {printType && <DetailRow label="Impression" value={`${printType.name}${rectoVerso ? " (Recto-Verso)" : " (Recto)"}`} />}
             {product?.has_pages && <DetailRow label="Pages intérieures" value={`${innerPages} pages`} />}
             <DetailRow label="Coût papier" value={formatDZD((breakdown.paperCost || 0) + (breakdown.coverPaperCost || 0))} />

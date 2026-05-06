@@ -293,7 +293,7 @@ export default function CalculatorPage() {
       status: "pending",
       details: { 
         clientName, clientCompany, product, printType, paperType, paperSize,
-        finishedW, finishedH, quantity, rectoVerso, innerPages, paperWeight,
+        finishedW, finishedH, quantity, rectoVerso, innerPages, paperWeight, coverPaperType, coverWeight,
         selectedFinitionsData: selectedFinitions.map((id) => finitions.find((f) => f.id === id)),
         selectedPelliculagesData: selectedPelliculages.map((id) => pelliculages.find((p) => p.id === id)),
         breakdown, addDesign
@@ -327,7 +327,7 @@ export default function CalculatorPage() {
     if (!breakdown) return;
     sessionStorage.setItem("currentQuote", JSON.stringify({
       clientName, clientCompany, product, printType, paperType, paperSize,
-      finishedW, finishedH, quantity, rectoVerso, innerPages, paperWeight,
+      finishedW, finishedH, quantity, rectoVerso, innerPages, paperWeight, coverPaperType, coverWeight,
       selectedFinitionsData: selectedFinitions.map((id) => finitions.find((f) => f.id === id)),
       selectedPelliculagesData: selectedPelliculages.map((id) => pelliculages.find((p) => p.id === id)),
       breakdown, addDesign
