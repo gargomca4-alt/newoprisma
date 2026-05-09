@@ -52,6 +52,7 @@ export interface CalcBreakdown {
   printCost: number;
   finitionCost: number;
   pelliculageCost: number;
+  totalPaperCost: number;
   subtotal: number;
   designCost: number;
   total: number;
@@ -241,7 +242,7 @@ export function calculate(input: CalcInput): CalcBreakdown {
 
     notes.push(`Surface: ${areaSqm.toFixed(2)} m² × ${input.quantity} unités`);
     return {
-      upPerSheet: 1, sheetsNeeded: input.quantity, paperCost: 0, coverSheetsNeeded: 0, coverPaperCost: 0,
+      upPerSheet: 1, sheetsNeeded: input.quantity, paperCost: 0, coverSheetsNeeded: 0, coverPaperCost: 0, totalPaperCost: 0,
       printCost, finitionCost, pelliculageCost, subtotal, designCost, total: subtotal + designCost,
     layout: {
       rows: 1, cols: 1, pieceW: input.finishedW, pieceH: input.finishedH, sheetW: input.finishedW, sheetH: input.finishedH, rotated: false,
