@@ -62,6 +62,7 @@ export interface CalcBreakdown {
   printCost: number;
   finitionCost: number;
   pelliculageCost: number;
+  totalPaperCost: number;
   subtotal: number;
   designCost: number;
   total: number;
@@ -413,7 +414,7 @@ export function calculate(input: CalcInput): CalcBreakdown {
 
     notes.push(`Surface: ${areaSqm.toFixed(2)} m² × ${input.quantity} unités`);
     return {
-      upPerSheet: 1, sheetsNeeded: input.quantity, paperCost: 0, coverSheetsNeeded: 0, coverPaperCost: 0,
+      upPerSheet: 1, sheetsNeeded: input.quantity, paperCost: 0, coverSheetsNeeded: 0, coverPaperCost: 0, totalPaperCost: 0,
       printCost, finitionCost, pelliculageCost, subtotal, designCost, total: subtotal + designCost,
     layout: {
       rows: 1, cols: 1, pieceW: input.finishedW, pieceH: input.finishedH, sheetW: input.finishedW, sheetH: input.finishedH, rotated: false,
@@ -424,18 +425,19 @@ export function calculate(input: CalcInput): CalcBreakdown {
   }
 
   // ── LAYOUT ──
-  const innerLeafs = input.hasPages ? Math.ceil(input.innerPages / 4) : 0;
+  // Based on user's professional example:
+  // Cover is imposed (e.g., 2-up on SRA3)
+  // Interior pages are calculated as (Pages / 2) sheets per book (effectively 1-up A4 on machine sheet logic)
+  const innerLeafs = input.hasPages ? Math.ceil(input.innerPages / 2) : 0;
   const totalInnerImpressions = input.quantity * innerLeafs;
-  const innerPieceW = input.finishedW * 2;
+  const mainPieceW = input.finishedW;
+  const mainPieceH = input.finishedH;
+  const innerPieceW = input.finishedW;
   const innerPieceH = input.finishedH;
-  const coverPieceW = input.hasCover ? input.finishedW * 2 : input.finishedW;
-  const coverPieceH = input.finishedH;
-  const mainPieceW = input.hasCover ? coverPieceW : input.finishedW;
-  const mainPieceH = input.hasCover ? coverPieceH : input.finishedH;
 
   steps.push({ category: 'layout', label: 'Format fini', formula: `${input.finishedW} × ${input.finishedH}`, value: `${input.finishedW}×${input.finishedH}`, unit: 'mm' });
   steps.push({ category: 'layout', label: 'Fond perdu (bleed)', formula: `+${input.bleed}mm chaque côté`, value: input.bleed, unit: 'mm' });
-  steps.push({ category: 'layout', label: 'Pièce avec bleed', formula: `(${mainPieceW} + ${input.bleed*2}) × (${mainPieceH} + ${input.bleed*2})`, value: `${mainPieceW + input.bleed*2}×${mainPieceH + input.bleed*2}`, unit: 'mm' });
+  steps.push({ category: 'layout', label: 'Pièce avec bleed', formula: `(${input.finishedW} + ${input.bleed*2}) × (${input.finishedH} + ${input.bleed*2})`, value: `${input.finishedW + input.bleed*2}×${input.finishedH + input.bleed*2}`, unit: 'mm' });
   steps.push({ category: 'layout', label: 'Feuille offset', formula: '', value: `${input.sheetW}×${input.sheetH}`, unit: 'mm' });
 
   const fit = fitOnSheet(mainPieceW, mainPieceH, input.sheetW, input.sheetH, input.bleed, input.layoutPreference || 'optimal');
@@ -450,12 +452,11 @@ export function calculate(input: CalcInput): CalcBreakdown {
   // Inner sheets (catalog only)
   let innerSheetsNeeded = 0;
   if (input.hasPages && innerLeafs > 0) {
-    const innerFit = fitOnSheet(innerPieceW, innerPieceH, input.sheetW, input.sheetH, input.bleed, input.layoutPreference || 'optimal');
-    const innerUp = Math.max(innerFit.up, 1);
-    innerSheetsNeeded = Math.ceil(totalInnerImpressions / innerUp);
+    // For interior pages, user logic uses (Pages/2 * Qty) directly as sheets
+    innerSheetsNeeded = totalInnerImpressions; 
     steps.push({ category: 'layout', label: 'Pages intérieures', formula: `${input.innerPages} pages → ${innerLeafs} feuilles/ex. × ${input.quantity} ex.`, value: totalInnerImpressions, unit: 'impressions' });
-    steps.push({ category: 'layout', label: 'Feuilles intérieures', formula: `⌈${totalInnerImpressions} ÷ ${innerUp}⌉`, value: innerSheetsNeeded, unit: 'feuilles' });
-    notes.push(`Pages intérieures: ${input.innerPages} pages = ${innerLeafs} feuilles/exemplaire × ${input.quantity} = ${totalInnerImpressions} impressions, ${innerUp}-up = ${innerSheetsNeeded} feuilles`);
+    steps.push({ category: 'layout', label: 'Feuilles intérieures', formula: `${totalInnerImpressions} × 1`, value: innerSheetsNeeded, unit: 'feuilles' });
+    notes.push(`Pages intérieures: ${input.innerPages} pages = ${innerLeafs} feuilles/exemplaire × ${input.quantity} = ${totalInnerImpressions} feuilles`);
   }
 
   // ── WASTE ──
@@ -583,6 +584,7 @@ export function calculate(input: CalcInput): CalcBreakdown {
     upPerSheet,
     sheetsNeeded: totalSheets,
     paperCost: input.hasCover ? coverPaperCost : paperCost + innerPaperCost,
+    totalPaperCost: totalPaperCost,
     coverSheetsNeeded: input.hasCover ? totalSheets : 0,
     coverPaperCost,
     printCost,

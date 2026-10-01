@@ -124,6 +124,7 @@ CREATE TABLE IF NOT EXISTS public.quotes (
   product_name TEXT,
   quantity INTEGER,
   total NUMERIC,
+  status TEXT DEFAULT 'pending',
   details JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
