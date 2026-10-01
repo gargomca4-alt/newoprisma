@@ -97,9 +97,9 @@ export default function QuotesPage() {
 
   const load = async () => {
     const { data } = await supabase.from("quotes").select("*").order("created_at", { ascending: false });
-    const mapped = (data || []).map(q => ({
+    const mapped = (data || []).map((q: any) => ({
       ...q,
-      status: q.details?.status || (Number(q.details?.paidAmount) >= Number(q.total) && Number(q.total) > 0 ? "accepted" : "pending")
+      status: (q.details as any)?.status || (Number((q.details as any)?.paidAmount) >= Number(q.total) && Number(q.total) > 0 ? "accepted" : "pending")
     }));
     setItems(mapped);
   };

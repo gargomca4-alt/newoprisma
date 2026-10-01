@@ -43,13 +43,13 @@ export default function InvoicesPage() {
       .from("quotes")
       .select("*")
       .order("created_at", { ascending: false });
-    const allQuotes = data || [];
+    const allQuotes: any[] = data || [];
     setQuotes(allQuotes);
 
     // If prefill quoteId provided via URL, open create dialog with that quote
     if (prefillQuoteId) {
-      const q = allQuotes.find(item => item.id === prefillQuoteId);
-      if (q && !q.details?.invoiceNumber) {
+      const q: any = allQuotes.find((item: any) => item.id === prefillQuoteId);
+      if (q && !(q.details as any)?.invoiceNumber) {
         setSelectedQuoteId(prefillQuoteId);
         setCreateDialogOpen(true);
       }
