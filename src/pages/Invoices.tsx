@@ -23,13 +23,16 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
+import { isQuoteOwnedByUser } from "@/lib/userPricing";
+
 export default function InvoicesPage() {
   const { t } = useTranslation();
-  const { email, role } = useRole();
+  const { email, role, userId, isAdmin } = useRole();
   const [searchParams] = useSearchParams();
   const prefillQuoteId = searchParams.get("quoteId");
 
   const [quotes, setQuotes] = useState<any[]>([]);
+  const [scopeFilter, setScopeFilter] = useState<"all" | "mine">("all");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -57,11 +60,22 @@ export default function InvoicesPage() {
     loadData();
   }, [prefillQuoteId]);
 
+  const scopedQuotes = useMemo(() => {
+    if (!isAdmin || scopeFilter === "mine") {
+      return quotes.filter((q) => isQuoteOwnedByUser(q, userId, email));
+    }
+    return quotes;
+  }, [quotes, isAdmin, scopeFilter, userId, email]);
+
+  const myQuotesCount = useMemo(() => {
+    return quotes.filter((q) => isQuoteOwnedByUser(q, userId, email)).length;
+  }, [quotes, userId, email]);
+
   // Quotes that have an invoice number
-  const invoices = quotes.filter(q => q.details?.invoiceNumber);
+  const invoices = scopedQuotes.filter(q => q.details?.invoiceNumber);
 
   // Quotes eligible to become invoices (not yet converted)
-  const uninvoicedQuotes = quotes.filter(q => !q.details?.invoiceNumber);
+  const uninvoicedQuotes = scopedQuotes.filter(q => !q.details?.invoiceNumber);
 
   const getPaid = (q: any) => Number(q.details?.paidAmount) || 0;
   const getTotal = (q: any) => Number(q.total) || 0;
@@ -220,6 +234,36 @@ export default function InvoicesPage() {
           </div>
         }
       />
+
+      {/* Admin Scope Switcher */}
+      {isAdmin && (
+        <div className="flex items-center justify-between gap-3 p-2 rounded-xl bg-muted/40 border">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-muted-foreground ml-1">Affichage :</span>
+            <div className="flex gap-1 bg-background p-1 rounded-lg border shadow-sm">
+              <Button
+                variant={scopeFilter === "all" ? "default" : "ghost"}
+                size="sm"
+                className="h-7 text-xs px-3 rounded-md"
+                onClick={() => setScopeFilter("all")}
+              >
+                Toutes les factures ({quotes.filter(q => q.details?.invoiceNumber).length})
+              </Button>
+              <Button
+                variant={scopeFilter === "mine" ? "default" : "ghost"}
+                size="sm"
+                className="h-7 text-xs px-3 rounded-md"
+                onClick={() => setScopeFilter("mine")}
+              >
+                Mes factures ({myQuotesCount})
+              </Button>
+            </div>
+          </div>
+          <span className="text-xs text-muted-foreground hidden sm:inline mr-2">
+            Connecté en tant qu'administrateur
+          </span>
+        </div>
+      )}
 
       {/* KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

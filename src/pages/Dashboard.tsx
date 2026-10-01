@@ -13,6 +13,8 @@ import {
 import { Link, Navigate } from "react-router-dom";
 import { useRole } from "@/lib/useRole";
 
+import { isQuoteOwnedByUser } from "@/lib/userPricing";
+
 type Quote = {
   id: string;
   client_name: string;
@@ -27,8 +29,9 @@ type Quote = {
 
 export default function DashboardPage() {
   const { t } = useTranslation();
-  const { isAdmin, loading: roleLoading } = useRole();
+  const { isAdmin, email, userId, loading: roleLoading } = useRole();
   const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [scopeFilter, setScopeFilter] = useState<"all" | "mine">("all");
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
@@ -39,22 +42,33 @@ export default function DashboardPage() {
     })();
   }, []);
 
+  const scopedQuotes = useMemo(() => {
+    if (scopeFilter === "mine") {
+      return quotes.filter((q) => isQuoteOwnedByUser(q, userId, email));
+    }
+    return quotes;
+  }, [quotes, scopeFilter, userId, email]);
+
+  const myQuotesCount = useMemo(() => {
+    return quotes.filter((q) => isQuoteOwnedByUser(q, userId, email)).length;
+  }, [quotes, userId, email]);
+
   const stats = useMemo(() => {
     const now = new Date();
-    const thisMonth = quotes.filter(q => {
+    const thisMonth = scopedQuotes.filter(q => {
       const d = new Date(q.created_at);
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     });
-    const lastMonth = quotes.filter(q => {
+    const lastMonth = scopedQuotes.filter(q => {
       const d = new Date(q.created_at);
       const lm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       return d.getMonth() === lm.getMonth() && d.getFullYear() === lm.getFullYear();
     });
 
-    const acceptedOrPaid = quotes.filter(q => q.status === "accepted" || Number(q.details?.paidAmount) > 0);
+    const acceptedOrPaid = scopedQuotes.filter(q => q.status === "accepted" || Number(q.details?.paidAmount) > 0);
 
     // Revenue = only what has actually been paid (paidAmount)
-    const totalPaid = quotes.reduce((s, q) => s + (Number(q.details?.paidAmount) || 0), 0);
+    const totalPaid = scopedQuotes.reduce((s, q) => s + (Number(q.details?.paidAmount) || 0), 0);
     const monthPaid = thisMonth.reduce((s, q) => s + (Number(q.details?.paidAmount) || 0), 0);
     const lastMonthPaid = lastMonth.reduce((s, q) => s + (Number(q.details?.paidAmount) || 0), 0);
     const revenueGrowth = lastMonthPaid > 0 ? ((monthPaid - lastMonthPaid) / lastMonthPaid * 100) : 0;
@@ -197,6 +211,29 @@ export default function DashboardPage() {
                 {t("dashboard.title")}
               </h1>
               <p className="text-base md:text-lg text-muted-foreground font-medium max-w-2xl mt-1">{t("dashboard.subtitle")}</p>
+
+              {/* Scope Switcher */}
+              <div className="flex items-center gap-2 mt-4">
+                <span className="text-xs font-semibold text-muted-foreground">Données :</span>
+                <div className="flex gap-1 bg-background/80 backdrop-blur-sm p-1 rounded-xl border shadow-sm">
+                  <Button
+                    variant={scopeFilter === "all" ? "default" : "ghost"}
+                    size="sm"
+                    className="h-7 text-xs px-3 rounded-lg"
+                    onClick={() => setScopeFilter("all")}
+                  >
+                    Vue Globale ({quotes.length})
+                  </Button>
+                  <Button
+                    variant={scopeFilter === "mine" ? "default" : "ghost"}
+                    size="sm"
+                    className="h-7 text-xs px-3 rounded-lg"
+                    onClick={() => setScopeFilter("mine")}
+                  >
+                    Mes Devis ({myQuotesCount})
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -559,7 +596,14 @@ export default function DashboardPage() {
             {stats.recent.map(q => (
               <Link to={`/devis?id=${q.id}`} key={q.id} className="flex items-center justify-between py-3 hover:bg-muted/40 -mx-2 px-3 rounded-xl transition-colors">
                 <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-sm truncate">{q.client_name}{q.client_company ? ` · ${q.client_company}` : ""}</div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-sm truncate">{q.client_name}{q.client_company ? ` · ${q.client_company}` : ""}</span>
+                    {q.details?.createdBy && (
+                      <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${isQuoteOwnedByUser(q, userId, email) ? "border-primary/40 text-primary bg-primary/5" : "border-muted text-muted-foreground"}`}>
+                        {isQuoteOwnedByUser(q, userId, email) ? "Mon devis" : `Par: ${q.details.createdBy}`}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="text-xs text-muted-foreground">{q.product_name} · {new Date(q.created_at).toLocaleDateString("fr-DZ")}</div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">

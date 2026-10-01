@@ -47,12 +47,15 @@ function StatusBadge({ status, onClick }: { status: string; onClick?: () => void
   );
 }
 
+import { isQuoteOwnedByUser } from "@/lib/userPricing";
+
 export default function QuotesPage() {
   const { t } = useTranslation();
-  const { email, role } = useRole();
+  const { email, role, userId, isAdmin } = useRole();
   const [items, setItems] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [scopeFilter, setScopeFilter] = useState<"all" | "mine">("all");
 
   // Selection for bulk delete
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -65,7 +68,14 @@ export default function QuotesPage() {
   const [noteQuote, setNoteQuote] = useState<any | null>(null);
   const [noteText, setNoteText] = useState("");
 
-  const filteredItems = items.filter(q => {
+  const scopedItems = useMemo(() => {
+    if (!isAdmin || scopeFilter === "mine") {
+      return items.filter((q) => isQuoteOwnedByUser(q, userId, email));
+    }
+    return items;
+  }, [items, isAdmin, scopeFilter, userId, email]);
+
+  const filteredItems = scopedItems.filter((q) => {
     const matchSearch =
       (q.client_name || "").toLowerCase().includes(search.toLowerCase()) ||
       (q.client_company || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -74,11 +84,15 @@ export default function QuotesPage() {
     return matchSearch && matchStatus;
   });
 
+  const myQuotesCount = useMemo(() => {
+    return items.filter((q) => isQuoteOwnedByUser(q, userId, email)).length;
+  }, [items, userId, email]);
+
   const statusCounts = {
-    all: items.length,
-    pending: items.filter(q => q.status === "pending").length,
-    accepted: items.filter(q => q.status === "accepted").length,
-    rejected: items.filter(q => q.status === "rejected").length,
+    all: scopedItems.length,
+    pending: scopedItems.filter((q) => q.status === "pending").length,
+    accepted: scopedItems.filter((q) => q.status === "accepted").length,
+    rejected: scopedItems.filter((q) => q.status === "rejected").length,
   };
 
   const load = async () => {
@@ -224,8 +238,38 @@ export default function QuotesPage() {
         }
       />
 
+      {/* Admin Scope Switcher */}
+      {isAdmin && (
+        <div className="flex items-center justify-between gap-3 p-2 rounded-xl bg-muted/40 border">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-muted-foreground ml-1">Affichage :</span>
+            <div className="flex gap-1 bg-background p-1 rounded-lg border shadow-sm">
+              <Button
+                variant={scopeFilter === "all" ? "default" : "ghost"}
+                size="sm"
+                className="h-7 text-xs px-3 rounded-md"
+                onClick={() => setScopeFilter("all")}
+              >
+                Tous les devis ({items.length})
+              </Button>
+              <Button
+                variant={scopeFilter === "mine" ? "default" : "ghost"}
+                size="sm"
+                className="h-7 text-xs px-3 rounded-md"
+                onClick={() => setScopeFilter("mine")}
+              >
+                Mes devis uniquement ({myQuotesCount})
+              </Button>
+            </div>
+          </div>
+          <span className="text-xs text-muted-foreground hidden sm:inline mr-2">
+            Connecté en tant qu'administrateur
+          </span>
+        </div>
+      )}
+
       {/* Status tabs */}
-      {items.length > 0 && (
+      {scopedItems.length > 0 && (
         <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full">
           <TabsList className="grid w-full grid-cols-4 h-10 rounded-xl">
             <TabsTrigger value="all" className="text-xs gap-1.5 rounded-lg">
@@ -324,6 +368,13 @@ export default function QuotesPage() {
                             })}
                           </DropdownMenuContent>
                         </DropdownMenu>
+
+                        {/* Creator / Owner Tag */}
+                        {q.details?.createdBy ? (
+                          <Badge variant="outline" className={`text-[10px] px-2 py-0.5 border ${isQuoteOwnedByUser(q, userId, email) ? "border-primary/40 text-primary bg-primary/5" : "border-muted text-muted-foreground"}`}>
+                            {isQuoteOwnedByUser(q, userId, email) ? "Mon devis" : `Par: ${q.details.createdBy}`}
+                          </Badge>
+                        ) : null}
 
                         {hasNote && (
                           <button

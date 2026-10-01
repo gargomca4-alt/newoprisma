@@ -16,13 +16,18 @@ import {
   getPaperStock, updatePaperStock, getPriceHistory, recordPriceChange, PriceHistoryEntry
 } from "@/lib/priceHistory";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  loadUserPrices, applyUserPricing, saveUserPriceOverride, resetUserPrices, hasCustomPrices
+} from "@/lib/userPricing";
 
 export default function PaperPage() {
   const { t } = useTranslation();
-  const { email } = useRole();
+  const { email, role, userId, isAdmin } = useRole();
   const [items, setItems] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
+  const [priceMode, setPriceMode] = useState<"personal" | "catalog">("personal");
+  const [hasCustom, setHasCustom] = useState(false);
 
   // Stock management
   const [stocks, setStocks] = useState<Record<string, { stockSheets: number; minThreshold: number }>>({});
@@ -37,14 +42,22 @@ export default function PaperPage() {
 
   const load = async () => {
     const { data } = await supabase.from("paper_types").select("*").order("display_order");
-    setItems(data || []);
     const stockData = await getPaperStock();
     setStocks(stockData);
+
+    const profile = await loadUserPrices(userId, email);
+    setHasCustom(hasCustomPrices(profile, "paper_types"));
+
+    if (priceMode === "personal") {
+      setItems(applyUserPricing(data || [], "paper_types", profile));
+    } else {
+      setItems(data || []);
+    }
   };
 
   useEffect(() => {
     load();
-  }, []);
+  }, [userId, email, priceMode]);
 
   const openStockModal = (paper: any) => {
     setStockPaper(paper);
@@ -108,14 +121,31 @@ export default function PaperPage() {
           });
         }
       });
-      await supabase.from("paper_types").update(payload).eq("id", editing.id);
+
+      if (priceMode === "personal") {
+        await saveUserPriceOverride("paper_types", editing.id, {
+          weight_prices: form.weight_prices,
+          price_per_sheet_sra3: form.price_per_sheet_sra3,
+        }, userId, email);
+        toast.success(`Tarifs personnalisés enregistrés pour "${form.name}"`);
+      } else {
+        await supabase.from("paper_types").update(payload).eq("id", editing.id);
+        toast.success(`Catalogue général mis à jour pour "${form.name}"`);
+      }
     } else {
       await supabase.from("paper_types").insert(payload);
+      toast.success(t("common.save"));
     }
 
-    showSuccess("Success", t("common.save"));
     setOpen(false);
     setEditing(null);
+    load();
+  };
+
+  const handleResetMyPrices = async () => {
+    if (!(await confirmDelete("Voulez-vous réinitialiser vos tarifs papier aux valeurs par défaut du catalogue ?"))) return;
+    await resetUserPrices("paper_types", userId, email);
+    toast.success("Vos tarifs papier ont été réinitialisés");
     load();
   };
 
@@ -143,6 +173,58 @@ export default function PaperPage() {
         }
       />
 
+      {/* Pricing Mode Banner */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-muted/40 border">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
+            💼
+          </div>
+          <div>
+            <div className="text-xs font-semibold flex items-center gap-2">
+              <span>Tarification Papier</span>
+              {hasCustom && (
+                <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary border-primary/20">
+                  Tarifs personnalisés actifs
+                </Badge>
+              )}
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              {priceMode === "personal" 
+                ? `Vos modifications s'appliquent à votre compte (${email || "utilisateur actuel"})`
+                : "Attention : vous modifiez le catalogue général pour tous les utilisateurs"}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          {hasCustom && (
+            <Button variant="ghost" size="sm" onClick={handleResetMyPrices} className="text-xs text-muted-foreground hover:text-destructive h-8">
+              Réinitialiser
+            </Button>
+          )}
+          {isAdmin && (
+            <div className="flex bg-background p-1 rounded-lg border shadow-sm">
+              <Button
+                variant={priceMode === "personal" ? "default" : "ghost"}
+                size="sm"
+                className="h-7 text-xs px-2.5 rounded-md"
+                onClick={() => setPriceMode("personal")}
+              >
+                Mes tarifs
+              </Button>
+              <Button
+                variant={priceMode === "catalog" ? "default" : "ghost"}
+                size="sm"
+                className="h-7 text-xs px-2.5 rounded-md"
+                onClick={() => setPriceMode("catalog")}
+              >
+                Catalogue général
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {items.map((p) => {
           const wp = p.weight_prices || {};
@@ -154,7 +236,14 @@ export default function PaperPage() {
             <Card key={p.id} className="border-2 hover:shadow-md transition-smooth flex flex-col justify-between">
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="font-bold text-base">{p.name}</div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="font-bold text-base">{p.name}</div>
+                    {p._isCustomPrice && (
+                      <Badge variant="outline" className="text-[10px] border-primary/40 text-primary bg-primary/5">
+                        Personnalisé
+                      </Badge>
+                    )}
+                  </div>
                   <button
                     onClick={() => openStockModal(p)}
                     className="cursor-pointer transition-transform hover:scale-105"

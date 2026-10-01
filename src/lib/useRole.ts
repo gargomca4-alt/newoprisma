@@ -6,6 +6,7 @@ export type UserRole = "admin" | "agent";
 interface RoleInfo {
   role: UserRole;
   email: string;
+  userId: string;
   loading: boolean;
   isAdmin: boolean;
   isAgent: boolean;
@@ -20,6 +21,7 @@ interface RoleInfo {
 export function useRole(): RoleInfo {
   const [role, setRole] = useState<UserRole>("agent");
   const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,8 +30,12 @@ export function useRole(): RoleInfo {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         const userEmail = user?.email?.toLowerCase() || "";
+        const uId = user?.id || "";
 
-        if (mounted) setEmail(userEmail);
+        if (mounted) {
+          setEmail(userEmail);
+          setUserId(uId);
+        }
 
         // Load roles map from settings
         const { data } = await supabase

@@ -14,6 +14,11 @@ import { showSuccess, confirmDelete } from "@/lib/alerts";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/PageHeader";
 
+import { useRole } from "@/lib/useRole";
+import {
+  loadUserPrices, applyUserPricing, saveUserPriceOverride, resetUserPrices, hasCustomPrices
+} from "@/lib/userPricing";
+
 export default function FinitionsPage() {
   const { t } = useTranslation();
   return (
@@ -33,22 +38,49 @@ export default function FinitionsPage() {
 
 function FinitionList({ table }: { table: "finitions" | "pelliculages" }) {
   const { t } = useTranslation();
+  const { email, role, userId, isAdmin } = useRole();
   const [items, setItems] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
+  const [priceMode, setPriceMode] = useState<"personal" | "catalog">("personal");
+  const [hasCustom, setHasCustom] = useState(false);
   const isPellic = table === "pelliculages";
 
   const load = async () => {
     const { data } = await supabase.from(table).select("*").order("display_order");
-    setItems(data || []);
+    const profile = await loadUserPrices(userId, email);
+    setHasCustom(hasCustomPrices(profile, table));
+
+    if (priceMode === "personal") {
+      setItems(applyUserPricing(data || [], table, profile));
+    } else {
+      setItems(data || []);
+    }
   };
-  useEffect(() => { load(); }, [table]);
+  useEffect(() => { load(); }, [table, userId, email, priceMode]);
 
   const save = async (form: any) => {
-    if (editing?.id) await supabase.from(table).update(form).eq("id", editing.id);
-    else await supabase.from(table).insert(form);
-    showSuccess("Success", t("common.save"));
+    if (editing?.id) {
+      if (priceMode === "personal") {
+        const override = isPellic ? { price_per_sqm: form.price_per_sqm } : { price: form.price };
+        await saveUserPriceOverride(table, editing.id, override, userId, email);
+        toast.success("Tarif personnalisé enregistré");
+      } else {
+        await supabase.from(table).update(form).eq("id", editing.id);
+        toast.success("Catalogue général mis à jour");
+      }
+    } else {
+      await supabase.from(table).insert(form);
+      toast.success(t("common.save"));
+    }
     setOpen(false); setEditing(null); load();
+  };
+
+  const handleResetMyPrices = async () => {
+    if (!(await confirmDelete(`Voulez-vous réinitialiser vos tarifs ${isPellic ? "pelliculage" : "finition"} aux valeurs par défaut ?`))) return;
+    await resetUserPrices(table, userId, email);
+    toast.success("Tarifs réinitialisés");
+    load();
   };
 
   const remove = async (id: string) => {
@@ -60,15 +92,70 @@ function FinitionList({ table }: { table: "finitions" | "pelliculages" }) {
 
   return (
     <div className="space-y-4">
-      <Button onClick={() => { setEditing(null); setOpen(true); }} className="gradient-brand text-white border-0">
-        <Plus className="w-4 h-4 mr-1.5" />{t("common.new")}
-      </Button>
+      {/* Pricing Mode Banner */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-2xl bg-muted/40 border">
+        <div className="flex items-center gap-2">
+          <div className="text-xs font-semibold flex items-center gap-2">
+            <span>{isPellic ? "Tarifs Pelliculage" : "Tarifs Finitions"}</span>
+            {hasCustom && (
+              <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary border-primary/20">
+                Personnalisé
+              </Badge>
+            )}
+          </div>
+          <span className="text-[11px] text-muted-foreground hidden sm:inline">
+            ({priceMode === "personal" ? "Vos tarifs personnels" : "Catalogue général"})
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          {hasCustom && (
+            <Button variant="ghost" size="sm" onClick={handleResetMyPrices} className="text-xs text-muted-foreground hover:text-destructive h-7">
+              Réinitialiser
+            </Button>
+          )}
+          {isAdmin && (
+            <div className="flex bg-background p-0.5 rounded-lg border shadow-sm">
+              <Button
+                variant={priceMode === "personal" ? "default" : "ghost"}
+                size="sm"
+                className="h-6 text-xs px-2 rounded-md"
+                onClick={() => setPriceMode("personal")}
+              >
+                Mes tarifs
+              </Button>
+              <Button
+                variant={priceMode === "catalog" ? "default" : "ghost"}
+                size="sm"
+                className="h-6 text-xs px-2 rounded-md"
+                onClick={() => setPriceMode("catalog")}
+              >
+                Général
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex justify-between items-center">
+        <Button onClick={() => { setEditing(null); setOpen(true); }} className="gradient-brand text-white border-0">
+          <Plus className="w-4 h-4 mr-1.5" />{t("common.new")}
+        </Button>
+      </div>
+
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {items.map((f) => (
           <Card key={f.id} className="border-2 hover:shadow-md transition-smooth">
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-2">
-                <div className="font-medium text-sm">{f.name}</div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="font-medium text-sm">{f.name}</div>
+                  {f._isCustomPrice && (
+                    <Badge variant="outline" className="text-[9px] border-primary/40 text-primary bg-primary/5">
+                      Personnalisé
+                    </Badge>
+                  )}
+                </div>
                 <Badge className="gradient-brand text-white border-0 text-[10px]">
                   {isPellic ? `${f.price_per_sqm} DA/m²` : `${f.price} DA / ${f.price_unit === "sqm" ? "m²" : "pc"}`}
                 </Badge>

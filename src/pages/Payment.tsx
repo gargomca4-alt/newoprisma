@@ -22,11 +22,14 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
+import { isQuoteOwnedByUser } from "@/lib/userPricing";
+
 export default function PaymentPage() {
   const { t } = useTranslation();
-  const { email, role } = useRole();
+  const { email, role, userId, isAdmin } = useRole();
   const [quotes, setQuotes] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [scopeFilter, setScopeFilter] = useState<"all" | "mine">("all");
   const [payDialog, setPayDialog] = useState<any>(null);
   const [payAmount, setPayAmount] = useState("");
   const [quoteToDelete, setQuoteToDelete] = useState<any | null>(null);
@@ -43,7 +46,18 @@ export default function PaymentPage() {
     load();
   }, []);
 
-  const filtered = quotes.filter((q) => {
+  const scopedQuotes = useMemo(() => {
+    if (!isAdmin || scopeFilter === "mine") {
+      return quotes.filter((q) => isQuoteOwnedByUser(q, userId, email));
+    }
+    return quotes;
+  }, [quotes, isAdmin, scopeFilter, userId, email]);
+
+  const myQuotesCount = useMemo(() => {
+    return quotes.filter((q) => isQuoteOwnedByUser(q, userId, email)).length;
+  }, [quotes, userId, email]);
+
+  const filtered = scopedQuotes.filter((q) => {
     const s = search.toLowerCase();
     return (
       (q.client_name || "").toLowerCase().includes(s) ||
@@ -147,15 +161,15 @@ export default function PaymentPage() {
     setQuoteToDelete(null);
   };
 
-  // Stats
-  const acceptedOrPaid = quotes.filter(q => q.status === "accepted" || getPaid(q) > 0);
-  const totalPaid = quotes.reduce((sum, q) => sum + getPaid(q), 0);
+  // Stats based on scoped quotes
+  const acceptedOrPaid = scopedQuotes.filter(q => q.status === "accepted" || getPaid(q) > 0);
+  const totalPaid = scopedQuotes.reduce((sum, q) => sum + getPaid(q), 0);
   const totalAcceptedValue = acceptedOrPaid.reduce((sum, q) => sum + getTotal(q), 0);
   
   // As requested, Chiffre d'affaires = total encaissé
   const totalRevenue = totalPaid;
   const totalRemaining = Math.max(0, totalAcceptedValue - totalPaid);
-  const paidCount = quotes.filter((q) => getStatus(q) === "paid").length;
+  const paidCount = scopedQuotes.filter((q) => getStatus(q) === "paid").length;
 
   return (
     <div className="space-y-6">
@@ -175,6 +189,36 @@ export default function PaymentPage() {
           ) : null
         }
       />
+
+      {/* Admin Scope Switcher */}
+      {isAdmin && (
+        <div className="flex items-center justify-between gap-3 p-2 rounded-xl bg-muted/40 border">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-muted-foreground ml-1">Affichage :</span>
+            <div className="flex gap-1 bg-background p-1 rounded-lg border shadow-sm">
+              <Button
+                variant={scopeFilter === "all" ? "default" : "ghost"}
+                size="sm"
+                className="h-7 text-xs px-3 rounded-md"
+                onClick={() => setScopeFilter("all")}
+              >
+                Tous les paiements ({quotes.length})
+              </Button>
+              <Button
+                variant={scopeFilter === "mine" ? "default" : "ghost"}
+                size="sm"
+                className="h-7 text-xs px-3 rounded-md"
+                onClick={() => setScopeFilter("mine")}
+              >
+                Mes paiements ({myQuotesCount})
+              </Button>
+            </div>
+          </div>
+          <span className="text-xs text-muted-foreground hidden sm:inline mr-2">
+            Connecté en tant qu'administrateur
+          </span>
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -300,6 +344,13 @@ export default function PaymentPage() {
                         >
                           {status === "paid" ? t("payment.statusPaid") : status === "partial" ? t("payment.statusPartial") : t("payment.statusUnpaid")}
                         </Badge>
+
+                        {/* Creator / Owner Tag */}
+                        {q.details?.createdBy ? (
+                          <Badge variant="outline" className={`text-[10px] px-2 py-0.5 border ${isQuoteOwnedByUser(q, userId, email) ? "border-primary/40 text-primary bg-primary/5" : "border-muted text-muted-foreground"}`}>
+                            {isQuoteOwnedByUser(q, userId, email) ? "Mon dossier" : `Par: ${q.details.createdBy}`}
+                          </Badge>
+                        ) : null}
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
                         {q.product_name} · {q.quantity} {t("calc.units")} · {new Date(q.created_at).toLocaleDateString()}

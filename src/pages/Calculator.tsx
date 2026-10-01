@@ -20,6 +20,7 @@ import { useRole } from "@/lib/useRole";
 import { logAction } from "@/lib/logger";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { loadUserPrices, applyUserPricing, saveQuoteWithUser, hasCustomPrices } from "@/lib/userPricing";
 
 const DRAFT_KEY = "oprisma_calc_draft";
 
@@ -41,7 +42,8 @@ type Pelliculage = any;
 
 export default function CalculatorPage() {
   const { t } = useTranslation();
-  const { email, role } = useRole();
+  const { email, role, userId } = useRole();
+  const [hasUserPricing, setHasUserPricing] = useState(false);
 
   // Data from DB
   const [products, setProducts] = useState<Product[]>([]);
@@ -257,7 +259,7 @@ export default function CalculatorPage() {
 
   useEffect(() => {
     (async () => {
-      const [p, pt, ps, prt, fi, pe, ppl, ppr, st, qt] = await Promise.all([
+      const [p, pt, ps, prt, fi, pe, ppl, ppr, st, qt, userPrices] = await Promise.all([
         supabase.from("products").select("*").eq("active", true).order("display_order"),
         supabase.from("paper_types").select("*").eq("active", true).order("display_order"),
         supabase.from("paper_sizes").select("*").eq("active", true).order("display_order"),
@@ -268,13 +270,18 @@ export default function CalculatorPage() {
         supabase.from("product_print_types").select("*"),
         supabase.from("settings").select("*").eq("key", "design_percentage").maybeSingle(),
         supabase.from("settings").select("*").eq("key", "clients_list").maybeSingle(),
+        loadUserPrices(userId, email),
       ]);
+
+      const isCustom = hasCustomPrices(userPrices);
+      setHasUserPricing(isCustom);
+
       setProducts(p.data || []);
-      setPaperTypes(pt.data || []);
+      setPaperTypes(applyUserPricing(pt.data || [], "paper_types", userPrices));
       setPaperSizes(ps.data || []);
-      setPrintTypes(prt.data || []);
-      setFinitions(fi.data || []);
-      setPelliculages(pe.data || []);
+      setPrintTypes(applyUserPricing(prt.data || [], "print_types", userPrices));
+      setFinitions(applyUserPricing(fi.data || [], "finitions", userPrices));
+      setPelliculages(applyUserPricing(pe.data || [], "pelliculages", userPrices));
       setProductLinks({ paper: ppl.data || [], print: ppr.data || [] });
       if (st.data?.value) setDesignPct(Number(st.data.value));
 
@@ -295,7 +302,7 @@ export default function CalculatorPage() {
         }
       }
     })();
-  }, []);
+  }, [userId, email]);
 
   const product = products.find((p) => p.id === productId);
   const printType = printTypes.find((p) => p.id === printTypeId);
@@ -464,7 +471,7 @@ export default function CalculatorPage() {
       return;
     }
 
-    const { error } = await supabase.from("quotes").insert(payload as any);
+    const { error } = await saveQuoteWithUser(payload, userId, email);
     if (error) toast.error("Erreur: " + error.message);
     else { 
       localStorage.removeItem(DRAFT_KEY); 
@@ -511,6 +518,12 @@ export default function CalculatorPage() {
               {t("calc.title")}
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground font-medium max-w-2xl mt-1">{t("calc.subtitle")}</p>
+            {hasUserPricing && (
+              <Badge variant="secondary" className="mt-2 text-xs bg-primary/10 text-primary border border-primary/20 gap-1.5 py-1 px-3">
+                <Sparkles className="w-3.5 h-3.5 text-primary" />
+                Tarifs personnalisés actifs pour votre compte
+              </Badge>
+            )}
           </div>
         </div>
       </div>
