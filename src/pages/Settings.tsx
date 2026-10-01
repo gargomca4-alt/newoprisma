@@ -23,6 +23,7 @@ export default function SettingsPage() {
   const [bleed, setBleed] = useState(3);
   const [terms, setTerms] = useState("Le présent devis est valable 30 jours. Un acompte de 50% est exigé à la commande.");
   const [watermark, setWatermark] = useState("OPRISMA DESIGN");
+  const [uiUxHourlyRate, setUiUxHourlyRate] = useState(2500);
 
   // Role management
   const [roles, setRoles] = useState<RoleEntry[]>([]);
@@ -38,6 +39,7 @@ export default function SettingsPage() {
         if (s.key === "default_bleed_mm") setBleed(Number(s.value));
         if (s.key === "terms_conditions") setTerms(String(s.value).replace(/"/g, ""));
         if (s.key === "watermark_text") setWatermark(String(s.value).replace(/"/g, ""));
+        if (s.key === "ui_ux_default_hourly_rate") setUiUxHourlyRate(Number(s.value));
         if (s.key === "user_roles") {
           try {
             const map = typeof s.value === "string" ? JSON.parse(s.value) : s.value;
@@ -58,6 +60,7 @@ export default function SettingsPage() {
       supabase.from("settings").upsert({ key: "default_bleed_mm", value: bleed as any }),
       supabase.from("settings").upsert({ key: "terms_conditions", value: JSON.stringify(terms) as any }),
       supabase.from("settings").upsert({ key: "watermark_text", value: JSON.stringify(watermark) as any }),
+      supabase.from("settings").upsert({ key: "ui_ux_default_hourly_rate", value: uiUxHourlyRate as any }),
     ]);
     showSuccess("Success", t("common.save"));
   };
@@ -116,10 +119,14 @@ export default function SettingsPage() {
             <Label>{t("settings.companyName")}</Label>
             <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
           </div>
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <Label>{t("settings.designPercentage")}</Label>
               <Input type="number" min={0} max={100} value={designPct} onChange={(e) => setDesignPct(+e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Taux horaire UI/UX (DA/h)</Label>
+              <Input type="number" min={0} step={100} value={uiUxHourlyRate} onChange={(e) => setUiUxHourlyRate(+e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Bleed défaut (mm)</Label>

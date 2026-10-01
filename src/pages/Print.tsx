@@ -7,17 +7,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Pencil, Printer } from "lucide-react";
+import { Plus, Trash2, Pencil, Printer, History } from "lucide-react";
 import { toast } from "sonner";
 import { showSuccess, confirmDelete } from "@/lib/alerts";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/PageHeader";
+import { useRole } from "@/lib/useRole";
+import { recordPriceChange, getPriceHistory, PriceHistoryEntry } from "@/lib/priceHistory";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function PrintPage() {
   const { t } = useTranslation();
+  const { email } = useRole();
   const [items, setItems] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [priceHistory, setPriceHistory] = useState<PriceHistoryEntry[]>([]);
 
   const load = async () => {
     const { data } = await supabase.from("print_types").select("*").order("display_order");
@@ -25,9 +31,40 @@ export default function PrintPage() {
   };
   useEffect(() => { load(); }, []);
 
+  const openPriceHistory = async () => {
+    const hist = await getPriceHistory();
+    setPriceHistory(hist.filter(h => h.itemType === "print"));
+    setHistoryOpen(true);
+  };
+
   const save = async (form: any) => {
-    if (editing?.id) await supabase.from("print_types").update(form).eq("id", editing.id);
-    else await supabase.from("print_types").insert(form);
+    if (editing?.id) {
+      if (editing.cost_per_sheet !== form.cost_per_sheet) {
+        recordPriceChange({
+          itemType: "print",
+          itemId: editing.id,
+          itemName: form.name,
+          variant: "Coût / feuille",
+          oldPrice: editing.cost_per_sheet,
+          newPrice: form.cost_per_sheet,
+          user: email
+        });
+      }
+      if (editing.setup_cost !== form.setup_cost) {
+        recordPriceChange({
+          itemType: "print",
+          itemId: editing.id,
+          itemName: form.name,
+          variant: "Mise en route",
+          oldPrice: editing.setup_cost,
+          newPrice: form.setup_cost,
+          user: email
+        });
+      }
+      await supabase.from("print_types").update(form).eq("id", editing.id);
+    } else {
+      await supabase.from("print_types").insert(form);
+    }
     showSuccess("Success", t("common.save"));
     setOpen(false); setEditing(null); load();
   };
@@ -43,9 +80,14 @@ export default function PrintPage() {
   return (
     <div className="space-y-6">
       <PageHeader icon={Printer} title={t("print.title")} action={
-        <Button onClick={() => { setEditing(null); setOpen(true); }} className="gradient-brand text-white border-0">
-          <Plus className="w-4 h-4 mr-1.5" />{t("common.new")}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={openPriceHistory} className="gap-1.5">
+            <History className="w-4 h-4" /> Historique des Prix
+          </Button>
+          <Button onClick={() => { setEditing(null); setOpen(true); }} className="gradient-brand text-white border-0 gap-1.5">
+            <Plus className="w-4 h-4" />{t("common.new")}
+          </Button>
+        </div>
       } />
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {items.map((p) => (
@@ -72,6 +114,59 @@ export default function PrintPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>{editing ? t("common.edit") : t("common.new")}</DialogTitle></DialogHeader>
           <PrintForm editing={editing} onSave={save} onCancel={() => setOpen(false)} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Price History Dialog */}
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="w-5 h-5 text-primary" />
+              Historique des Tarifs d'Impression
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto pr-1">
+            {priceHistory.length === 0 ? (
+              <p className="text-center text-sm text-muted-foreground py-8">
+                Aucun historique de modification pour l'impression pour l'instant. Les changements futurs apparaîtront ici.
+              </p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Type Impression</TableHead>
+                    <TableHead>Paramètre</TableHead>
+                    <TableHead className="text-right">Ancien</TableHead>
+                    <TableHead className="text-right">Nouveau</TableHead>
+                    <TableHead className="text-right">Évolution</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {priceHistory.map((h) => {
+                    const diff = h.newPrice - h.oldPrice;
+                    return (
+                      <TableRow key={h.id}>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {new Date(h.date).toLocaleDateString("fr-DZ", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        </TableCell>
+                        <TableCell className="font-semibold text-xs">{h.itemName}</TableCell>
+                        <TableCell className="text-xs">{h.variant || "Coût"}</TableCell>
+                        <TableCell className="text-right text-xs tabular-nums text-muted-foreground">{h.oldPrice} DA</TableCell>
+                        <TableCell className="text-right text-xs tabular-nums font-bold text-foreground">{h.newPrice} DA</TableCell>
+                        <TableCell className="text-right text-xs tabular-nums font-semibold">
+                          <span className={diff > 0 ? "text-red-600" : "text-emerald-600"}>
+                            {diff > 0 ? `+${diff} DA` : `${diff} DA`}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -1,7 +1,11 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { BarChart3, Calculator, Package, Layers, Printer, Sparkles, FileText, Settings, Moon, Sun, Globe, Wallet, Users, LogOut, Menu, History } from "lucide-react";
+import {
+  BarChart3, Calculator, Package, Layers, Printer, Sparkles, FileText,
+  Settings, Moon, Sun, Globe, Wallet, Users, LogOut, Menu, History,
+  Receipt, Bell, AlertTriangle, ArrowRight
+} from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -9,12 +13,74 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/co
 import logo from "@/assets/oprisma-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useRole } from "@/lib/useRole";
+import { toast } from "sonner";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
   const { isAdmin } = useRole();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState<{ id: string; title: string; desc: string; link: string; type: 'warning' | 'info' }[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: quotes } = await supabase.from("quotes").select("*").order("created_at", { ascending: false });
+        if (!quotes) return;
+
+        const notifs: any[] = [];
+        const now = Date.now();
+        // 1. Pending quotes older than 48 hours
+        const pendingOld = quotes.filter(q => q.status === "pending" && (now - new Date(q.created_at).getTime()) > 48 * 3600 * 1000);
+        if (pendingOld.length > 0) {
+          notifs.push({
+            id: "pending-quotes",
+            title: `${pendingOld.length} devis à relancer`,
+            desc: "Ces devis sont en attente depuis plus de 48h.",
+            link: "/quotes",
+            type: "warning"
+          });
+        }
+
+        // 2. Unpaid balances
+        const unpaid = quotes.filter(q => {
+          const total = Number(q.total || 0);
+          const paid = Number(q.details?.paidAmount || 0);
+          return (q.status === "accepted" || paid > 0) && (total - paid > 0);
+        });
+        if (unpaid.length > 0) {
+          notifs.push({
+            id: "unpaid-debts",
+            title: `${unpaid.length} créances à encaisser`,
+            desc: "Devis ou factures avec solde restant.",
+            link: "/payment",
+            type: "info"
+          });
+        }
+
+        setNotifications(notifs);
+      } catch (e) {}
+    })();
+  }, []);
+
+  const requestNotificationPermission = async () => {
+    if ("Notification" in window) {
+      const perm = await Notification.requestPermission();
+      if (perm === "granted") {
+        try {
+          new Notification("Oprisma Design", {
+            body: "Les notifications système sont activées !",
+            icon: logo
+          });
+        } catch {}
+        toast.success("Notifications système activées !");
+      } else {
+        toast.info("Notifications refusées par le navigateur.");
+      }
+    } else {
+      toast.info("Notifications non supportées sur ce navigateur.");
+    }
+  };
 
   const allNavItems = [
     { to: "/", icon: BarChart3, label: t("nav.dashboard"), adminOnly: true },
@@ -24,6 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/print", icon: Printer, label: t("nav.print"), adminOnly: true },
     { to: "/finitions", icon: Sparkles, label: t("nav.finitions"), adminOnly: true },
     { to: "/quotes", icon: FileText, label: t("nav.quotes"), adminOnly: false },
+    { to: "/invoices", icon: Receipt, label: "Factures", adminOnly: false },
     { to: "/clients", icon: Users, label: t("nav.clients"), adminOnly: false },
     { to: "/payment", icon: Wallet, label: t("nav.payment"), adminOnly: true },
     { to: "/logs", icon: History, label: "Logs", adminOnly: true },
@@ -55,6 +122,54 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
 
           <div className="flex items-center gap-2">
+            {/* Notifications Center */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="relative rounded-full shadow-sm border-muted-foreground/20 hover:bg-muted text-muted-foreground transition-smooth">
+                  <Bell className="h-4 w-4" />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white shadow animate-pulse">
+                      {notifications.length}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80 rounded-2xl shadow-xl p-2 border-muted-foreground/15">
+                <div className="flex items-center justify-between p-2 border-b border-border/50">
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Notifications & Alertes</span>
+                  <button
+                    onClick={requestNotificationPermission}
+                    className="text-[10px] text-primary hover:underline font-semibold"
+                  >
+                    Activer alertes
+                  </button>
+                </div>
+                <div className="py-1 space-y-1">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-muted-foreground">
+                      ✨ Tout est à jour ! Aucune alerte active.
+                    </div>
+                  ) : (
+                    notifications.map(n => (
+                      <Link
+                        key={n.id}
+                        to={n.link}
+                        className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-muted/60 transition-colors text-xs"
+                      >
+                        <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${n.type === 'warning' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400'}`}>
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-foreground">{n.title}</div>
+                          <div className="text-[11px] text-muted-foreground truncate">{n.desc}</div>
+                        </div>
+                      </Link>
+                    ))
+                  )}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2 rounded-full border-muted-foreground/20 hover:bg-muted transition-smooth shadow-sm">

@@ -25,6 +25,8 @@ const Payment = lazy(() => import("./pages/Payment"));
 const Clients = lazy(() => import("./pages/Clients"));
 const Devis = lazy(() => import("./pages/Devis"));
 const Logs = lazy(() => import("./pages/Logs"));
+const Invoices = lazy(() => import("./pages/Invoices"));
+const Portal = lazy(() => import("./pages/Portal"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -99,6 +101,16 @@ function ShellRoutes() {
     );
   }
 
+  if (location.pathname === "/portal") {
+    return (
+      <Suspense fallback={<PageFallback />}>
+        <Routes>
+          <Route path="/portal" element={<Portal />} />
+        </Routes>
+      </Suspense>
+    );
+  }
+
   return (
     <AuthGuard>
       <AppShell>
@@ -111,6 +123,7 @@ function ShellRoutes() {
             <Route path="/print" element={<Print />} />
             <Route path="/finitions" element={<Finitions />} />
             <Route path="/quotes" element={<Quotes />} />
+            <Route path="/invoices" element={<Invoices />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/clients" element={<Clients />} />

@@ -119,7 +119,10 @@ export default function DevisPage() {
   }
 
   const today = new Date().toLocaleDateString('fr-DZ');
-  const ref = "OPR-" + Date.now().toString().slice(-6);
+  const params = new URLSearchParams(window.location.search);
+  const isInvoice = params.get("type") === "facture" || Boolean(data?.invoiceNumber);
+  const docTitle = isInvoice ? "FACTURE" : "DEVIS";
+  const ref = data?.invoiceNumber || (isInvoice ? "FAC-" + Date.now().toString().slice(-6) : (data?.quoteNumber || "OPR-" + Date.now().toString().slice(-6)));
 
   const exportPDF = async () => {
     if (!sheetRef.current) return;
@@ -149,7 +152,7 @@ export default function DevisPage() {
         heightLeft -= pageHeight;
       }
       const safeName = (clientName || "client").replace(/[^a-z0-9]/gi, "_");
-      pdf.save(`Devis_${ref}_${safeName}.pdf`);
+      pdf.save(`${docTitle}_${ref}_${safeName}.pdf`);
       toast.success("PDF téléchargé");
     } catch (e: unknown) {
       toast.error("Erreur PDF: " + ((e as Error)?.message || ""));
@@ -167,7 +170,7 @@ export default function DevisPage() {
           className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/30"
           onClick={() => {
             const lines = [
-              `📋 *Devis Oprisma Design*`,
+              `📋 *${docTitle} Oprisma Design*`,
               `👤 Client: ${clientName || "—"}${clientCompany ? ` (${clientCompany})` : ""}`,
               `📦 Produit: ${product?.name || "—"}`,
               `📊 Quantité: ${quantity}`,
@@ -207,7 +210,7 @@ export default function DevisPage() {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-3xl font-bold" style={{ color: "hsl(220 75% 22%)" }}>DEVIS</div>
+            <div className="text-3xl font-bold" style={{ color: "hsl(220 75% 22%)" }}>{docTitle}</div>
             <div className="text-xs text-gray-800 mt-1 font-medium">N° {ref}</div>
             <div className="text-xs text-gray-800 font-medium">Date: {today}</div>
           </div>
@@ -238,6 +241,49 @@ export default function DevisPage() {
           </thead>
           <tbody className="text-sm">
             {(() => {
+              if (data.isUiUx || product?.category === "ui_ux" || breakdown?.isUiUx) {
+                const hours = breakdown.uiUxHours || data.uiUxHours || 20;
+                const hourlyRate = breakdown.uiUxHourlyRate || data.uiUxHourlyRate || 2500;
+                const unitPrice = breakdown.total / (quantity || 1);
+                return (
+                  <>
+                    <tr className="border-b bg-gray-50">
+                      <td className="p-3">
+                        <div className="font-semibold text-base">{product.name}</div>
+                        <div className="text-xs text-gray-800 mt-1 space-y-0.5">
+                          <p className="font-medium text-primary">Prestation de Conception UI/UX & Design Digital</p>
+                          <p>
+                            Volume de travail : <span className="font-semibold">{hours} heures</span>
+                            {" · "}Taux horaire : <span className="font-semibold">{formatDZD(hourlyRate)} / heure</span>
+                          </p>
+                          {data.uiUxScreenCount && (
+                            <p>Nombre d'écrans / maquettes : {data.uiUxScreenCount} écrans</p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="text-center p-3 tabular-nums">{quantity}</td>
+                      <td className="text-right p-3 tabular-nums">{formatDZD(unitPrice)}</td>
+                      <td className="text-right p-3 tabular-nums font-semibold">{formatDZD(breakdown.total)}</td>
+                    </tr>
+                    {data.selectedUiUxModules && data.selectedUiUxModules.length > 0 && (
+                      <tr className="border-b">
+                        <td colSpan={4} className="p-3 pl-6 text-gray-700 text-xs bg-muted/10">
+                          <div className="font-semibold text-gray-900 mb-1">Livrables & Modules inclus :</div>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                            {data.selectedUiUxModules.map((m: any, idx: number) => (
+                              <div key={idx} className="flex items-center gap-1.5">
+                                <span className="text-emerald-600 font-bold">✓</span>
+                                <span>{m.name} {m.hours ? `(+${m.hours}h)` : ''}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                );
+              }
+
               const areaSqm = (finishedW * finishedH) / 1_000_000;
               const productTotal = breakdown.subtotal - breakdown.finitionCost - breakdown.pelliculageCost;
               const productUnit = productTotal / quantity;
@@ -330,12 +376,30 @@ export default function DevisPage() {
                 <td className="text-right p-3 tabular-nums">{formatDZD(breakdown.designCost)}</td>
               </tr>
             )}
+            {breakdown.discountAmount > 0 && (
+              <tr className="text-emerald-700 bg-emerald-50 font-semibold">
+                <td colSpan={3} className="text-right p-3">
+                  Remise commerciale {breakdown.discountType === 'percent' ? `(${breakdown.discountValue}%)` : ''}
+                </td>
+                <td className="text-right p-3 tabular-nums">
+                  -{formatDZD(breakdown.discountAmount)}
+                </td>
+              </tr>
+            )}
             <tr className="text-white text-lg" style={{ background: "hsl(220 75% 22%)" }}>
               <td colSpan={3} className="text-right p-3 font-bold">TOTAL TTC</td>
               <td className="text-right p-3 tabular-nums font-bold">{formatDZD(breakdown.total)}</td>
             </tr>
           </tfoot>
         </table>
+
+        {/* Notes / Instructions client */}
+        {(data.notes || data.quoteNotes) && (
+          <div className="mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200 text-xs">
+            <div className="font-semibold text-gray-900 mb-1">📝 Remarques & Instructions :</div>
+            <p className="text-gray-700 whitespace-pre-wrap">{data.notes || data.quoteNotes}</p>
+          </div>
+        )}
 
         {/* Détails techniques du calcul (Caché à l'impression pour le client) */}
         <div className="mt-8 p-5 rounded-lg border-2 print:hidden" style={{ borderColor: "hsl(220 75% 22% / 0.3)", background: "hsl(220 75% 22% / 0.03)" }}>

@@ -59,15 +59,33 @@ export function CalculatorResult({
         <CardContent className="p-5 space-y-3">
           {breakdown ? (
             <>
-              <div className="space-y-2 text-sm">
-                <Row label={t("calc.paperCost")} value={formatDZD(breakdown.paperCost + breakdown.coverPaperCost)} />
-                <Row label={t("calc.printCost")} value={formatDZD(breakdown.printCost)} />
-                {breakdown.finitionCost > 0 && <Row label={t("calc.finitionCost")} value={formatDZD(breakdown.finitionCost)} />}
-                {breakdown.pelliculageCost > 0 && <Row label={t("calc.pelliculages")} value={formatDZD(breakdown.pelliculageCost)} />}
-                <Separator />
-                <Row label={t("calc.subtotal")} value={formatDZD(breakdown.subtotal)} bold />
-                {addDesign && <Row label={`${t("calc.designCost")} (${designPct}%)`} value={formatDZD(breakdown.designCost)} accent />}
-              </div>
+              {breakdown.isUiUx ? (
+                <div className="space-y-2 text-sm">
+                  <Row label="Taux horaire" value={`${formatDZD(breakdown.uiUxHourlyRate || 0)} / h`} />
+                  <Row label="Volume estimé" value={`${breakdown.uiUxHours || 0} h`} />
+                  <Separator />
+                  <Row label={t("calc.subtotal")} value={formatDZD(breakdown.subtotal)} bold />
+                </div>
+              ) : (
+                <div className="space-y-2 text-sm">
+                  <Row label={t("calc.paperCost")} value={formatDZD(breakdown.paperCost + breakdown.coverPaperCost)} />
+                  <Row label={t("calc.printCost")} value={formatDZD(breakdown.printCost)} />
+                  {breakdown.finitionCost > 0 && <Row label={t("calc.finitionCost")} value={formatDZD(breakdown.finitionCost)} />}
+                  {breakdown.pelliculageCost > 0 && <Row label={t("calc.pelliculages")} value={formatDZD(breakdown.pelliculageCost)} />}
+                  <Separator />
+                  <Row label={t("calc.subtotal")} value={formatDZD(breakdown.subtotal)} bold />
+                  {addDesign && <Row label={`${t("calc.designCost")} (${designPct}%)`} value={formatDZD(breakdown.designCost)} accent />}
+                </div>
+              )}
+              {breakdown.discountAmount > 0 && (
+                <div className="pt-1">
+                  <Row
+                    label={`Remise (${breakdown.discountType === 'percent' ? `${breakdown.discountValue}%` : 'Fixe'})`}
+                    value={`-${formatDZD(breakdown.discountAmount)}`}
+                    accent
+                  />
+                </div>
+              )}
               <Separator />
               <div className="pt-2">
                 <Dialog>
@@ -119,7 +137,7 @@ export function CalculatorResult({
         </CardContent>
       </Card>
 
-      {breakdown && !isLargeFormat && (
+      {breakdown && !isLargeFormat && !breakdown.isUiUx && (
         <Card className="glass-card border-white/50 dark:border-white/10 shadow-lg rounded-[1.5rem] overflow-hidden">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">

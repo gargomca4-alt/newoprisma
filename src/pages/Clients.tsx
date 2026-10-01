@@ -10,10 +10,11 @@ import { formatDZD } from "@/lib/calc";
 import { PageHeader } from "@/components/PageHeader";
 import {
   Users, Plus, Search, Phone, Mail, MapPin, FileText,
-  ChevronDown, ChevronUp, Trash2, Pencil,
+  ChevronDown, ChevronUp, Trash2, Pencil, Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { showSuccess, confirmDelete } from "@/lib/alerts";
+import { exportClientsToCSV } from "@/lib/exportCSV";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -167,9 +168,30 @@ export default function ClientsPage() {
   return (
     <div className="space-y-6">
       <PageHeader icon={Users} title={t("clients.title")} action={
-        <Button onClick={openNew} className="gradient-brand text-white border-0">
-          <Plus className="w-4 h-4 mr-1.5" />{t("clients.addClient")}
-        </Button>
+        <div className="flex items-center gap-2">
+          {clients.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                exportClientsToCSV(
+                  aggregated.map(a => ({
+                    ...a.client,
+                    quoteCount: a.totalOrders,
+                    totalSpent: a.totalPaid,
+                    totalDebt: a.totalRemaining
+                  }))
+                )
+              }
+              className="gap-1.5"
+            >
+              <Download className="w-4 h-4" /> Exporter CSV
+            </Button>
+          )}
+          <Button onClick={openNew} className="gradient-brand text-white border-0">
+            <Plus className="w-4 h-4 mr-1.5" />{t("clients.addClient")}
+          </Button>
+        </div>
       } />
 
       {/* Stats */}

@@ -7,11 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { formatDZD } from "@/lib/calc";
 import { PageHeader } from "@/components/PageHeader";
-import { Search, Wallet, CheckCircle2, AlertCircle, Clock, X } from "lucide-react";
+import { Search, Wallet, CheckCircle2, AlertCircle, Clock, X, Download } from "lucide-react";
 import { toast } from "sonner";
 import { showSuccess, confirmDelete } from "@/lib/alerts";
 import { useRole } from "@/lib/useRole";
 import { logAction } from "@/lib/logger";
+import { exportPaymentsToCSV } from "@/lib/exportCSV";
 import {
   Dialog,
   DialogContent,
@@ -143,7 +144,22 @@ export default function PaymentPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader icon={Wallet} title={t("payment.title")} action={null} />
+      <PageHeader
+        icon={Wallet}
+        title={t("payment.title")}
+        action={
+          quotes.length > 0 ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportPaymentsToCSV(quotes)}
+              className="gap-1.5"
+            >
+              <Download className="w-4 h-4" /> Exporter CSV
+            </Button>
+          ) : null
+        }
+      />
 
       {/* Stats cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

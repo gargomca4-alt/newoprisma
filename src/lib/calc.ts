@@ -33,14 +33,24 @@ export interface CalcInput {
   isLargeFormat?: boolean;
   largeFormatPricePerSqm?: number;
   layoutPreference?: 'horizontal' | 'vertical' | 'optimal';
+  // UI/UX & Digital hourly calculation
+  isUiUx?: boolean;
+  hourlyRate?: number;
+  hours?: number;
+  screenCount?: number;
+  hoursPerScreen?: number;
+  uiUxServices?: { name: string; hours: number; price?: number }[];
+  // Commercial Discount (Remise)
+  discountType?: 'percent' | 'fixed';
+  discountValue?: number;
 }
 
 export interface CalcStep {
-  category: string;       // grouping: 'layout' | 'paper' | 'print' | 'finition' | 'pelliculage' | 'design' | 'total'
+  category: string;       // grouping: 'layout' | 'paper' | 'print' | 'finition' | 'pelliculage' | 'design' | 'ui_ux' | 'total'
   label: string;          // human readable label
   formula: string;        // the formula used
   value: number | string; // computed result
-  unit: string;           // 'DA' | 'feuilles' | 'mm' | 'poses' | 'm²' | '%' | ''
+  unit: string;           // 'DA' | 'feuilles' | 'mm' | 'poses' | 'm²' | '%' | 'heures' | 'DA/h' | ''
 }
 
 export interface CalcBreakdown {
@@ -55,6 +65,16 @@ export interface CalcBreakdown {
   subtotal: number;
   designCost: number;
   total: number;
+  // Discount breakdown
+  discountAmount?: number;
+  discountPercentage?: number;
+  discountType?: 'percent' | 'fixed';
+  discountValue?: number;
+  // UI/UX breakdown
+  isUiUx?: boolean;
+  uiUxCost?: number;
+  uiUxHours?: number;
+  uiUxHourlyRate?: number;
   // visual layout helpers
   layout: {
     rows: number;
@@ -203,6 +223,158 @@ export function fitOnSheet(pieceW: number, pieceH: number, sheetW: number, sheet
 export function calculate(input: CalcInput): CalcBreakdown {
   const notes: string[] = [];
   const steps: CalcStep[] = [];
+
+  // UI/UX: Hourly rate × hours calculation
+  if (input.isUiUx || input.productCategory === 'ui_ux') {
+    const hourlyRate = Number(input.hourlyRate) || 2500;
+    const baseHours = Math.max(0, Number(input.hours) || 0);
+
+    steps.push({
+      category: 'ui_ux',
+      label: 'Taux horaire UI/UX',
+      formula: '',
+      value: hourlyRate,
+      unit: 'DA/h'
+    });
+
+    if (input.screenCount && input.screenCount > 0) {
+      steps.push({
+        category: 'ui_ux',
+        label: "Nombre d'écrans / maquettes",
+        formula: `${input.screenCount} écrans`,
+        value: input.screenCount,
+        unit: 'écrans'
+      });
+    }
+
+    steps.push({
+      category: 'ui_ux',
+      label: 'Temps estimé (base)',
+      formula: `${baseHours} heures`,
+      value: baseHours,
+      unit: 'heures'
+    });
+
+    const baseCost = baseHours * hourlyRate;
+    steps.push({
+      category: 'ui_ux',
+      label: 'Conception UI/UX',
+      formula: `${baseHours}h × ${hourlyRate} DA/h`,
+      value: Math.round(baseCost),
+      unit: 'DA'
+    });
+
+    let extraHours = 0;
+    let extraCost = 0;
+    if (input.uiUxServices && input.uiUxServices.length > 0) {
+      input.uiUxServices.forEach((srv) => {
+        const h = Number(srv.hours) || 0;
+        const c = srv.price !== undefined ? Number(srv.price) : h * hourlyRate;
+        extraHours += h;
+        extraCost += c;
+        steps.push({
+          category: 'ui_ux',
+          label: `Option: ${srv.name}`,
+          formula: srv.price !== undefined ? `${srv.price} DA` : `${h}h × ${hourlyRate} DA/h`,
+          value: Math.round(c),
+          unit: 'DA'
+        });
+      });
+    }
+
+    const totalHours = baseHours + extraHours;
+    const subtotal = baseCost + extraCost;
+    const qty = Math.max(1, input.quantity || 1);
+    const total = subtotal * qty;
+
+    steps.push({
+      category: 'total',
+      label: 'Sous-total UI/UX',
+      formula: extraCost > 0 ? `${Math.round(baseCost)} + ${Math.round(extraCost)}` : `${Math.round(subtotal)}`,
+      value: Math.round(subtotal),
+      unit: 'DA'
+    });
+
+    if (qty > 1) {
+      steps.push({
+        category: 'total',
+        label: `Quantité (${qty} projets)`,
+        formula: `${Math.round(subtotal)} × ${qty}`,
+        value: Math.round(total),
+        unit: 'DA'
+      });
+    }
+
+    const totalBeforeDiscount = total;
+    const discountVal = Number(input.discountValue) || 0;
+    let discountAmount = 0;
+    if (discountVal > 0) {
+      if (input.discountType === 'fixed') {
+        discountAmount = Math.min(discountVal, totalBeforeDiscount);
+      } else {
+        discountAmount = (totalBeforeDiscount * discountVal) / 100;
+      }
+    }
+    const finalTotal = Math.max(0, totalBeforeDiscount - discountAmount);
+
+    if (discountAmount > 0) {
+      steps.push({
+        category: 'total',
+        label: input.discountType === 'fixed' ? 'Remise commerciale' : `Remise commerciale (${discountVal}%)`,
+        formula: `-${Math.round(discountAmount)} DA`,
+        value: -Math.round(discountAmount),
+        unit: 'DA'
+      });
+    }
+
+    steps.push({
+      category: 'total',
+      label: discountAmount > 0 ? 'TOTAL FINAL NET TTC' : 'TOTAL FINAL TTC',
+      formula: discountAmount > 0 ? `${Math.round(totalBeforeDiscount)} - ${Math.round(discountAmount)}` : `${Math.round(finalTotal)} DA`,
+      value: Math.round(finalTotal),
+      unit: 'DA'
+    });
+
+    steps.push({
+      category: 'total',
+      label: 'Prix unitaire net',
+      formula: `${Math.round(finalTotal)} ÷ ${qty}`,
+      value: Math.round(finalTotal / qty),
+      unit: 'DA'
+    });
+
+    notes.push(`Prestation UI/UX : ${totalHours}h estimées au taux horaire de ${formatDZD(hourlyRate)}/h`);
+    if (input.screenCount) notes.push(`${input.screenCount} écrans / pages inclus`);
+    if (discountAmount > 0) notes.push(`Remise commerciale appliquée : -${formatDZD(discountAmount)}`);
+
+    return {
+      upPerSheet: 1,
+      sheetsNeeded: 0,
+      paperCost: 0,
+      coverSheetsNeeded: 0,
+      coverPaperCost: 0,
+      printCost: 0,
+      finitionCost: 0,
+      pelliculageCost: 0,
+      subtotal,
+      designCost: subtotal,
+      total: finalTotal,
+      discountAmount,
+      discountPercentage: input.discountType === 'percent' ? discountVal : (totalBeforeDiscount > 0 ? (discountAmount / totalBeforeDiscount) * 100 : 0),
+      discountType: input.discountType,
+      discountValue: discountVal,
+      isUiUx: true,
+      uiUxCost: subtotal,
+      uiUxHours: totalHours,
+      uiUxHourlyRate: hourlyRate,
+      layout: {
+        rows: 0, cols: 0, pieceW: 0, pieceH: 0, sheetW: 0, sheetH: 0, rotated: false,
+        rects: []
+      },
+      notes,
+      steps,
+    };
+  }
 
   // Large format: simple area calc
   if (input.isLargeFormat) {
@@ -365,13 +537,47 @@ export function calculate(input: CalcInput): CalcBreakdown {
     steps.push({ category: 'design', label: `Conception graphique (${input.designPercentage}%)`, formula: `${Math.round(subtotal)} × ${input.designPercentage} ÷ 100`, value: Math.round(designCost), unit: 'DA' });
   }
 
-  const total = subtotal + designCost;
-  steps.push({ category: 'total', label: 'TOTAL TTC', formula: `${Math.round(subtotal)} + ${Math.round(designCost)}`, value: Math.round(total), unit: 'DA' });
-  steps.push({ category: 'total', label: 'Prix unitaire', formula: `${Math.round(total)} ÷ ${input.quantity}`, value: +(total / input.quantity).toFixed(2), unit: 'DA' });
+  const beforeDiscountTotal = subtotal + designCost;
+  const discountVal = Number(input.discountValue) || 0;
+  let discountAmount = 0;
+  if (discountVal > 0) {
+    if (input.discountType === 'fixed') {
+      discountAmount = Math.min(discountVal, beforeDiscountTotal);
+    } else {
+      discountAmount = (beforeDiscountTotal * discountVal) / 100;
+    }
+  }
+  const total = Math.max(0, beforeDiscountTotal - discountAmount);
+
+  if (discountAmount > 0) {
+    steps.push({
+      category: 'total',
+      label: input.discountType === 'fixed' ? 'Remise commerciale' : `Remise commerciale (${discountVal}%)`,
+      formula: `-${Math.round(discountAmount)} DA`,
+      value: -Math.round(discountAmount),
+      unit: 'DA'
+    });
+  }
+
+  steps.push({
+    category: 'total',
+    label: discountAmount > 0 ? 'TOTAL NET TTC' : 'TOTAL TTC',
+    formula: discountAmount > 0 ? `${Math.round(beforeDiscountTotal)} - ${Math.round(discountAmount)}` : `${Math.round(subtotal)} + ${Math.round(designCost)}`,
+    value: Math.round(total),
+    unit: 'DA'
+  });
+  steps.push({
+    category: 'total',
+    label: 'Prix unitaire net',
+    formula: `${Math.round(total)} ÷ ${input.quantity}`,
+    value: +(total / input.quantity).toFixed(2),
+    unit: 'DA'
+  });
 
   notes.push(`Format pièce: ${mainPieceW}×${mainPieceH}mm (+${input.bleed}mm bleed) sur feuille ${input.sheetW}×${input.sheetH}mm`);
   notes.push(`${upPerSheet} poses/feuille → ${sheetsNeeded} feuilles + 5% gâche = ${totalSheets} feuilles`);
   if (input.rectoVerso) notes.push(`Recto-Verso: ×${input.rvMultiplier} sur impression`);
+  if (discountAmount > 0) notes.push(`Remise commerciale appliquée : -${formatDZD(discountAmount)}`);
 
   return {
     upPerSheet,
@@ -385,6 +591,10 @@ export function calculate(input: CalcInput): CalcBreakdown {
     subtotal,
     designCost,
     total,
+    discountAmount,
+    discountPercentage: input.discountType === 'percent' ? discountVal : (beforeDiscountTotal > 0 ? (discountAmount / beforeDiscountTotal) * 100 : 0),
+    discountType: input.discountType,
+    discountValue: discountVal,
     layout: {
       rows: fit.rows,
       cols: fit.cols,

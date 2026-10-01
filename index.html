@@ -23,9 +23,46 @@
     <meta property="og:image" content="/logo.png">
     <meta name="twitter:image" content="/logo.png">
     <meta name="twitter:card" content="summary_large_image">
+    <script>
+      // Force unregister all Service Workers and delete caches in dev
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          for (var r of regs) { r.unregister(); }
+        });
+      }
+      // Global error listener to display runtime errors on screen
+      window.addEventListener('error', function(e) {
+        var box = document.getElementById('runtime-error-box');
+        if (!box) {
+          box = document.createElement('div');
+          box.id = 'runtime-error-box';
+          box.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;background:#ef4444;color:white;padding:16px;font-family:monospace;font-size:13px;white-space:pre-wrap;box-shadow:0 4px 12px rgba(0,0,0,0.3)';
+          document.body.prepend(box);
+        }
+        box.innerHTML = '<b>Runtime Error:</b> ' + (e.error ? (e.error.stack || e.error.message) : e.message) + '<br><small>' + (e.filename || '') + ':' + (e.lineno || '') + '</small>';
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        var box = document.getElementById('runtime-rejection-box');
+        if (!box) {
+          box = document.createElement('div');
+          box.id = 'runtime-rejection-box';
+          box.style.cssText = 'position:fixed;top:50px;left:0;right:0;z-index:999999;background:#b91c1c;color:white;padding:16px;font-family:monospace;font-size:13px;white-space:pre-wrap;box-shadow:0 4px 12px rgba(0,0,0,0.3)';
+          document.body.prepend(box);
+        }
+        box.innerHTML = '<b>Unhandled Promise:</b> ' + (e.reason ? (e.reason.stack || e.reason.message || e.reason) : 'Unknown');
+      });
+    </script>
 </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui,-apple-system,sans-serif;color:#1e293b;background:#f8fafc;">
+        <div style="text-align:center;">
+          <div style="width:36px;height:36px;border:3px solid #0f2a5c;border-top-color:transparent;border-radius:50%;margin:0 auto 16px;animation:spin 1s linear infinite;"></div>
+          <p style="font-weight:600;font-size:16px;">Chargement d'Oprisma Design...</p>
+        </div>
+        <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
