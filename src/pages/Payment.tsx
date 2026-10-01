@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { formatDZD } from "@/lib/calc";
 import { PageHeader } from "@/components/PageHeader";
-import { Search, Wallet, CheckCircle2, AlertCircle, Clock, X, Download } from "lucide-react";
+import { Search, Wallet, CheckCircle2, AlertCircle, Clock, X, Download, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { showSuccess, confirmDelete } from "@/lib/alerts";
 import { useRole } from "@/lib/useRole";
@@ -29,6 +29,7 @@ export default function PaymentPage() {
   const [search, setSearch] = useState("");
   const [payDialog, setPayDialog] = useState<any>(null);
   const [payAmount, setPayAmount] = useState("");
+  const [quoteToDelete, setQuoteToDelete] = useState<any | null>(null);
 
   const load = async () => {
     const { data } = await supabase
@@ -132,6 +133,20 @@ export default function PaymentPage() {
     load();
   };
 
+  const handleDeleteQuote = async () => {
+    if (!quoteToDelete) return;
+    const target = quoteToDelete;
+    const { error } = await supabase.from("quotes").delete().eq("id", target.id);
+    if (error) {
+      toast.error("Erreur de suppression: " + error.message);
+      return;
+    }
+    toast.success(`Dossier de ${target.client_name} supprimé avec succès`);
+    await logAction(email, role, "Suppression Devis (Paiements)", `Client: ${target.client_name} - Total: ${formatDZD(Number(target.total) || 0)}`);
+    setQuotes(prev => prev.filter(q => q.id !== target.id));
+    setQuoteToDelete(null);
+  };
+
   // Stats
   const acceptedOrPaid = quotes.filter(q => q.status === "accepted" || getPaid(q) > 0);
   const totalPaid = quotes.reduce((sum, q) => sum + getPaid(q), 0);
@@ -161,30 +176,53 @@ export default function PaymentPage() {
         }
       />
 
-      {/* Stats cards */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-2 overflow-hidden">
-          <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t("payment.totalRevenue")}</div>
-            <div className="text-xl font-bold mt-1 tabular-nums">{formatDZD(totalRevenue)}</div>
+        <Card className="border-2">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center text-white shrink-0">
+              <Wallet className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">{t("payment.totalRevenue")}</div>
+              <div className="text-lg font-bold tabular-nums">{formatDZD(totalRevenue)}</div>
+            </div>
           </CardContent>
         </Card>
-        <Card className="border-2 overflow-hidden">
-          <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Total Facturé</div>
-            <div className="text-xl font-bold mt-1 tabular-nums text-emerald-600">{formatDZD(totalAcceptedValue)}</div>
+
+        <Card className="border-2">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">{t("payment.totalPaid")}</div>
+              <div className="text-lg font-bold tabular-nums text-emerald-600">{formatDZD(totalPaid)}</div>
+            </div>
           </CardContent>
         </Card>
-        <Card className="border-2 overflow-hidden">
-          <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t("payment.totalRemaining")}</div>
-            <div className="text-xl font-bold mt-1 tabular-nums text-amber-600">{formatDZD(totalRemaining)}</div>
+
+        <Card className="border-2">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">{t("payment.totalRemaining")}</div>
+              <div className="text-lg font-bold tabular-nums text-amber-600">{formatDZD(totalRemaining)}</div>
+            </div>
           </CardContent>
         </Card>
-        <Card className="border-2 overflow-hidden">
-          <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t("payment.paidQuotes")}</div>
-            <div className="text-xl font-bold mt-1">{paidCount} <span className="text-sm font-normal text-muted-foreground">/ {quotes.length}</span></div>
+
+        <Card className="border-2">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400 flex items-center justify-center shrink-0">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">{t("payment.paidQuotes")}</div>
+              <div className="text-lg font-bold tabular-nums">{paidCount} / {quotes.length}</div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -212,31 +250,35 @@ export default function PaymentPage() {
       ) : (
         <div className="space-y-3">
           {filtered.map((q) => {
-            const status = getStatus(q);
             const paid = getPaid(q);
             const total = getTotal(q);
             const remaining = getRemaining(q);
+            const status = getStatus(q);
             const pct = total > 0 ? Math.min(100, (paid / total) * 100) : 0;
 
             return (
-              <Card key={q.id} className="border-2 hover:shadow-md transition-smooth overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="p-4 flex items-start gap-4">
+              <Card key={q.id} className="border-2 hover:shadow-md transition-smooth">
+                <CardContent className="p-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     {/* Status icon */}
-                    <div className={`mt-1 w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      status === "paid"
-                        ? "bg-emerald-100 dark:bg-emerald-900/30"
-                        : status === "partial"
-                        ? "bg-amber-100 dark:bg-amber-900/30"
-                        : "bg-red-100 dark:bg-red-900/30"
-                    }`}>
-                      {status === "paid" ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                      ) : status === "partial" ? (
-                        <Clock className="w-5 h-5 text-amber-600" />
-                      ) : (
-                        <AlertCircle className="w-5 h-5 text-red-500" />
-                      )}
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                          status === "paid"
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
+                            : status === "partial"
+                            ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400"
+                            : "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400"
+                        }`}
+                      >
+                        {status === "paid" ? (
+                          <CheckCircle2 className="w-5 h-5" />
+                        ) : status === "partial" ? (
+                          <Clock className="w-5 h-5" />
+                        ) : (
+                          <AlertCircle className="w-5 h-5" />
+                        )}
+                      </div>
                     </div>
 
                     {/* Info */}
@@ -290,7 +332,7 @@ export default function PaymentPage() {
                     {/* Total + actions */}
                     <div className="text-right shrink-0 space-y-2">
                       <div className="text-lg font-bold tabular-nums">{formatDZD(total)}</div>
-                      <div className="flex gap-1.5 justify-end">
+                      <div className="flex gap-1.5 justify-end items-center flex-wrap">
                         {status !== "paid" && (
                           <Button
                             size="sm"
@@ -308,13 +350,24 @@ export default function PaymentPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
                             onClick={() => resetPayment(q)}
                             title={t("payment.reset")}
                           >
-                            <X className="w-3.5 h-3.5 text-destructive" />
+                            <X className="w-3.5 h-3.5 text-muted-foreground" />
                           </Button>
                         )}
+
+                        {/* Prominent Delete Button */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          onClick={() => setQuoteToDelete(q)}
+                          title="Supprimer ce devis"
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -324,6 +377,51 @@ export default function PaymentPage() {
           })}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={Boolean(quoteToDelete)} onOpenChange={(open) => { if (!open) setQuoteToDelete(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="w-5 h-5 text-destructive" />
+              Supprimer le dossier / paiement
+            </DialogTitle>
+          </DialogHeader>
+          {quoteToDelete && (
+            <div className="space-y-3 pt-2 text-sm">
+              <p className="text-muted-foreground">
+                Êtes-vous sûr de vouloir supprimer définitivement ce devis ?
+              </p>
+              <div className="p-3 rounded-xl bg-destructive/5 border border-destructive/20 space-y-1">
+                <div className="font-semibold text-foreground">
+                  {quoteToDelete.client_name} {quoteToDelete.client_company ? `(${quoteToDelete.client_company})` : ''}
+                </div>
+                <div className="text-xs text-muted-foreground">{quoteToDelete.product_name}</div>
+                <div className="flex justify-between text-xs pt-1 border-t border-destructive/10">
+                  <span>Montant total:</span>
+                  <span className="font-bold text-foreground">{formatDZD(getTotal(quoteToDelete))}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span>Montant déjà payé:</span>
+                  <span className="font-bold text-emerald-600">{formatDZD(getPaid(quoteToDelete))}</span>
+                </div>
+              </div>
+              <p className="text-xs text-destructive font-medium">
+                ⚠️ Cette action est irréversible et supprimera le devis ainsi que son suivi de paiement.
+              </p>
+            </div>
+          )}
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setQuoteToDelete(null)}>
+              Annuler
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteQuote} className="gap-1.5 shadow-sm">
+              <Trash2 className="w-4 h-4" />
+              Confirmer la suppression
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Payment Dialog */}
       <Dialog open={!!payDialog} onOpenChange={(open) => { if (!open) { setPayDialog(null); setPayAmount(""); } }}>
