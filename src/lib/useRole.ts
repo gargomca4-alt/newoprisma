@@ -86,6 +86,7 @@ export function useRole(): RoleInfo {
   return {
     role,
     email,
+    userId,
     loading,
     isAdmin: role === "admin",
     isAgent: role === "agent",

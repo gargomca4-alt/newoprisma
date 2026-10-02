@@ -89,16 +89,17 @@ export default function DashboardPage() {
     const totalAcceptedValue = acceptedOrPaid.reduce((s, q) => s + (Number(q.total) || 0), 0);
     const totalRemaining = Math.max(0, totalAcceptedValue - totalPaid);
 
-    const pending = quotes.filter(q => q.status === "pending").length;
-    const accepted = quotes.filter(q => q.status === "accepted").length;
+    const pending = scopedQuotes.filter(q => q.status === "pending").length;
+    const accepted = scopedQuotes.filter(q => q.status === "accepted").length;
+    const rejected = scopedQuotes.filter(q => q.status === "rejected").length;
 
     // Conversion rate & Panier moyen
-    const totalQuotesCount = quotes.length;
+    const totalQuotesCount = scopedQuotes.length;
     const conversionRate = totalQuotesCount > 0 ? Math.round((accepted / totalQuotesCount) * 100) : 0;
     const avgOrderValue = accepted > 0 ? Math.round(totalAcceptedValue / accepted) : 0;
 
     // Invoices count & invoiced total
-    const invoicedQuotes = quotes.filter(q => q.details?.invoiceNumber);
+    const invoicedQuotes = scopedQuotes.filter(q => q.details?.invoiceNumber);
     const invoicedCount = invoicedQuotes.length;
     const invoicedTotal = invoicedQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0);
 
@@ -117,7 +118,7 @@ export default function DashboardPage() {
 
     // Top Clients Ranking
     const clientMap: Record<string, { name: string; company?: string; totalSpent: number; count: number }> = {};
-    quotes.forEach(q => {
+    scopedQuotes.forEach(q => {
       const name = (q.client_name || "Client").trim();
       const paid = Number(q.details?.paidAmount) || 0;
       const total = Number(q.total) || 0;
@@ -133,10 +134,10 @@ export default function DashboardPage() {
       .slice(0, 5);
 
     // Unique clients
-    const uniqueClients = new Set(quotes.map(q => q.client_name?.toLowerCase().trim())).size;
+    const uniqueClients = new Set(scopedQuotes.map(q => q.client_name?.toLowerCase().trim())).size;
 
     // Recent quotes
-    const recent = quotes.slice(0, 8);
+    const recent = scopedQuotes.slice(0, 8);
 
     // Chart data based on selected range
     const chartData: { label: string; revenue: number; count: number }[] = [];
@@ -202,7 +203,7 @@ export default function DashboardPage() {
     }
 
     // Outstanding Debts (> 15 days, unpaid)
-    const outstandingDebts = quotes.filter(q => {
+    const outstandingDebts = scopedQuotes.filter(q => {
       if (q.status === "rejected") return false;
       const remaining = Math.max(0, (Number(q.total) || 0) - (Number(q.details?.paidAmount) || 0));
       if (remaining <= 0) return false;
@@ -235,7 +236,7 @@ export default function DashboardPage() {
       monthlyData: chartData,
       outstandingDebts
     };
-  }, [quotes, chartRange, customStart, customEnd]);
+  }, [scopedQuotes, chartRange, customStart, customEnd]);
 
   const maxChartRevenue = Math.max(...stats.chartData.map(m => m.revenue), 1);
 

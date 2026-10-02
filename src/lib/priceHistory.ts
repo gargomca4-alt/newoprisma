@@ -70,7 +70,7 @@ export async function getPaperStock(): Promise<Record<string, { stockSheets: num
   try {
     const { data } = await supabase.from("settings").select("*").eq("key", "paper_stock").maybeSingle();
     if (data?.value) {
-      return typeof data.value === "string" ? JSON.parse(data.value) : data.value;
+      return typeof data.value === "string" ? JSON.parse(data.value) : (data.value as Record<string, { stockSheets: number; minThreshold: number }>);
     }
     const raw = localStorage.getItem(STOCK_KEY);
     return raw ? JSON.parse(raw) : {};

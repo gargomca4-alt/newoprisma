@@ -45,7 +45,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         // 2. Unpaid balances
         const unpaid = quotes.filter(q => {
           const total = Number(q.total || 0);
-          const paid = Number(q.details?.paidAmount || 0);
+          const paid = Number((q.details as any)?.paidAmount || 0);
           return (q.status === "accepted" || paid > 0) && (total - paid > 0);
         });
         if (unpaid.length > 0) {

@@ -357,6 +357,7 @@ export function calculate(input: CalcInput): CalcBreakdown {
       printCost: 0,
       finitionCost: 0,
       pelliculageCost: 0,
+      totalPaperCost: 0,
       subtotal,
       designCost: subtotal,
       total: finalTotal,
