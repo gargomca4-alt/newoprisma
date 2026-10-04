@@ -261,7 +261,7 @@ export default function Auth() {
                           onClick={() => setIsForgot(true)}
                           className="text-[11px] text-accent font-bold hover:underline"
                         >
-                          Oublié ?
+                          Mot de passe oublié ?
                         </button>
                       </div>
                       <div className="relative">
@@ -482,7 +482,7 @@ export default function Auth() {
                         onClick={() => setIsForgot(true)}
                         className="text-[11px] text-accent font-bold hover:underline"
                       >
-                        Oublié ?
+                        Mot de passe oublié ?
                       </button>
                     )}
                   </div>
