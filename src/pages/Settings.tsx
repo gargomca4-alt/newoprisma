@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Settings as SettingsIcon, Save, Users, Plus, Trash2, Shield, ShieldCheck } from "lucide-react";
+import { Settings as SettingsIcon, Save, Users, Plus, Trash2, Shield, ShieldCheck, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { showSuccess, confirmDelete } from "@/lib/alerts";
 import { PageHeader } from "@/components/PageHeader";
@@ -19,10 +20,10 @@ export default function SettingsPage() {
   const { t } = useTranslation();
   const { isAdmin, email: currentEmail } = useRole();
   const [designPct, setDesignPct] = useState(35);
-  const [companyName, setCompanyName] = useState("Oprisma Design");
+  const [companyName, setCompanyName] = useState("Impuls Design");
   const [bleed, setBleed] = useState(3);
   const [terms, setTerms] = useState("Le présent devis est valable 30 jours. Un acompte de 50% est exigé à la commande.");
-  const [watermark, setWatermark] = useState("OPRISMA DESIGN");
+  const [watermark, setWatermark] = useState("");
   const [uiUxHourlyRate, setUiUxHourlyRate] = useState(2500);
 
   // Role management
@@ -35,10 +36,16 @@ export default function SettingsPage() {
       const { data } = await supabase.from("settings").select("*");
       data?.forEach((s) => {
         if (s.key === "design_percentage") setDesignPct(Number(s.value));
-        if (s.key === "company_name") setCompanyName(String(s.value).replace(/"/g, ""));
+        if (s.key === "company_name") {
+          const c = String(s.value).replace(/"/g, "");
+          setCompanyName(c.toLowerCase().includes("oprisma") ? "Impuls Design" : c);
+        }
         if (s.key === "default_bleed_mm") setBleed(Number(s.value));
         if (s.key === "terms_conditions") setTerms(String(s.value).replace(/"/g, ""));
-        if (s.key === "watermark_text") setWatermark(String(s.value).replace(/"/g, ""));
+        if (s.key === "watermark_text") {
+          const w = String(s.value).replace(/"/g, "");
+          setWatermark(w.toLowerCase().includes("oprisma") ? "" : w);
+        }
         if (s.key === "ui_ux_default_hourly_rate") setUiUxHourlyRate(Number(s.value));
         if (s.key === "user_roles") {
           try {
@@ -151,12 +158,20 @@ export default function SettingsPage() {
       {isAdmin && (
         <Card className="border-2 rounded-2xl">
           <CardContent className="p-6 space-y-5">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="w-5 h-5 text-primary" />
-              <h3 className="font-bold text-base">Gestion des utilisateurs</h3>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
+                <h3 className="font-bold text-base">Gestion des utilisateurs & Stagiaires</h3>
+              </div>
+              <Button asChild size="sm" variant="outline" className="rounded-xl text-xs gap-1.5 border-border">
+                <Link to="/stagiaires">
+                  <span>Centre Stagiaires</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </Button>
             </div>
             <p className="text-xs text-muted-foreground -mt-3">
-              Gérez les rôles : <strong>Admin</strong> a accès complet (prix, produits, paramètres). <strong>Agent</strong> peut uniquement créer des devis et gérer les clients.
+              Gérez les rôles et approbations : <strong>Admin</strong> a accès complet (prix, produits, validation). <strong>Stagiaire</strong> peut créer des devis et consulter ses données personnelles.
             </p>
 
             {/* Current users */}

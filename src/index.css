@@ -9,191 +9,256 @@
 
 @layer base {
   :root {
-    --background: 220 33% 98%;
-    --foreground: 220 40% 12%;
+    /* Apple Clean Canvas: light neutral gray for maximum contrast against white cards */
+    --background: 240 5% 96.5%;
+    --foreground: 240 6% 12%;
 
+    /* Apple Pure White Cards */
     --card: 0 0% 100%;
-    --card-foreground: 220 40% 12%;
+    --card-foreground: 240 6% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 40% 12%;
+    --popover-foreground: 240 6% 12%;
 
-    /* Brand: deep navy blue from logo */
-    --primary: 220 75% 22%;
+    /* Brand Tier 1: Solid Deep Royal Purple (#42287B) */
+    --primary: 259 51% 32%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 215 80% 35%;
+    --primary-glow: 259 51% 40%;
 
-    /* Brand: green from logo */
-    --secondary: 145 65% 42%;
-    --secondary-foreground: 0 0% 100%;
+    /* Brand Tier 2: Apple Subtle UI Secondary (#E5E5EA) */
+    --secondary: 240 5% 90%;
+    --secondary-foreground: 240 6% 12%;
+    --secondary-soft: 240 5% 94%;
 
-    /* Brand: yellow from logo */
-    --accent: 50 95% 50%;
-    --accent-foreground: 220 75% 18%;
+    /* Brand Tier 3: Solid Warm Amber/Gold (#F5A623) */
+    --accent: 37 90% 55%;
+    --accent-foreground: 259 51% 20%;
+    --accent-hover: 37 95% 50%;
 
-    --muted: 220 15% 95%;
-    --muted-foreground: 220 15% 42%;
+    /* High-contrast Apple Muted text */
+    --muted: 240 5% 92%;
+    --muted-foreground: 240 4% 42%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 145 65% 42%;
-    --warning: 38 92% 55%;
+    --success: 152 64% 38%;
+    --warning: 37 90% 55%;
 
-    --border: 220 15% 90%;
-    --input: 220 15% 92%;
-    --ring: 220 75% 22%;
+    /* Apple Hairline Border */
+    --border: 240 6% 89%;
+    --input: 240 6% 88%;
+    --ring: 259 51% 32%;
 
-    --radius: 1rem; /* Softer, more luxurious radius */
+    --radius: 0.875rem;
 
-    /* Brand gradient (logo triangle) */
-    --gradient-brand: linear-gradient(135deg, hsl(220 75% 22%) 0%, hsl(145 65% 42%) 60%, hsl(50 95% 55%) 100%);
-    --gradient-brand-soft: linear-gradient(135deg, hsl(220 75% 22% / 0.05) 0%, hsl(145 65% 42% / 0.05) 60%, hsl(50 95% 55% / 0.08) 100%);
-    --gradient-primary: linear-gradient(135deg, hsl(220 75% 22%), hsl(215 80% 35%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 25% 98%));
+    /* Pure Solid Palette (NO MULTI-COLOR GRADIENTS) */
+    --gradient-brand: hsl(259 51% 32%);
+    --gradient-brand-soft: hsl(259 51% 32% / 0.06);
+    --gradient-primary: hsl(259 51% 32%);
+    --gradient-accent: hsl(37 90% 55%);
+    --gradient-card: hsl(0 0% 100%);
 
-    /* Premium shadows */
-    --shadow-sm: 0 2px 8px -2px hsl(220 40% 12% / 0.04), 0 1px 2px -1px hsl(220 40% 12% / 0.02);
-    --shadow-md: 0 8px 24px -4px hsl(220 40% 12% / 0.06), 0 4px 8px -2px hsl(220 40% 12% / 0.04);
-    --shadow-lg: 0 20px 40px -8px hsl(220 40% 12% / 0.1), 0 8px 16px -4px hsl(220 40% 12% / 0.06);
-    --shadow-glow: 0 0 40px hsl(50 95% 50% / 0.15);
-    --shadow-brand: 0 8px 24px -4px hsl(220 75% 22% / 0.25);
+    /* Apple Subtle Natural Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 14px 0 rgba(0, 0, 0, 0.06), 0 1px 3px 0 rgba(0, 0, 0, 0.03);
+    --shadow-lg: 0 10px 30px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.03);
+    --shadow-glow: 0 0 20px hsl(37 90% 55% / 0.25);
+    --shadow-brand: 0 4px 16px -2px hsl(259 51% 32% / 0.25);
 
-    --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
 
-    --sidebar-background: 0 0% 99%;
-    --sidebar-foreground: 220 60% 12%;
-    --sidebar-primary: 220 75% 22%;
-    --sidebar-primary-foreground: 50 100% 96%;
-    --sidebar-accent: 220 25% 96%;
-    --sidebar-accent-foreground: 220 75% 22%;
-    --sidebar-border: 220 20% 90%;
-    --sidebar-ring: 220 75% 22%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 6% 12%;
+    --sidebar-primary: 259 51% 32%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 5% 94%;
+    --sidebar-accent-foreground: 259 51% 32%;
+    --sidebar-border: 240 6% 90%;
+    --sidebar-ring: 259 51% 32%;
   }
 
   .dark {
-    --background: 222 45% 6%;
-    --foreground: 210 30% 96%;
+    /* Apple Dark Pro Canvas */
+    --background: 250 16% 9%;
+    --foreground: 240 5% 96%;
 
-    --card: 222 40% 9%;
-    --card-foreground: 210 30% 96%;
+    --card: 250 15% 13%;
+    --card-foreground: 240 5% 96%;
 
-    --popover: 222 40% 9%;
-    --popover-foreground: 210 30% 96%;
+    --popover: 250 15% 13%;
+    --popover-foreground: 240 5% 96%;
 
-    --primary: 210 90% 60%;
-    --primary-foreground: 222 45% 6%;
-    --primary-glow: 215 85% 70%;
+    /* Vivid Royal Purple in Dark Mode */
+    --primary: 260 65% 65%;
+    --primary-foreground: 250 16% 9%;
+    --primary-glow: 260 65% 72%;
 
-    --secondary: 145 55% 50%;
-    --secondary-foreground: 222 45% 6%;
+    --secondary: 250 12% 20%;
+    --secondary-foreground: 240 5% 96%;
+    --secondary-soft: 250 12% 16%;
 
-    --accent: 50 95% 60%;
-    --accent-foreground: 222 45% 6%;
+    /* Warm Gold in Dark Mode */
+    --accent: 37 92% 58%;
+    --accent-foreground: 250 16% 9%;
+    --accent-hover: 37 95% 62%;
 
-    --muted: 222 30% 14%;
-    --muted-foreground: 215 20% 68%;
+    --muted: 250 12% 18%;
+    --muted-foreground: 240 4% 64%;
 
-    --destructive: 0 70% 55%;
-    --destructive-foreground: 210 30% 96%;
+    --destructive: 0 72% 58%;
+    --destructive-foreground: 240 5% 96%;
 
-    --success: 145 55% 50%;
-    --warning: 38 92% 60%;
+    --success: 152 56% 52%;
+    --warning: 37 92% 58%;
 
-    --border: 222 30% 16%;
-    --input: 222 30% 14%;
-    --ring: 210 90% 60%;
+    --border: 250 12% 20%;
+    --input: 250 12% 18%;
+    --ring: 260 65% 65%;
 
-    --gradient-brand: linear-gradient(135deg, hsl(215 85% 45%) 0%, hsl(145 60% 45%) 50%, hsl(50 95% 60%) 100%);
-    --gradient-brand-soft: linear-gradient(135deg, hsl(215 85% 45% / 0.15) 0%, hsl(145 60% 45% / 0.12) 50%, hsl(50 95% 60% / 0.15) 100%);
-    --gradient-primary: linear-gradient(135deg, hsl(210 90% 55%), hsl(215 85% 65%));
-    --gradient-card: linear-gradient(145deg, hsl(222 40% 10%), hsl(222 38% 8%));
+    --gradient-brand: hsl(260 65% 65%);
+    --gradient-brand-soft: hsl(260 65% 65% / 0.12);
+    --gradient-primary: hsl(260 65% 65%);
+    --gradient-accent: hsl(37 92% 58%);
+    --gradient-card: hsl(250 15% 13%);
 
-    --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.3);
-    --shadow-md: 0 4px 16px -4px hsl(0 0% 0% / 0.4);
-    --shadow-lg: 0 12px 32px -8px hsl(0 0% 0% / 0.5);
-    --shadow-glow: 0 0 40px hsl(50 95% 60% / 0.18);
-    --shadow-brand: 0 8px 24px -8px hsl(210 90% 50% / 0.4);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 14px 0 rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 12px 30px -4px rgba(0, 0, 0, 0.6);
+    --shadow-glow: 0 0 25px hsl(37 92% 58% / 0.25);
+    --shadow-brand: 0 4px 16px -2px hsl(260 65% 65% / 0.4);
 
-    --sidebar-background: 222 45% 6%;
-    --sidebar-foreground: 210 30% 96%;
-    --sidebar-primary: 210 90% 60%;
-    --sidebar-primary-foreground: 222 45% 6%;
-    --sidebar-accent: 222 30% 14%;
-    --sidebar-accent-foreground: 210 30% 96%;
-    --sidebar-border: 222 30% 16%;
-    --sidebar-ring: 210 90% 60%;
+    --sidebar-background: 250 16% 9%;
+    --sidebar-foreground: 240 5% 96%;
+    --sidebar-primary: 260 65% 65%;
+    --sidebar-primary-foreground: 250 16% 9%;
+    --sidebar-accent: 250 12% 18%;
+    --sidebar-accent-foreground: 240 5% 96%;
+    --sidebar-border: 250 12% 20%;
+    --sidebar-ring: 260 65% 65%;
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
   }
 
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
   }
 
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Outfit", sans-serif;
+    min-height: 100%;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    padding-top: env(safe-area-inset-top);
+  }
+
+  #root {
+    min-height: 100%;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Prevent iOS Safari from auto-zooming in on input focus */
+  @media screen and (max-width: 768px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
   }
 
   [dir="rtl"] body {
-    font-family: 'Cairo', 'Tajawal', -apple-system, sans-serif;
+    font-family: 'Cairo', 'Tajawal', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
   h1, h2, h3, h4 {
-    @apply tracking-tight;
-    font-family: 'Inter', -apple-system, sans-serif;
+    @apply tracking-tight font-bold text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Outfit", sans-serif;
     font-feature-settings: "ss01", "cv11";
   }
 
-  /* Subtle scrollbar */
-  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  /* Apple Slim Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.2);
-    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.18);
+    border-radius: 9999px;
   }
-  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.4); }
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.3); }
+  .dark ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
 }
 
 @layer utilities {
-  .gradient-brand { background-image: var(--gradient-brand); }
-  .gradient-brand-soft { background-image: var(--gradient-brand-soft); }
-  .gradient-primary { background-image: var(--gradient-primary); }
-  .gradient-card { background-image: var(--gradient-card); }
-  .text-gradient-brand {
-    background-image: var(--gradient-brand);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  /* No more multi-color gradients: solid, clean Apple styling */
+  .gradient-brand {
+    background-color: hsl(var(--primary));
   }
+  .gradient-brand-soft {
+    background-color: hsl(var(--primary) / 0.08);
+  }
+  .gradient-primary {
+    background-color: hsl(var(--primary));
+  }
+  .gradient-accent {
+    background-color: hsl(var(--accent));
+  }
+  .gradient-card {
+    background-color: hsl(var(--card));
+  }
+
+  .text-gradient-brand {
+    color: hsl(var(--primary));
+  }
+
+  .text-gradient-gold {
+    color: hsl(var(--accent));
+  }
+
   .shadow-brand { box-shadow: var(--shadow-brand); }
   .shadow-glow { box-shadow: var(--shadow-glow); }
-  .shadow-elegant { box-shadow: var(--shadow-lg); }
-  .transition-smooth { transition: all 0.3s var(--transition-smooth); }
+  .shadow-elegant { box-shadow: var(--shadow-md); }
+  .transition-smooth { transition: all 0.2s var(--transition-smooth); }
+
+  /* Apple Frosted Glass */
   .glass {
-    background: hsl(var(--card) / 0.7);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border: 1px solid hsl(var(--border) / 0.5);
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(0, 0, 0, 0.08);
   }
+
   .glass-card {
-    background: hsl(var(--card) / 0.85);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border: 1px solid hsl(var(--border) / 0.7);
+    background: #ffffff;
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 6px 16px -2px rgba(0, 0, 0, 0.04);
   }
+
+  .dark .glass {
+    background: rgba(28, 27, 34, 0.82);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
   .dark .glass-card {
-    background: hsl(222 42% 8% / 0.92);
-    border: 1px solid hsl(220 30% 18% / 0.8);
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 24px -2px rgba(0, 0, 0, 0.4);
   }
 }
 

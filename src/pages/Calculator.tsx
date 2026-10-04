@@ -20,7 +20,10 @@ import { useRole } from "@/lib/useRole";
 import { logAction } from "@/lib/logger";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { loadUserPrices, applyUserPricing, saveQuoteWithUser, hasCustomPrices } from "@/lib/userPricing";
+import {
+  loadUserPrices, applyUserPricing, saveQuoteWithUser, hasCustomPrices,
+  loadUserClientsList, saveUserClientToList, isQuoteOwnedByUser
+} from "@/lib/userPricing";
 
 const DRAFT_KEY = "oprisma_calc_draft";
 
@@ -42,7 +45,7 @@ type Pelliculage = any;
 
 export default function CalculatorPage() {
   const { t } = useTranslation();
-  const { email, role, userId } = useRole();
+  const { email, role, userId, isAdmin } = useRole();
   const [hasUserPricing, setHasUserPricing] = useState(false);
 
   // Data from DB
@@ -259,7 +262,7 @@ export default function CalculatorPage() {
 
   useEffect(() => {
     (async () => {
-      const [p, pt, ps, prt, fi, pe, ppl, ppr, st, qt, userPrices] = await Promise.all([
+      const [p, pt, ps, prt, fi, pe, ppl, ppr, st, userClients, userQuotesRes, userPrices] = await Promise.all([
         supabase.from("products").select("*").eq("active", true).order("display_order"),
         supabase.from("paper_types").select("*").eq("active", true).order("display_order"),
         supabase.from("paper_sizes").select("*").eq("active", true).order("display_order"),
@@ -269,14 +272,15 @@ export default function CalculatorPage() {
         supabase.from("product_paper_types").select("*"),
         supabase.from("product_print_types").select("*"),
         supabase.from("settings").select("*").eq("key", "design_percentage").maybeSingle(),
-        supabase.from("settings").select("*").eq("key", "clients_list").maybeSingle(),
+        loadUserClientsList(userId, email, isAdmin),
+        supabase.from("quotes").select("client_name, client_company, details, user_id").order("created_at", { ascending: false }),
         loadUserPrices(userId, email),
       ]);
 
       const isCustom = hasCustomPrices(userPrices);
       setHasUserPricing(isCustom);
 
-      setProducts(p.data || []);
+      setProducts(applyUserPricing(p.data || [], "products", userPrices));
       setPaperTypes(applyUserPricing(pt.data || [], "paper_types", userPrices));
       setPaperSizes(ps.data || []);
       setPrintTypes(applyUserPricing(prt.data || [], "print_types", userPrices));
@@ -285,24 +289,35 @@ export default function CalculatorPage() {
       setProductLinks({ paper: ppl.data || [], print: ppr.data || [] });
       if (st.data?.value) setDesignPct(Number(st.data.value));
 
-      if (qt.data?.value) {
-        try {
-          const parsed = typeof qt.data.value === "string" ? JSON.parse(qt.data.value) : qt.data.value;
-          if (Array.isArray(parsed)) {
-            const unique = new Map<string, string>();
-            parsed.forEach((c: any) => {
-              if (c.name && !unique.has(c.name.toLowerCase())) {
-                unique.set(c.name.toLowerCase(), { name: c.name, company: c.company || "" } as any);
-              }
-            });
-            setRecentClients(Array.from(unique.values()) as any);
+      // Build isolated client suggestions strictly for this user (never leak admin clients!)
+      const unique = new Map<string, { name: string; company: string }>();
+
+      // 1. From user's saved isolated client list
+      if (Array.isArray(userClients)) {
+        userClients.forEach((c) => {
+          if (c.name?.trim()) {
+            unique.set(c.name.trim().toLowerCase(), { name: c.name.trim(), company: c.company || "" });
           }
-        } catch (e) {
-          console.error(e);
-        }
+        });
       }
+
+      // 2. From user's own quotes
+      const myQuotes = !isAdmin
+        ? (userQuotesRes.data || []).filter((q: any) => isQuoteOwnedByUser(q, userId, email))
+        : (userQuotesRes.data || []);
+
+      myQuotes.forEach((q: any) => {
+        if (q.client_name?.trim()) {
+          const key = q.client_name.trim().toLowerCase();
+          if (!unique.has(key)) {
+            unique.set(key, { name: q.client_name.trim(), company: q.client_company || "" });
+          }
+        }
+      });
+
+      setRecentClients(Array.from(unique.values()));
     })();
-  }, [userId, email]);
+  }, [userId, email, isAdmin]);
 
   const product = products.find((p) => p.id === productId);
   const printType = printTypes.find((p) => p.id === printTypeId);
@@ -474,6 +489,14 @@ export default function CalculatorPage() {
     const { error } = await saveQuoteWithUser(payload, userId, email);
     if (error) toast.error("Erreur: " + error.message);
     else { 
+      if (clientName?.trim()) {
+        await saveUserClientToList(
+          { name: clientName.trim(), company: clientCompany?.trim() },
+          userId,
+          email,
+          isAdmin
+        );
+      }
       localStorage.removeItem(DRAFT_KEY); 
       showSuccess("Success", "Devis enregistré"); 
       await logAction(email, role, "Création Devis", `Client: ${clientName} - Total: ${formatDZD(breakdown.total)}`);
@@ -501,20 +524,14 @@ export default function CalculatorPage() {
   };
   return (
     <div className="space-y-8 max-w-[1400px] mx-auto animate-fade-in relative pb-10">
-      {/* Luxurious Abstract Background */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] -z-10 pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
-      <div className="absolute top-40 left-0 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[100px] -z-10 pointer-events-none mix-blend-multiply dark:mix-blend-screen" />
-
-      {/* Hero */}
-      <div className="relative overflow-hidden rounded-[2rem] glass-card border border-white/50 dark:border-white/10 p-8 sm:p-12 shadow-lg">
-        <div className="absolute top-0 right-0 w-[40%] h-full bg-gradient-to-l from-primary/10 to-transparent pointer-events-none" />
-        <div className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full gradient-brand opacity-20 blur-3xl pointer-events-none" />
+      {/* Hero Apple Style */}
+      <div className="relative overflow-hidden rounded-[1.5rem] bg-card border border-border p-8 sm:p-10 shadow-sm">
         <div className="relative flex flex-col md:flex-row md:items-center gap-6 z-10">
-          <div className="w-20 h-20 rounded-[1.5rem] gradient-brand flex items-center justify-center shadow-brand transform rotate-3 transition-transform hover:rotate-6 duration-500">
-            <Calculator className="w-10 h-10 text-white drop-shadow-md" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-primary flex items-center justify-center text-white shadow-sm shrink-0">
+            <Calculator className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
           </div>
           <div>
-            <h1 className="text-4xl sm:text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-secondary drop-shadow-sm pb-2">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground pb-1">
               {t("calc.title")}
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground font-medium max-w-2xl mt-1">{t("calc.subtitle")}</p>
@@ -617,11 +634,11 @@ export default function CalculatorPage() {
 
           {/* UI/UX Card OR Print Card */}
           {isUiUx ? (
-            <Card className="glass-card border-violet-500/30 dark:border-violet-500/20 shadow-lg rounded-[1.5rem] overflow-hidden">
-              <CardHeader className="pb-3 border-b border-border/40 bg-gradient-to-r from-violet-500/10 via-indigo-500/5 to-transparent">
+            <Card className="bg-card border border-border shadow-sm rounded-[1.5rem] overflow-hidden">
+              <CardHeader className="pb-3 border-b border-border bg-card">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
+                    <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm">
                       <Sparkles className="w-5 h-5" />
                     </div>
                     <div>
@@ -629,7 +646,7 @@ export default function CalculatorPage() {
                       <p className="text-xs text-muted-foreground">Facturation horaire • Maquettes Figma • Prototypes & Design System</p>
                     </div>
                   </div>
-                  <Badge className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white border-0 shadow-sm text-xs">
+                  <Badge className="bg-accent text-accent-foreground font-bold border-0 shadow-sm text-xs">
                     🎨 Facturation aux Heures
                   </Badge>
                 </div>
@@ -676,7 +693,7 @@ export default function CalculatorPage() {
                           type="button"
                           variant={uiUxHourlyRate === rate ? "default" : "outline"}
                           size="sm"
-                          className={`h-8 px-2.5 text-xs ${uiUxHourlyRate === rate ? "gradient-brand text-white border-0" : ""}`}
+                          className={`h-8 px-2.5 text-xs ${uiUxHourlyRate === rate ? "bg-primary text-white border-0 font-bold" : ""}`}
                           onClick={() => setUiUxHourlyRate(rate)}
                         >
                           {rate} DA
@@ -719,7 +736,7 @@ export default function CalculatorPage() {
                             type="button"
                             variant={uiUxHours === h ? "default" : "outline"}
                             size="sm"
-                            className={`h-7 px-2.5 text-xs ${uiUxHours === h ? "gradient-brand text-white border-0" : ""}`}
+                            className={`h-7 px-2.5 text-xs ${uiUxHours === h ? "bg-primary text-white border-0 font-bold" : ""}`}
                             onClick={() => setUiUxHours(h)}
                           >
                             {h}h
@@ -793,7 +810,7 @@ export default function CalculatorPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-1">
                               <span className="font-semibold text-xs truncate">{mod.name}</span>
-                              <Badge variant={isSelected ? "default" : "secondary"} className={`text-[10px] h-5 ${isSelected ? "gradient-brand text-white border-0" : ""}`}>
+                              <Badge variant={isSelected ? "default" : "secondary"} className={`text-[10px] h-5 ${isSelected ? "bg-primary text-white border-0 font-bold" : ""}`}>
                                 +{mod.hours}h
                               </Badge>
                             </div>
@@ -932,9 +949,9 @@ export default function CalculatorPage() {
                     {product?.has_cover ? (
                       <>
                         {/* 1) Couverture */}
-                        <div className="rounded-xl gradient-brand-soft border p-4 space-y-4">
+                        <div className="rounded-xl bg-muted/30 border border-border p-4 space-y-4">
                           <div className="flex items-center gap-2">
-                            <div className="w-1 h-5 rounded-full gradient-brand" />
+                            <div className="w-1 h-5 rounded-full bg-primary" />
                             <h4 className="text-sm font-semibold">Couverture extérieure</h4>
                           </div>
                           <div className="grid md:grid-cols-3 gap-4">

@@ -75,7 +75,7 @@ export default function PrintPage() {
         });
       }
 
-      if (priceMode === "personal") {
+      if (!isAdmin || priceMode === "personal") {
         await saveUserPriceOverride("print_types", editing.id, {
           cost_per_sheet: form.cost_per_sheet,
           setup_cost: form.setup_cost,
@@ -88,6 +88,10 @@ export default function PrintPage() {
         toast.success(`Catalogue général mis à jour pour "${form.name}"`);
       }
     } else {
+      if (!isAdmin) {
+        toast.error("Seul l'administrateur peut ajouter de nouvelles machines au catalogue.");
+        return;
+      }
       await supabase.from("print_types").insert(form);
       toast.success(t("common.save"));
     }
@@ -119,9 +123,11 @@ export default function PrintPage() {
           <Button variant="outline" size="sm" onClick={openPriceHistory} className="gap-1.5">
             <History className="w-4 h-4" /> Historique des Prix
           </Button>
-          <Button onClick={() => { setEditing(null); setOpen(true); }} className="gradient-brand text-white border-0 gap-1.5">
-            <Plus className="w-4 h-4" />{t("common.new")}
-          </Button>
+          {isAdmin && (
+            <Button onClick={() => { setEditing(null); setOpen(true); }} className="gradient-brand text-white border-0 gap-1.5">
+              <Plus className="w-4 h-4" />{t("common.new")}
+            </Button>
+          )}
         </div>
       } />
 
@@ -198,8 +204,14 @@ export default function PrintPage() {
                 <div className="flex justify-between"><span className="text-muted-foreground">{t("print.rvMultiplier")}</span><span className="font-medium tabular-nums">×{p.recto_verso_multiplier}</span></div>
               </div>
               <div className="flex gap-2 mt-4">
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => { setEditing(p); setOpen(true); }}><Pencil className="w-3.5 h-3.5 mr-1" />{t("common.edit")}</Button>
-                <Button variant="outline" size="sm" onClick={() => remove(p.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => { setEditing(p); setOpen(true); }}>
+                  <Pencil className="w-3.5 h-3.5 mr-1" />{isAdmin ? t("common.edit") : "Modifier mes tarifs"}
+                </Button>
+                {isAdmin && (
+                  <Button variant="outline" size="sm" onClick={() => remove(p.id)} title="Supprimer du catalogue">
+                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

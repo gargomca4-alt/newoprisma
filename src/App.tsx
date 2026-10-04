@@ -23,6 +23,7 @@ const Quotes = lazy(() => import("./pages/Quotes"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Payment = lazy(() => import("./pages/Payment"));
 const Clients = lazy(() => import("./pages/Clients"));
+const Stagiaires = lazy(() => import("./pages/Stagiaires"));
 const Devis = lazy(() => import("./pages/Devis"));
 const Logs = lazy(() => import("./pages/Logs"));
 const Invoices = lazy(() => import("./pages/Invoices"));
@@ -126,7 +127,8 @@ function ShellRoutes() {
             <Route path="/invoices" element={<Invoices />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/payment" element={<Payment />} />
-            <Route path="/clients" element={<Clients />} />
+            <Route path="/stagiaires" element={<Stagiaires />} />
+            <Route path="/clients" element={<Stagiaires />} />
             <Route path="/logs" element={<Logs />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

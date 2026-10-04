@@ -35,3 +35,8 @@ coverage/
 
 .vercel
 *.tsbuildinfo
+
+# Scratch scripts
+check-*.mjs
+test-*.mjs
+convert-logo.cjs

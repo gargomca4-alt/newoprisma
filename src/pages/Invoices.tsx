@@ -365,7 +365,7 @@ export default function InvoicesPage() {
                         </Badge>
                       )}
                       {st === "partial" && (
-                        <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400 gap-1 border-0">
+                        <Badge className="bg-secondary-soft text-primary dark:bg-secondary/20 dark:text-primary-foreground gap-1 border-0">
                           <Clock className="w-3 h-3" /> Acompte versé
                         </Badge>
                       )}

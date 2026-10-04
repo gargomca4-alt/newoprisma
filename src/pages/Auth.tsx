@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
 import { showSuccess, showError } from "@/lib/alerts";
-import { Loader2 } from "lucide-react";
+import { Loader2, ShieldCheck, Clock, UserCheck } from "lucide-react";
+import { createStagiaireManual } from "@/lib/useRole";
 
 export default function Auth() {
   const [view, setView] = useState<'login' | 'signup' | 'forgot'>('login');
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,90 +32,155 @@ export default function Auth() {
     try {
       if (view === 'login') {
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: email.trim(),
           password,
         });
         if (error) throw error;
-        showSuccess("Success", "Connexion réussie");
+        showSuccess("Connexion réussie", "Bienvenue sur votre espace Oprisma.");
         navigate("/");
       } else if (view === 'signup') {
-        const { error } = await supabase.auth.signUp({
-          email,
+        const cleanEmail = email.trim().toLowerCase();
+        const cleanName = fullName.trim() || cleanEmail.split("@")[0];
+
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: cleanEmail,
           password,
+          options: {
+            data: {
+              full_name: cleanName,
+            },
+          },
         });
-        if (error) throw error;
-        showSuccess("Success", "Inscription réussie. Vérifiez votre boîte mail si nécessaire.");
-        if (!error) {
-           const { data: { session } } = await supabase.auth.getSession();
-           if (session) navigate("/");
-           else setView('login');
+        if (signUpError) throw signUpError;
+
+        // Auto sign-in if session was not attached to signUpData
+        let activeSession = signUpData?.session;
+        if (!activeSession) {
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: cleanEmail,
+            password,
+          });
+          if (!signInError && signInData?.session) {
+            activeSession = signInData.session;
+          }
+        }
+
+        // Register in stagiaires list as pending
+        try {
+          await createStagiaireManual({
+            email: cleanEmail,
+            name: cleanName,
+            role: "stagiaire",
+            status: "pending",
+          });
+        } catch (e) {
+          console.warn("Pending stagiaire registration fallback:", e);
+        }
+
+        showSuccess(
+          "Compte créé avec succès !",
+          "Votre compte est ouvert. Il est en attente d'approbation par l'administrateur."
+        );
+
+        if (activeSession) {
+          navigate("/");
+        } else {
+          // If session could not be established immediately, navigate or prompt login
+          navigate("/");
         }
       } else if (view === 'forgot') {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
           redirectTo: window.location.origin + "/",
         });
         if (error) throw error;
-        showSuccess("Success", "Lien de réinitialisation envoyé ! Vérifiez votre boîte mail.");
+        showSuccess("Email envoyé", "Vérifiez votre boîte mail pour réinitialiser le mot de passe.");
         setView('login');
       }
     } catch (error: any) {
-      showError("Erreur", error.message || "Une erreur est survenue");
+      showError("Erreur d'authentification", error.message || "Une erreur est survenue");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-muted/30">
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
-      
-      {/* Decorative background elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[100px]"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-secondary/10 blur-[100px]"></div>
-
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background selection:bg-accent/30 selection:text-foreground">
       <div className="w-full max-w-5xl grid md:grid-cols-2 gap-8 items-center z-10">
         
         {/* Left Side: Branding */}
         <div className="hidden md:flex flex-col justify-center space-y-6 p-8">
-          <img src="/logo.png" alt="Oprisma Design" className="w-48 mb-8" />
-          <h1 className="text-4xl font-bold tracking-tight text-foreground">
-            Bienvenue sur l'espace <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent">Oprisma Design</span>
+          <img src="/logo-light.png" alt="Impuls Designer Graphique" className="w-40 mb-6 dark:hidden" />
+          <img src="/logo-dark.png" alt="Impuls Designer Graphique" className="w-40 mb-6 hidden dark:block" />
+          <h1 className="text-4xl font-extrabold tracking-tight text-foreground leading-tight">
+            Espace Atelier & Devis <br/>
+            <span className="text-primary font-black">Impuls Design</span>
           </h1>
-          <p className="text-lg text-muted-foreground">
-            Gérez vos devis d'impression, vos produits, papiers, finitions et clients depuis une interface unique et professionnelle.
+          <p className="text-base text-muted-foreground font-medium leading-relaxed">
+            Plateforme complète d'estimation, calcul technique d'impression (Offset, Numérique, Finitions) et gestion d'équipe.
           </p>
-          <div className="flex gap-4 pt-4">
-            <div className="flex-1 p-4 rounded-2xl bg-white border shadow-sm">
-              <div className="font-semibold text-primary mb-1">Calculs précis</div>
-              <div className="text-xs text-muted-foreground">Offset, numérique et grand format</div>
+
+          <div className="space-y-3 pt-2">
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-card border border-border shadow-xs">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                <UserCheck className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="font-bold text-sm text-foreground">Accès Stagiaires Contrôlé</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Chaque stagiaire crée son compte et attend la validation de l'administrateur.
+                </div>
+              </div>
             </div>
-            <div className="flex-1 p-4 rounded-2xl bg-white border shadow-sm">
-              <div className="font-semibold text-secondary mb-1">Devis pro</div>
-              <div className="text-xs text-muted-foreground">Générez des devis professionnels</div>
+
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-card border border-border shadow-xs">
+              <div className="w-8 h-8 rounded-lg bg-accent/15 text-accent flex items-center justify-center shrink-0 mt-0.5">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="font-bold text-sm text-foreground">Isolation & Confidentialité</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Chaque stagiaire voit et gère uniquement ses propres devis et calculs.
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Right Side: Auth Form */}
-        <Card className="w-full max-w-md mx-auto shadow-2xl border-0 overflow-hidden">
-          <div className="h-2 w-full gradient-brand"></div>
+        <Card className="w-full max-w-md mx-auto shadow-sm border border-border rounded-2xl overflow-hidden bg-card">
+          <div className="h-1.5 w-full bg-accent"></div>
           <CardHeader className="pt-8 pb-4">
             <div className="md:hidden flex justify-center mb-6">
-              <img src="/logo.png" alt="Oprisma Design" className="h-12" />
+              <img src="/logo-light.png" alt="Impuls" className="h-16 dark:hidden" />
+              <img src="/logo-dark.png" alt="Impuls" className="h-16 hidden dark:block" />
             </div>
-            <CardTitle className="text-2xl text-center">
-              {view === 'login' ? "Connexion" : view === 'signup' ? "Créer un compte" : "Mot de passe oublié"}
+            <CardTitle className="text-2xl text-center font-bold tracking-tight">
+              {view === 'login' ? "Connexion" : view === 'signup' ? "Créer un compte stagiaire" : "Mot de passe oublié"}
             </CardTitle>
-            <CardDescription className="text-center">
-              {view === 'login' && "Entrez vos identifiants pour accéder à votre espace"}
-              {view === 'signup' && "Remplissez les champs pour créer un nouvel accès"}
-              {view === 'forgot' && "Entrez votre email pour recevoir un lien de réinitialisation"}
+            <CardDescription className="text-center text-xs">
+              {view === 'login' && "Entrez vos identifiants pour accéder à votre espace de travail"}
+              {view === 'signup' && "Inscription pour stagiaires et collaborateurs d'atelier"}
+              {view === 'forgot' && "Entrez votre email pour recevoir les instructions"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAuth} className="space-y-4">
-              <div className="space-y-2">
+              {view === 'signup' && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="fullname">Nom & Prénom</Label>
+                  <Input
+                    id="fullname"
+                    type="text"
+                    placeholder="Ex: Mohamed Kaci"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    className="h-11 rounded-xl"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-1.5">
                 <Label htmlFor="email">Adresse email</Label>
                 <Input
                   id="email"
@@ -123,16 +189,20 @@ export default function Auth() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-11"
+                  className="h-11 rounded-xl"
                 />
               </div>
               
               {view !== 'forgot' && (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Mot de passe</Label>
                     {view === 'login' && (
-                      <button type="button" onClick={() => setView('forgot')} className="text-xs text-primary hover:underline font-medium">
+                      <button
+                        type="button"
+                        onClick={() => setView('forgot')}
+                        className="text-xs text-accent font-semibold hover:underline"
+                      >
                         Mot de passe oublié ?
                       </button>
                     )}
@@ -140,18 +210,30 @@ export default function Auth() {
                   <Input
                     id="password"
                     type="password"
+                    placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-11"
+                    className="h-11 rounded-xl"
                   />
                 </div>
               )}
+
+              {view === 'signup' && (
+                <div className="p-3 rounded-xl bg-accent/10 border border-accent/20 text-xs text-accent-foreground flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-accent shrink-0" />
+                  <span>Votre compte sera en attente d'approbation par le superviseur.</span>
+                </div>
+              )}
               
-              <Button type="submit" className="w-full h-11 gradient-brand text-white border-0 shadow-md font-semibold mt-6" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full h-11 bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl shadow-xs font-bold mt-4"
+                disabled={loading}
+              >
                 {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                   view === 'login' ? "Se connecter" : 
-                  view === 'signup' ? "S'inscrire" : 
+                  view === 'signup' ? "Créer mon compte stagiaire" : 
                   "Envoyer le lien"
                 )}
               </Button>
@@ -159,21 +241,25 @@ export default function Auth() {
           </CardContent>
           <CardFooter className="pb-8 justify-center flex-col gap-2">
             {view === 'forgot' ? (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Vous vous souvenez de votre mot de passe ?
-                <button type="button" onClick={() => setView('login')} className="ml-1 text-primary font-semibold hover:underline">
+                <button
+                  type="button"
+                  onClick={() => setView('login')}
+                  className="ml-1 text-accent font-bold hover:underline"
+                >
                   Retour à la connexion
                 </button>
               </p>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                {view === 'login' ? "Vous n'avez pas de compte ?" : "Vous avez déjà un compte ?"}
+              <p className="text-xs text-muted-foreground">
+                {view === 'login' ? "Nouveau stagiaire ?" : "Vous avez déjà un compte ?"}
                 <button
                   type="button"
                   onClick={() => setView(view === 'login' ? 'signup' : 'login')}
-                  className="ml-1 text-primary font-semibold hover:underline"
+                  className="ml-1 text-accent font-bold hover:underline"
                 >
-                  {view === 'login' ? "S'inscrire" : "Se connecter"}
+                  {view === 'login' ? "Créer un compte stagiaire" : "Se connecter"}
                 </button>
               </p>
             )}

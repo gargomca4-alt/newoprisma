@@ -12,7 +12,7 @@ import { Link } from "react-router-dom";
 export default function DevisPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [data, setData] = useState<any>(null);
-  const [settings, setSettings] = useState({ terms: "", watermark: "", company: "Oprisma Design" });
+  const [settings, setSettings] = useState({ terms: "", watermark: "", company: "Impuls Design" });
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -23,13 +23,19 @@ export default function DevisPage() {
       const { data: sData } = await supabase.from("settings").select("*");
       let terms = "Le présent devis est valable 30 jours.";
       let watermark = "";
-      let company = "Oprisma Design";
+      let company = "Impuls Design";
       sData?.forEach(s => {
         if (s.key === "terms_conditions") terms = String(s.value).replace(/"/g, "");
-        if (s.key === "watermark_text") watermark = String(s.value).replace(/"/g, "");
-        if (s.key === "company_name") company = String(s.value).replace(/"/g, "");
+        if (s.key === "watermark_text") {
+          const w = String(s.value).replace(/"/g, "");
+          watermark = w.toLowerCase().includes("oprisma") ? "" : w;
+        }
+        if (s.key === "company_name") {
+          const c = String(s.value).replace(/"/g, "");
+          company = c.toLowerCase().includes("oprisma") ? "Impuls Design" : c;
+        }
       });
-      setSettings({ terms, watermark, company });
+      setSettings({ terms, watermark: "", company: company || "Impuls Design" });
 
       const params = new URLSearchParams(window.location.search);
       const id = params.get("id");
@@ -162,81 +168,85 @@ export default function DevisPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black p-4 sm:p-8 print:p-0 font-sans">
-      <div className="no-print mb-6 flex flex-wrap justify-end gap-2 max-w-4xl mx-auto">
-        <Button variant="outline" onClick={() => window.print()}><Printer className="w-4 h-4 mr-1.5" />Imprimer</Button>
-        <Button
-          variant="outline"
-          className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/30"
-          onClick={() => {
-            const lines = [
-              `📋 *${docTitle} Oprisma Design*`,
-              `👤 Client: ${clientName || "—"}${clientCompany ? ` (${clientCompany})` : ""}`,
-              `📦 Produit: ${product?.name || "—"}`,
-              `📊 Quantité: ${quantity}`,
-              `💰 *Total: ${formatDZD(breakdown?.total || 0)}*`,
-              `📅 Date: ${today}`,
-              ``,
-              `_Oprisma Design — Évènementiel · Print · Marketing Digital_`,
-            ];
-            window.open(`https://wa.me/?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
-          }}
-        >
-          <MessageCircle className="w-4 h-4 mr-1.5" />WhatsApp
+    <div className="min-h-screen bg-white text-black p-3 sm:p-8 print:p-0 font-sans">
+      <div className="no-print mb-4 sm:mb-6 flex flex-wrap items-center justify-between gap-2 max-w-4xl mx-auto">
+        <Button asChild variant="ghost" size="sm">
+          <Link to="/quotes" className="gap-1.5 text-xs text-gray-700 hover:text-black">
+            <ArrowLeft className="w-4 h-4" /> Retour aux devis
+          </Link>
         </Button>
-        <Button onClick={exportPDF} disabled={exporting} className="gradient-brand text-white border-0">
-          {exporting ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Download className="w-4 h-4 mr-1.5" />}
-          {exporting ? "Génération..." : "Télécharger PDF"}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="w-4 h-4 mr-1.5" />Imprimer</Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/30"
+            onClick={() => {
+              const lines = [
+                `📋 *${docTitle} Impuls Design*`,
+                `👤 Client: ${clientName || "—"}${clientCompany ? ` (${clientCompany})` : ""}`,
+                `📦 Produit: ${product?.name || "—"}`,
+                `📊 Quantité: ${quantity}`,
+                `💰 *Total: ${formatDZD(breakdown?.total || 0)}*`,
+                `📅 Date: ${today}`,
+                ``,
+                `_Impuls Design — Designer Graphique · Print · Marketing_`,
+              ];
+              window.open(`https://wa.me/?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
+            }}
+          >
+            <MessageCircle className="w-4 h-4 mr-1.5" />WhatsApp
+          </Button>
+          <Button size="sm" onClick={exportPDF} disabled={exporting} className="bg-accent hover:bg-accent/90 text-accent-foreground font-extrabold border-0 shadow-glow">
+            {exporting ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Download className="w-4 h-4 mr-1.5" />}
+            {exporting ? "Génération..." : "Télécharger PDF"}
+          </Button>
+        </div>
+      </div>
+      <div className="sm:hidden text-center text-[11px] text-gray-500 pb-2 no-print font-medium">
+        ↔ Glissez avec le doigt pour voir toute la largeur
       </div>
       <div className="overflow-x-auto pb-8 print:pb-0 print:overflow-visible">
-        <div ref={sheetRef} className="relative w-full min-w-[800px] max-w-4xl mx-auto bg-white p-8 sm:p-12 print:p-0 shadow-sm print:shadow-none rounded-lg print:rounded-none">
-          {/* Watermark */}
-          {settings.watermark && (
-            <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden z-0 select-none opacity-[0.03]">
-              <div className="text-[120px] font-black tracking-widest text-black -rotate-45 whitespace-nowrap">
-                {settings.watermark}
-              </div>
-            </div>
-          )}
-
+        <div ref={sheetRef} className="relative w-full min-w-[800px] max-w-4xl mx-auto bg-white p-6 sm:p-12 print:p-0 shadow-md print:shadow-none rounded-2xl print:rounded-none border border-gray-200 print:border-none">
         {/* Header */}
-        <div className="flex items-start justify-between border-b-4 pb-6 print:pb-4 relative z-10" style={{ borderColor: "hsl(220 75% 22%)" }}>
+        <div className="flex items-start justify-between border-b-4 pb-6 print:pb-4 relative z-10" style={{ borderColor: "hsl(262 56% 25%)" }}>
           <div className="flex items-center gap-4">
-            <img src={logo} alt="Oprisma" className="h-20 w-auto" />
+            <img src={logo} alt="Impuls Design" className="h-20 w-auto" />
             <div>
-              <h1 className="text-2xl font-bold" style={{ color: "hsl(220 75% 22%)" }}>{settings.company}</h1>
-              <p className="text-xs text-gray-800 font-medium">Évènementiel · Print · Marketing Digital</p>
+              <h1 className="text-2xl font-black tracking-tight" style={{ color: "hsl(262 56% 25%)" }}>
+                {settings.company && !settings.company.toLowerCase().includes("oprisma") ? settings.company : "Impuls Design"}
+              </h1>
+              <p className="text-xs text-gray-800 font-bold uppercase tracking-wider mt-0.5">DESIGNER GRAPHIQUE · PRINT · MARKETING DIGITAL</p>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-3xl font-bold" style={{ color: "hsl(220 75% 22%)" }}>{docTitle}</div>
-            <div className="text-xs text-gray-800 mt-1 font-medium">N° {ref}</div>
-            <div className="text-xs text-gray-800 font-medium">Date: {today}</div>
+            <div className="text-3xl font-black tracking-tight" style={{ color: "hsl(262 56% 25%)" }}>{docTitle}</div>
+            <div className="text-xs text-gray-800 mt-1 font-bold">N° {ref}</div>
+            <div className="text-xs text-gray-800 font-semibold">Date: {today}</div>
           </div>
         </div>
 
         {/* Client */}
         <div className="grid grid-cols-2 gap-6 mt-8 print:mt-4 relative z-10">
           <div>
-            <div className="text-xs uppercase tracking-wider text-gray-700 mb-1 font-semibold">Client</div>
-            <div className="font-semibold text-lg">{clientName}</div>
-            {clientCompany && <div className="text-sm text-gray-700">{clientCompany}</div>}
+            <div className="text-xs uppercase tracking-wider text-gray-700 mb-1 font-bold">Client</div>
+            <div className="font-extrabold text-lg text-gray-900">{clientName}</div>
+            {clientCompany && <div className="text-sm font-medium text-gray-700">{clientCompany}</div>}
           </div>
           <div>
-            <div className="text-xs uppercase tracking-wider text-gray-700 mb-1 font-semibold">Validité</div>
-            <div className="text-sm">15 jours à compter du {today}</div>
+            <div className="text-xs uppercase tracking-wider text-gray-700 mb-1 font-bold">Validité</div>
+            <div className="text-sm font-semibold text-gray-800">15 jours à compter du {today}</div>
           </div>
         </div>
 
         {/* Détail */}
         <table className="w-full mt-8 print:mt-4 border-collapse relative z-10">
           <thead>
-            <tr className="text-white text-sm" style={{ background: "linear-gradient(135deg, hsl(220 75% 22%), hsl(145 65% 42%))" }}>
-              <th className="text-left p-3 font-semibold">Désignation</th>
-              <th className="text-center p-3 font-semibold w-24">Quantité</th>
-              <th className="text-right p-3 font-semibold w-32">P. Unitaire</th>
-              <th className="text-right p-3 font-semibold w-32">Total</th>
+            <tr className="text-white text-sm bg-[#42287B]">
+              <th className="text-left p-3 font-bold">Désignation</th>
+              <th className="text-center p-3 font-bold w-24">Quantité</th>
+              <th className="text-right p-3 font-bold w-32">P. Unitaire</th>
+              <th className="text-right p-3 font-bold w-32">Total</th>
             </tr>
           </thead>
           <tbody className="text-sm">
@@ -394,24 +404,27 @@ export default function DevisPage() {
                 </td>
               </tr>
             )}
-            <tr className="text-white text-lg" style={{ background: "hsl(220 75% 22%)" }}>
-              <td colSpan={3} className="text-right p-3 font-bold">TOTAL TTC</td>
-              <td className="text-right p-3 tabular-nums font-bold">{formatDZD(breakdown.total)}</td>
+            <tr className="text-white text-lg" style={{ background: "hsl(262 56% 25%)" }}>
+              <td colSpan={3} className="text-right p-3 font-black">TOTAL TTC</td>
+              <td className="text-right p-3 tabular-nums font-black text-amber-300">{formatDZD(breakdown.total)}</td>
             </tr>
           </tfoot>
         </table>
 
         {/* Notes / Instructions client */}
         {(data.notes || data.quoteNotes) && (
-          <div className="mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200 text-xs">
-            <div className="font-semibold text-gray-900 mb-1">📝 Remarques & Instructions :</div>
+          <div className="mt-6 p-4 rounded-xl bg-gray-50 border border-gray-200 text-xs">
+            <div className="font-bold text-gray-900 mb-1">📝 Remarques & Instructions :</div>
             <p className="text-gray-700 whitespace-pre-wrap">{data.notes || data.quoteNotes}</p>
           </div>
         )}
 
         {/* Détails techniques du calcul (Caché à l'impression pour le client) */}
-        <div className="mt-8 p-5 rounded-lg border-2 print:hidden" style={{ borderColor: "hsl(220 75% 22% / 0.3)", background: "hsl(220 75% 22% / 0.03)" }}>
-          <div className="text-sm font-bold mb-3" style={{ color: "hsl(220 75% 22%)" }}>📋 Détails techniques du calcul</div>
+        <div className="mt-8 p-5 rounded-xl border-2 print:hidden" style={{ borderColor: "hsl(262 56% 25% / 0.25)", background: "hsl(262 56% 25% / 0.03)" }}>
+          <div className="text-sm font-extrabold mb-3 flex items-center gap-2" style={{ color: "hsl(262 56% 25%)" }}>
+            <span>📋 Détails techniques de l'atelier</span>
+            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-accent/20 text-accent">Atelier</span>
+          </div>
           <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs">
             <DetailRow label="Format fini (cm)" value={`${(finishedW / 10).toFixed(1)} × ${(finishedH / 10).toFixed(1)} cm`} />
             <DetailRow label="Format fini (mm)" value={`${finishedW} × ${finishedH} mm`} />

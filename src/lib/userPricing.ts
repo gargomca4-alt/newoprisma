@@ -5,6 +5,7 @@ export interface UserPriceOverrides {
   print_types?: Record<string, { cost_per_sheet?: number; setup_cost?: number; cost_per_color?: number; recto_verso_multiplier?: number }>;
   finitions?: Record<string, { price?: number }>;
   pelliculages?: Record<string, { price_per_sqm?: number }>;
+  products?: Record<string, { base_price?: number; default_markup?: number }>;
   updated_at?: string;
 }
 
@@ -17,6 +18,17 @@ export function getUserPricingKey(userId?: string, email?: string): string {
   if (userId) return `user_prices_${userId}`;
   if (email) return `user_prices_${email.replace(/[@.]/g, "_")}`;
   return "user_prices_default";
+}
+
+/**
+ * Get the storage key for a user's isolated client suggestions.
+ * Non-admins have their own isolated client key so they never see admin/other users' clients!
+ */
+export function getUserClientsKey(userId?: string, email?: string, isAdmin?: boolean): string {
+  if (isAdmin) return "clients_list";
+  if (userId) return `user_clients_${userId}`;
+  if (email) return `user_clients_${email.replace(/[@.]/g, "_")}`;
+  return "user_clients_guest";
 }
 
 /**
@@ -56,7 +68,7 @@ export async function loadUserPrices(userId?: string, email?: string): Promise<U
  * Save price overrides for a specific user without affecting others.
  */
 export async function saveUserPriceOverride(
-  section: "paper_types" | "print_types" | "finitions" | "pelliculages",
+  section: "paper_types" | "print_types" | "finitions" | "pelliculages" | "products",
   itemId: string,
   overrides: Record<string, any>,
   userId?: string,
@@ -97,7 +109,7 @@ export async function saveUserPriceOverride(
  * Reset user's custom prices back to company catalog defaults.
  */
 export async function resetUserPrices(
-  section?: "paper_types" | "print_types" | "finitions" | "pelliculages",
+  section?: "paper_types" | "print_types" | "finitions" | "pelliculages" | "products",
   userId?: string,
   email?: string
 ): Promise<boolean> {
@@ -111,6 +123,7 @@ export async function resetUserPrices(
     return !error;
   }
 
+  // Reset only one section
   const current = await loadUserPrices(userId, email);
   delete current[section];
   current.updated_at = new Date().toISOString();
@@ -130,7 +143,10 @@ export async function resetUserPrices(
 /**
  * Check if the user has custom prices configured.
  */
-export function hasCustomPrices(profile: UserPriceOverrides, section?: "paper_types" | "print_types" | "finitions" | "pelliculages"): boolean {
+export function hasCustomPrices(
+  profile: UserPriceOverrides,
+  section?: "paper_types" | "print_types" | "finitions" | "pelliculages" | "products"
+): boolean {
   if (section) {
     return Boolean(profile[section] && Object.keys(profile[section] || {}).length > 0);
   }
@@ -138,7 +154,8 @@ export function hasCustomPrices(profile: UserPriceOverrides, section?: "paper_ty
     Boolean(profile.paper_types && Object.keys(profile.paper_types).length > 0) ||
     Boolean(profile.print_types && Object.keys(profile.print_types).length > 0) ||
     Boolean(profile.finitions && Object.keys(profile.finitions).length > 0) ||
-    Boolean(profile.pelliculages && Object.keys(profile.pelliculages).length > 0)
+    Boolean(profile.pelliculages && Object.keys(profile.pelliculages).length > 0) ||
+    Boolean(profile.products && Object.keys(profile.products).length > 0)
   );
 }
 
@@ -147,7 +164,7 @@ export function hasCustomPrices(profile: UserPriceOverrides, section?: "paper_ty
  */
 export function applyUserPricing<T extends { id: string }>(
   items: T[],
-  section: "paper_types" | "print_types" | "finitions" | "pelliculages",
+  section: "paper_types" | "print_types" | "finitions" | "pelliculages" | "products",
   profile: UserPriceOverrides
 ): T[] {
   const overrides = profile[section];
@@ -162,6 +179,74 @@ export function applyUserPricing<T extends { id: string }>(
       _isCustomPrice: true,
     };
   });
+}
+
+/**
+ * Load isolated client list for a specific user (prevents non-admins from seeing admin clients).
+ */
+export async function loadUserClientsList(
+  userId?: string,
+  email?: string,
+  isAdmin?: boolean
+): Promise<{ name: string; company?: string; phone?: string }[]> {
+  try {
+    const key = getUserClientsKey(userId, email, isAdmin);
+    const { data } = await supabase
+      .from("settings")
+      .select("*")
+      .eq("key", key)
+      .maybeSingle();
+
+    if (data?.value) {
+      const parsed = typeof data.value === "string" ? JSON.parse(data.value) : data.value;
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (err) {
+    console.error("Error loading user clients:", err);
+  }
+  return [];
+}
+
+/**
+ * Save a client to the user's isolated client list.
+ */
+export async function saveUserClientToList(
+  client: { name: string; company?: string; phone?: string },
+  userId?: string,
+  email?: string,
+  isAdmin?: boolean
+): Promise<void> {
+  if (!client.name?.trim()) return;
+  try {
+    const currentList = await loadUserClientsList(userId, email, isAdmin);
+    const cleanName = client.name.trim();
+    const cleanCompany = (client.company || "").trim();
+    const cleanPhone = (client.phone || "").trim();
+
+    // Check if already in list
+    const exists = currentList.find(
+      (c) => c.name.toLowerCase().trim() === cleanName.toLowerCase()
+    );
+
+    let updated: { name: string; company?: string; phone?: string }[];
+    if (exists) {
+      updated = currentList.map((c) =>
+        c.name.toLowerCase().trim() === cleanName.toLowerCase()
+          ? { ...c, company: cleanCompany || c.company, phone: cleanPhone || c.phone }
+          : c
+      );
+    } else {
+      updated = [{ name: cleanName, company: cleanCompany, phone: cleanPhone }, ...currentList];
+    }
+
+    const key = getUserClientsKey(userId, email, isAdmin);
+    await supabase.from("settings").upsert({
+      key,
+      value: JSON.stringify(updated.slice(0, 100)) as any,
+    });
+  } catch (err) {
+    console.error("Error saving user client:", err);
+  }
 }
 
 /**
@@ -182,7 +267,6 @@ export function isQuoteOwnedByUser(quote: any, userId?: string, email?: string):
     if (createdBy === normalizedEmail) return true;
   }
 
-  // If quote has NO ownership info attached (legacy quote), consider it owned if no user info
   return false;
 }
 

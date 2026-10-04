@@ -35,13 +35,16 @@ export default function ClientPortalPage() {
     (async () => {
       // Load company settings
       const { data: sData } = await supabase.from("settings").select("*");
-      let comp = "Oprisma Design";
+      let comp = "Impuls Design";
       let ph = "";
       sData?.forEach(s => {
-        if (s.key === "company_name") comp = String(s.value).replace(/"/g, "");
+        if (s.key === "company_name") {
+          const c = String(s.value).replace(/"/g, "");
+          comp = c.toLowerCase().includes("oprisma") ? "Impuls Design" : c;
+        }
         if (s.key === "company_phone") ph = String(s.value).replace(/"/g, "");
       });
-      setCompanySettings({ company: comp, phone: ph });
+      setCompanySettings({ company: comp || "Impuls Design", phone: ph });
 
       if (!quoteId) {
         setLoading(false);
@@ -161,7 +164,8 @@ export default function ClientPortalPage() {
       <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur sticky top-0 z-30 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="Oprisma Design" className="h-8 w-auto" />
+            <img src={logo} alt="Impuls" className="h-8 w-auto dark:hidden" />
+            <img src="/logo-dark.png" alt="Impuls" className="h-8 w-auto hidden dark:block" />
             <div>
               <span className="font-bold text-sm tracking-tight">{companySettings.company}</span>
               <span className="hidden sm:inline text-xs text-muted-foreground ml-2">Portail Client</span>
@@ -222,8 +226,8 @@ export default function ClientPortalPage() {
         )}
 
         {/* Main Quote Card */}
-        <Card className="border shadow-lg rounded-3xl overflow-hidden bg-white dark:bg-slate-900">
-          <div className="p-6 sm:p-8 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-b">
+        <Card className="border border-border shadow-md rounded-[1.5rem] overflow-hidden bg-card">
+          <div className="p-6 sm:p-8 bg-card border-b border-border">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">

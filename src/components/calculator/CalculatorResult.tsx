@@ -48,12 +48,12 @@ export function CalculatorResult({
 
   return (
     <div className="space-y-4 lg:sticky lg:top-24 self-start">
-      <Card className="glass-card border-white/50 dark:border-white/10 shadow-xl rounded-[1.5rem] overflow-hidden">
-        <div className="gradient-brand p-5 text-white">
-          <div className="text-xs uppercase tracking-wider opacity-90">{t("calc.finalTotal")}</div>
-          <div className="text-4xl font-bold mt-1 tabular-nums">{breakdown ? formatDZD(breakdown.total) : "— DA"}</div>
+      <Card className="bg-card border border-border shadow-md rounded-[1.5rem] overflow-hidden">
+        <div className="bg-primary p-6 text-white">
+          <div className="text-xs uppercase tracking-wider font-semibold text-white/80">{t("calc.finalTotal")}</div>
+          <div className="text-4xl font-extrabold mt-1 tracking-tight tabular-nums text-white">{breakdown ? formatDZD(breakdown.total) : "— DA"}</div>
           {breakdown && quantity > 0 && (
-            <div className="text-xs opacity-80 mt-2">{t("calc.unitPrice")}: <span className="font-semibold">{formatDZD(breakdown.total / quantity)}</span> / {t("calc.units")}</div>
+            <div className="text-xs text-white/90 mt-2 font-medium">{t("calc.unitPrice")}: <span className="font-bold text-accent">{formatDZD(breakdown.total / quantity)}</span> / {t("calc.units")}</div>
           )}
         </div>
         <CardContent className="p-5 space-y-3">
@@ -127,8 +127,8 @@ export function CalculatorResult({
                 </Dialog>
               </div>
               <div className="grid grid-cols-2 gap-2 pt-2">
-                <Button variant="outline" onClick={onSaveQuote}><Save className="w-4 h-4 mr-1.5" />{t("calc.save")}</Button>
-                <Button onClick={onPrintDevis} className="gradient-brand text-white border-0"><PrinterIcon className="w-4 h-4 mr-1.5" />{t("calc.printDevis")}</Button>
+                <Button variant="outline" onClick={onSaveQuote} className="font-bold border-border"><Save className="w-4 h-4 mr-1.5" />{t("calc.save")}</Button>
+                <Button onClick={onPrintDevis} className="bg-accent hover:bg-accent/90 text-accent-foreground font-extrabold border-0"><PrinterIcon className="w-4 h-4 mr-1.5" />{t("calc.printDevis")}</Button>
               </div>
             </>
           ) : (
@@ -138,7 +138,7 @@ export function CalculatorResult({
       </Card>
 
       {breakdown && !isLargeFormat && !breakdown.isUiUx && (
-        <Card className="glass-card border-white/50 dark:border-white/10 shadow-lg rounded-[1.5rem] overflow-hidden">
+        <Card className="bg-card border border-border shadow-sm rounded-[1.5rem] overflow-hidden">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               {t("calc.montage")} <Badge variant="secondary" className="text-[10px]">+{bleed}mm bleed</Badge>

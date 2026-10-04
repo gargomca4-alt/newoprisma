@@ -122,7 +122,7 @@ export default function PaperPage() {
         }
       });
 
-      if (priceMode === "personal") {
+      if (!isAdmin || priceMode === "personal") {
         await saveUserPriceOverride("paper_types", editing.id, {
           weight_prices: form.weight_prices,
           price_per_sheet_sra3: form.price_per_sheet_sra3,
@@ -133,6 +133,10 @@ export default function PaperPage() {
         toast.success(`Catalogue général mis à jour pour "${form.name}"`);
       }
     } else {
+      if (!isAdmin) {
+        toast.error("Seul l'administrateur peut créer de nouveaux types de papier dans le catalogue.");
+        return;
+      }
       await supabase.from("paper_types").insert(payload);
       toast.success(t("common.save"));
     }
@@ -166,9 +170,11 @@ export default function PaperPage() {
             <Button variant="outline" size="sm" onClick={openPriceHistory} className="gap-1.5">
               <History className="w-4 h-4" /> Historique des Prix
             </Button>
-            <Button onClick={() => { setEditing(null); setOpen(true); }} className="gradient-brand text-white border-0 gap-1.5">
-              <Plus className="w-4 h-4" />{t("common.new")}
-            </Button>
+            {isAdmin && (
+              <Button onClick={() => { setEditing(null); setOpen(true); }} className="gradient-brand text-white border-0 gap-1.5">
+                <Plus className="w-4 h-4" />{t("common.new")}
+              </Button>
+            )}
           </div>
         }
       />
@@ -301,11 +307,13 @@ export default function PaperPage() {
 
                 <div className="flex gap-2 pt-2">
                   <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => { setEditing(p); setOpen(true); }}>
-                    <Pencil className="w-3.5 h-3.5 mr-1.5" />{t("common.edit")}
+                    <Pencil className="w-3.5 h-3.5 mr-1.5" />{isAdmin ? t("common.edit") : "Modifier mes tarifs"}
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => remove(p.id)}>
-                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                  </Button>
+                  {isAdmin && (
+                    <Button variant="outline" size="sm" onClick={() => remove(p.id)} title="Supprimer du catalogue">
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

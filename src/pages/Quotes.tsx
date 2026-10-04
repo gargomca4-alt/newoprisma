@@ -8,10 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   FileText, Trash2, ExternalLink, Search, Clock, CheckCircle2,
-  XCircle, MessageCircle, Download, MessageSquare, Share2, Receipt, AlertTriangle
+  XCircle, MessageCircle, Download, MessageSquare, Share2, Receipt, AlertTriangle,
+  Calendar, Users, Filter, X, ChevronDown, TrendingUp,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { formatDZD } from "@/lib/calc";
 import { PageHeader } from "@/components/PageHeader";
@@ -52,10 +53,25 @@ import { isQuoteOwnedByUser } from "@/lib/userPricing";
 export default function QuotesPage() {
   const { t } = useTranslation();
   const { email, role, userId, isAdmin } = useRole();
+  const [searchParams] = useSearchParams();
   const [items, setItems] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [scopeFilter, setScopeFilter] = useState<"all" | "mine">("all");
+  const [clientFilter, setClientFilter] = useState(() => searchParams.get("client") || "all");
+  const [monthFilter, setMonthFilter] = useState(() => searchParams.get("month") || "all");
+
+  useEffect(() => {
+    const c = searchParams.get("client");
+    if (c) setClientFilter(c);
+    const m = searchParams.get("month");
+    if (m) setMonthFilter(m);
+  }, [searchParams]);
+
+  const MONTH_NAMES = [
+    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+  ];
 
   // Selection for bulk delete
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -75,25 +91,104 @@ export default function QuotesPage() {
     return items;
   }, [items, isAdmin, scopeFilter, userId, email]);
 
+  // Build unique client names from scoped items
+  const availableClients = useMemo(() => {
+    const map = new Map<string, string>();
+    scopedItems.forEach(q => {
+      if (q.client_name?.trim()) {
+        const key = q.client_name.trim().toLowerCase();
+        if (!map.has(key)) map.set(key, q.client_name.trim());
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.localeCompare(b));
+  }, [scopedItems]);
+
+  // Build unique month options
+  const availableMonths = useMemo(() => {
+    const set = new Set<string>();
+    scopedItems.forEach(q => {
+      if (q.created_at) {
+        const d = new Date(q.created_at);
+        set.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+      }
+    });
+    return Array.from(set).sort().reverse();
+  }, [scopedItems]);
+
+  const formatMonthLabel = (val: string) => {
+    const [y, m] = val.split("-").map(Number);
+    return `${MONTH_NAMES[m - 1]} ${y}`;
+  };
+
   const filteredItems = scopedItems.filter((q) => {
     const matchSearch =
       (q.client_name || "").toLowerCase().includes(search.toLowerCase()) ||
       (q.client_company || "").toLowerCase().includes(search.toLowerCase()) ||
       (q.product_name || "").toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "all" || q.status === statusFilter;
-    return matchSearch && matchStatus;
+    const matchClient = clientFilter === "all" || q.client_name?.trim().toLowerCase() === clientFilter.toLowerCase();
+    const matchMonth = (() => {
+      if (monthFilter === "all") return true;
+      const [y, m] = monthFilter.split("-").map(Number);
+      const d = new Date(q.created_at);
+      return d.getFullYear() === y && d.getMonth() + 1 === m;
+    })();
+    return matchSearch && matchStatus && matchClient && matchMonth;
   });
 
   const myQuotesCount = useMemo(() => {
     return items.filter((q) => isQuoteOwnedByUser(q, userId, email)).length;
   }, [items, userId, email]);
 
-  const statusCounts = {
-    all: scopedItems.length,
-    pending: scopedItems.filter((q) => q.status === "pending").length,
-    accepted: scopedItems.filter((q) => q.status === "accepted").length,
-    rejected: scopedItems.filter((q) => q.status === "rejected").length,
-  };
+  const statusCounts = useMemo(() => {
+    const base = scopedItems.filter((q) => {
+      const matchClient = clientFilter === "all" || q.client_name?.trim().toLowerCase() === clientFilter.toLowerCase();
+      const matchMonth = (() => {
+        if (monthFilter === "all") return true;
+        const [y, m] = monthFilter.split("-").map(Number);
+        const d = new Date(q.created_at);
+        return d.getFullYear() === y && d.getMonth() + 1 === m;
+      })();
+      return matchClient && matchMonth;
+    });
+    return {
+      all: base.length,
+      pending: base.filter((q) => q.status === "pending").length,
+      accepted: base.filter((q) => q.status === "accepted").length,
+      rejected: base.filter((q) => q.status === "rejected").length,
+    };
+  }, [scopedItems, clientFilter, monthFilter]);
+
+  // Compute detailed financial summary (turnover, paid, remaining, all-time vs filtered)
+  const financialSummary = useMemo(() => {
+    const totalAmount = filteredItems.reduce((acc, q) => acc + (Number(q.total) || 0), 0);
+    const totalPaid = filteredItems.reduce((acc, q) => acc + (Number(q.details?.paidAmount) || 0), 0);
+    const totalRemaining = Math.max(0, totalAmount - totalPaid);
+    const count = filteredItems.length;
+
+    let clientAllTime: { totalAmount: number; totalPaid: number; totalRemaining: number; count: number; company?: string } | null = null;
+    if (clientFilter !== "all") {
+      const allForClient = scopedItems.filter(q => q.client_name?.trim().toLowerCase() === clientFilter.toLowerCase());
+      const cTotal = allForClient.reduce((acc, q) => acc + (Number(q.total) || 0), 0);
+      const cPaid = allForClient.reduce((acc, q) => acc + (Number(q.details?.paidAmount) || 0), 0);
+      const found = allForClient.find(q => q.client_company);
+      clientAllTime = {
+        totalAmount: cTotal,
+        totalPaid: cPaid,
+        totalRemaining: Math.max(0, cTotal - cPaid),
+        count: allForClient.length,
+        company: found?.client_company || "",
+      };
+    }
+
+    return {
+      totalAmount,
+      totalPaid,
+      totalRemaining,
+      count,
+      clientAllTime,
+    };
+  }, [filteredItems, scopedItems, clientFilter]);
 
   const load = async () => {
     const { data } = await supabase.from("quotes").select("*").order("created_at", { ascending: false });
@@ -296,45 +391,273 @@ export default function QuotesPage() {
         </Tabs>
       )}
 
-      {/* Search and Bulk Action Bar */}
+      {/* Search + Filters */}
       {items.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="relative max-w-sm flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher un client, entreprise, produit..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-
-          {/* Bulk Selection Actions */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border bg-card text-xs">
-              <Checkbox
-                id="select-all"
-                checked={filteredItems.length > 0 && selectedIds.length === filteredItems.length}
-                onCheckedChange={toggleSelectAll}
+        <div className="space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="relative max-w-sm flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher un client, entreprise, produit..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
               />
-              <label htmlFor="select-all" className="cursor-pointer font-medium select-none">
-                Tout sélectionner ({filteredItems.length})
-              </label>
             </div>
 
-            {selectedIds.length > 0 && (
-              <Button
-                variant="destructive"
-                size="sm"
-                className="gap-1.5 rounded-xl shadow-sm text-xs font-semibold animate-in fade-in"
-                onClick={() => setBulkDeleteDialogOpen(true)}
+            {/* Bulk Selection Actions */}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border bg-card text-xs">
+                <Checkbox
+                  id="select-all"
+                  checked={filteredItems.length > 0 && selectedIds.length === filteredItems.length}
+                  onCheckedChange={toggleSelectAll}
+                />
+                <label htmlFor="select-all" className="cursor-pointer font-medium select-none">
+                  Tout sélectionner ({filteredItems.length})
+                </label>
+              </div>
+
+              {selectedIds.length > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="gap-1.5 rounded-xl shadow-sm text-xs font-semibold animate-in fade-in"
+                  onClick={() => setBulkDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Supprimer ({selectedIds.length})
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Client + Month filters row */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Client filter */}
+            <div className="relative">
+              <Users className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <select
+                value={clientFilter}
+                onChange={(e) => setClientFilter(e.target.value)}
+                className="h-9 pl-8 pr-8 rounded-lg border border-input bg-background text-sm appearance-none cursor-pointer hover:bg-accent/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
               >
-                <Trash2 className="w-4 h-4" />
-                Supprimer ({selectedIds.length})
+                <option value="all">Tous les clients</option>
+                {availableClients.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            </div>
+
+            {/* Month filter */}
+            <div className="relative">
+              <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <select
+                value={monthFilter}
+                onChange={(e) => setMonthFilter(e.target.value)}
+                className="h-9 pl-8 pr-8 rounded-lg border border-input bg-background text-sm appearance-none cursor-pointer hover:bg-accent/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+              >
+                <option value="all">Tous les mois</option>
+                {availableMonths.map(m => (
+                  <option key={m} value={m}>{formatMonthLabel(m)}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            </div>
+
+            {/* Clear filters */}
+            {(clientFilter !== "all" || monthFilter !== "all") && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-muted-foreground hover:text-destructive gap-1"
+                onClick={() => { setClientFilter("all"); setMonthFilter("all"); }}
+              >
+                <X className="w-3.5 h-3.5" />
+                Effacer les filtres
               </Button>
             )}
           </div>
+
+          {/* Active filters badges */}
+          {(clientFilter !== "all" || monthFilter !== "all") && (
+            <div className="flex flex-wrap items-center gap-2">
+              {clientFilter !== "all" && (
+                <Badge variant="secondary" className="gap-1.5 bg-primary/10 text-primary px-3 py-1">
+                  <Users className="w-3 h-3" />
+                  {clientFilter}
+                  <button onClick={() => setClientFilter("all")} className="ml-1 hover:text-destructive"><X className="w-3 h-3" /></button>
+                </Badge>
+              )}
+              {monthFilter !== "all" && (
+                <Badge variant="secondary" className="gap-1.5 bg-primary/10 text-primary px-3 py-1">
+                  <Calendar className="w-3 h-3" />
+                  {formatMonthLabel(monthFilter)}
+                  <button onClick={() => setMonthFilter("all")} className="ml-1 hover:text-destructive"><X className="w-3 h-3" /></button>
+                </Badge>
+              )}
+              <span className="text-xs text-muted-foreground">
+                {filteredItems.length} résultat{filteredItems.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+          )}
         </div>
+      )}
+
+      {/* Financial Summary KPI / Client Turnover Card */}
+      {scopedItems.length > 0 && (
+        clientFilter !== "all" ? (
+          <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/[0.05] via-background to-amber-500/[0.04] shadow-md overflow-hidden animate-in fade-in slide-in-from-top-2">
+            <div className="p-4 sm:p-5">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border/60">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl gradient-brand flex items-center justify-center text-white font-bold text-xl shadow-brand shrink-0">
+                    {clientFilter.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-lg font-bold tracking-tight text-foreground">{clientFilter}</h2>
+                      {financialSummary.clientAllTime?.company && (
+                        <Badge variant="outline" className="text-xs font-normal">
+                          {financialSummary.clientAllTime.company}
+                        </Badge>
+                      )}
+                      <Badge className="bg-primary/10 text-primary border-primary/20 text-xs">
+                        Fiche & Chiffre d'Affaires
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Historique complet et chiffre d'affaires total cumulé de ce client avec Impuls Design
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => exportQuotesToCSV(filteredItems)}
+                    className="h-8 gap-1.5 text-xs shadow-xs"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Exporter ces devis
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setClientFilter("all")}
+                    className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Voir tous les clients
+                  </Button>
+                </div>
+              </div>
+
+              {/* Financial KPIs */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-4">
+                {/* Total Chiffre d'Affaires */}
+                <div className="p-3.5 rounded-xl bg-background border shadow-xs">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+                    <TrendingUp className="w-4 h-4 text-primary" />
+                    <span>Chiffre d'Affaires Total</span>
+                  </div>
+                  <div className="text-xl sm:text-2xl font-extrabold tracking-tight mt-1.5 text-primary tabular-nums">
+                    {formatDZD(financialSummary.clientAllTime?.totalAmount || 0)}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    Sur l'ensemble de ses devis ({financialSummary.clientAllTime?.count || 0})
+                  </div>
+                </div>
+
+                {/* Total Encaissé / Payé */}
+                <div className="p-3.5 rounded-xl bg-background border shadow-xs">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Total Encaissé (Versé)</span>
+                  </div>
+                  <div className="text-xl sm:text-2xl font-extrabold tracking-tight mt-1.5 text-emerald-600 dark:text-emerald-400 tabular-nums">
+                    {formatDZD(financialSummary.clientAllTime?.totalPaid || 0)}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    Total déjà versé
+                  </div>
+                </div>
+
+                {/* Reste à Payer / Crédit */}
+                <div className="p-3.5 rounded-xl bg-background border shadow-xs">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>Reste à Payer (Crédit)</span>
+                  </div>
+                  <div className={`text-xl sm:text-2xl font-extrabold tracking-tight mt-1.5 tabular-nums ${(financialSummary.clientAllTime?.totalRemaining || 0) > 0 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}>
+                    {formatDZD(financialSummary.clientAllTime?.totalRemaining || 0)}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {(financialSummary.clientAllTime?.totalRemaining || 0) > 0 ? "Solde non réglé" : "Entièrement réglé"}
+                  </div>
+                </div>
+
+                {/* Devis Travaillés */}
+                <div className="p-3.5 rounded-xl bg-background border shadow-xs">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                    <FileText className="w-4 h-4" />
+                    <span>Nombre de Devis</span>
+                  </div>
+                  <div className="text-xl sm:text-2xl font-extrabold tracking-tight mt-1.5 text-foreground tabular-nums">
+                    {financialSummary.clientAllTime?.count || 0}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {monthFilter !== "all" ? `Dont ${financialSummary.count} en ${formatMonthLabel(monthFilter)}` : "Commandes réalisées"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Month-specific breakdown banner if month filter is also active */}
+              {monthFilter !== "all" && (
+                <div className="mt-3 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-amber-600" />
+                    <span>
+                      Sous-total pour <strong>{formatMonthLabel(monthFilter)}</strong> : <strong>{formatDZD(financialSummary.totalAmount)}</strong> ({financialSummary.count} devis)
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-muted-foreground">
+                    (Le grand total ci-dessus représente la totalité historique)
+                  </span>
+                </div>
+              )}
+            </div>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-2xl bg-muted/40 border">
+            <div>
+              <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                {monthFilter !== "all" || search ? "Chiffre Sélection" : "Chiffre d'Affaires Global"}
+              </div>
+              <div className="text-lg sm:text-xl font-bold text-primary mt-0.5 tabular-nums">
+                {formatDZD(financialSummary.totalAmount)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Total Encaissé</div>
+              <div className="text-lg sm:text-xl font-bold text-emerald-600 mt-0.5 tabular-nums">
+                {formatDZD(financialSummary.totalPaid)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Reste à Recouvrer</div>
+              <div className={`text-lg sm:text-xl font-bold mt-0.5 tabular-nums ${financialSummary.totalRemaining > 0 ? "text-amber-600" : "text-muted-foreground"}`}>
+                {formatDZD(financialSummary.totalRemaining)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Nombre de Devis</div>
+              <div className="text-lg sm:text-xl font-bold text-foreground mt-0.5 tabular-nums">
+                {financialSummary.count}
+              </div>
+            </div>
+          </div>
+        )
       )}
 
       {filteredItems.length === 0 ? (
@@ -360,7 +683,15 @@ export default function QuotesPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-base">{q.client_name}{q.client_company ? ` · ${q.client_company}` : ""}</span>
+                        <button
+                          type="button"
+                          onClick={() => setClientFilter(q.client_name)}
+                          className="font-semibold text-base hover:text-primary transition-colors text-left flex items-center gap-1.5 group cursor-pointer"
+                          title={`Filtrer tous les devis de ${q.client_name} et afficher son chiffre d'affaires total`}
+                        >
+                          <span className="group-hover:underline underline-offset-2">{q.client_name}</span>
+                          {q.client_company ? <span className="text-sm text-muted-foreground font-normal">· {q.client_company}</span> : null}
+                        </button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <span><StatusBadge status={q.status || "pending"} /></span>
@@ -387,7 +718,7 @@ export default function QuotesPage() {
                         {hasNote && (
                           <button
                             onClick={() => openNoteDialog(q)}
-                            className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 hover:opacity-80 transition-opacity"
+                            className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-secondary-soft text-primary dark:bg-secondary/20 dark:text-primary-foreground hover:opacity-80 transition-opacity"
                             title="Voir la note"
                           >
                             <MessageSquare className="w-3 h-3" />

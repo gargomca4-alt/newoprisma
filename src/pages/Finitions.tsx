@@ -61,7 +61,7 @@ function FinitionList({ table }: { table: "finitions" | "pelliculages" }) {
 
   const save = async (form: any) => {
     if (editing?.id) {
-      if (priceMode === "personal") {
+      if (!isAdmin || priceMode === "personal") {
         const override = isPellic ? { price_per_sqm: form.price_per_sqm } : { price: form.price };
         await saveUserPriceOverride(table, editing.id, override, userId, email);
         toast.success("Tarif personnalisé enregistré");
@@ -70,6 +70,10 @@ function FinitionList({ table }: { table: "finitions" | "pelliculages" }) {
         toast.success("Catalogue général mis à jour");
       }
     } else {
+      if (!isAdmin) {
+        toast.error("Seul l'administrateur peut ajouter de nouvelles finitions au catalogue.");
+        return;
+      }
       await supabase.from(table).insert(form);
       toast.success(t("common.save"));
     }
@@ -137,11 +141,13 @@ function FinitionList({ table }: { table: "finitions" | "pelliculages" }) {
         </div>
       </div>
 
-      <div className="flex justify-between items-center">
-        <Button onClick={() => { setEditing(null); setOpen(true); }} className="gradient-brand text-white border-0">
-          <Plus className="w-4 h-4 mr-1.5" />{t("common.new")}
-        </Button>
-      </div>
+      {isAdmin && (
+        <div className="flex justify-between items-center">
+          <Button onClick={() => { setEditing(null); setOpen(true); }} className="gradient-brand text-white border-0">
+            <Plus className="w-4 h-4 mr-1.5" />{t("common.new")}
+          </Button>
+        </div>
+      )}
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {items.map((f) => (
@@ -161,8 +167,14 @@ function FinitionList({ table }: { table: "finitions" | "pelliculages" }) {
                 </Badge>
               </div>
               <div className="flex gap-2 mt-3">
-                <Button variant="outline" size="sm" className="flex-1 h-8" onClick={() => { setEditing(f); setOpen(true); }}><Pencil className="w-3 h-3 mr-1" />{t("common.edit")}</Button>
-                <Button variant="outline" size="sm" className="h-8" onClick={() => remove(f.id)}><Trash2 className="w-3 h-3 text-destructive" /></Button>
+                <Button variant="outline" size="sm" className="flex-1 h-8 text-xs" onClick={() => { setEditing(f); setOpen(true); }}>
+                  <Pencil className="w-3 h-3 mr-1" />{isAdmin ? t("common.edit") : "Modifier mon tarif"}
+                </Button>
+                {isAdmin && (
+                  <Button variant="outline" size="sm" className="h-8" onClick={() => remove(f.id)} title="Supprimer du catalogue">
+                    <Trash2 className="w-3 h-3 text-destructive" />
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

@@ -12,26 +12,51 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import logo from "@/assets/oprisma-logo.png";
 import { supabase } from "@/integrations/supabase/client";
-import { useRole } from "@/lib/useRole";
+import { useRole, getStagiairesList } from "@/lib/useRole";
+import { isQuoteOwnedByUser } from "@/lib/userPricing";
 import { toast } from "sonner";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
-  const { isAdmin } = useRole();
+  const { isAdmin, email, userId } = useRole();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [pendingStagiairesCount, setPendingStagiairesCount] = useState(0);
   const [notifications, setNotifications] = useState<{ id: string; title: string; desc: string; link: string; type: 'warning' | 'info' }[]>([]);
 
   useEffect(() => {
     (async () => {
       try {
-        const { data: quotes } = await supabase.from("quotes").select("*").order("created_at", { ascending: false });
-        if (!quotes) return;
-
         const notifs: any[] = [];
+
+        // If admin, check for pending stagiaires
+        if (isAdmin) {
+          const list = await getStagiairesList();
+          const pending = list.filter((s) => s.status === "pending" && s.role !== "admin");
+          setPendingStagiairesCount(pending.length);
+          if (pending.length > 0) {
+            notifs.push({
+              id: "pending-stagiaires",
+              title: `${pending.length} stagiaire(s) en attente`,
+              desc: "Nouvelles demandes d'accès à valider.",
+              link: "/stagiaires",
+              type: "warning",
+            });
+          }
+        }
+
+        const { data: quotes } = await supabase.from("quotes").select("*").order("created_at", { ascending: false });
+        if (!quotes) {
+          setNotifications(notifs);
+          return;
+        }
+
+        // Scope quotes if not admin
+        const myQuotes = !isAdmin ? quotes.filter((q) => isQuoteOwnedByUser(q, userId, email)) : quotes;
+
         const now = Date.now();
         // 1. Pending quotes older than 48 hours
-        const pendingOld = quotes.filter(q => q.status === "pending" && (now - new Date(q.created_at).getTime()) > 48 * 3600 * 1000);
+        const pendingOld = myQuotes.filter(q => q.status === "pending" && (now - new Date(q.created_at).getTime()) > 48 * 3600 * 1000);
         if (pendingOld.length > 0) {
           notifs.push({
             id: "pending-quotes",
@@ -43,7 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         }
 
         // 2. Unpaid balances
-        const unpaid = quotes.filter(q => {
+        const unpaid = myQuotes.filter(q => {
           const total = Number(q.total || 0);
           const paid = Number((q.details as any)?.paidAmount || 0);
           return (q.status === "accepted" || paid > 0) && (total - paid > 0);
@@ -61,7 +86,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         setNotifications(notifs);
       } catch (e) {}
     })();
-  }, []);
+  }, [isAdmin, email, userId]);
 
   const requestNotificationPermission = async () => {
     if ("Notification" in window) {
@@ -82,22 +107,37 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   };
 
-  const allNavItems = [
-    { to: "/", icon: BarChart3, label: t("nav.dashboard"), adminOnly: true },
-    { to: "/calculator", icon: Calculator, label: t("nav.calculator"), adminOnly: false },
-    { to: "/products", icon: Package, label: t("nav.products"), adminOnly: true },
-    { to: "/paper", icon: Layers, label: t("nav.paper"), adminOnly: true },
-    { to: "/print", icon: Printer, label: t("nav.print"), adminOnly: true },
-    { to: "/finitions", icon: Sparkles, label: t("nav.finitions"), adminOnly: true },
-    { to: "/quotes", icon: FileText, label: t("nav.quotes"), adminOnly: false },
-    { to: "/invoices", icon: Receipt, label: "Factures", adminOnly: false },
-    { to: "/clients", icon: Users, label: t("nav.clients"), adminOnly: false },
-    { to: "/payment", icon: Wallet, label: t("nav.payment"), adminOnly: true },
-    { to: "/logs", icon: History, label: "Logs", adminOnly: true },
-    { to: "/settings", icon: Settings, label: t("nav.settings"), adminOnly: true },
+  const navGroups = [
+    {
+      title: "GESTION & DEVIS",
+      items: [
+        { to: "/", icon: BarChart3, label: t("nav.dashboard"), adminOnly: false },
+        { to: "/calculator", icon: Calculator, label: t("nav.calculator"), adminOnly: false, isCta: true },
+        { to: "/quotes", icon: FileText, label: t("nav.quotes"), adminOnly: false },
+        { to: "/invoices", icon: Receipt, label: "Factures", adminOnly: false },
+        { to: "/payment", icon: Wallet, label: t("nav.payment"), adminOnly: false },
+      ],
+    },
+    {
+      title: "PRODUCTION & ATELIER",
+      items: [
+        { to: "/products", icon: Package, label: t("nav.products"), adminOnly: false },
+        { to: "/paper", icon: Layers, label: t("nav.paper"), adminOnly: false },
+        { to: "/print", icon: Printer, label: t("nav.print"), adminOnly: false },
+        { to: "/finitions", icon: Sparkles, label: t("nav.finitions"), adminOnly: false },
+      ],
+    },
+    {
+      title: "RELATIONS & SYSTÈME",
+      items: [
+        { to: "/stagiaires", icon: Users, label: "Stagiaires", adminOnly: true, badgeCount: pendingStagiairesCount },
+        { to: "/logs", icon: History, label: "Logs", adminOnly: true },
+        { to: "/settings", icon: Settings, label: t("nav.settings"), adminOnly: true },
+      ],
+    },
   ];
 
-  const navItems = allNavItems.filter(item => !item.adminOnly || isAdmin);
+  const flatNavItems = navGroups.flatMap(g => g.items).filter(item => !item.adminOnly || isAdmin);
 
   const langs = [
     { code: "fr", label: "Français" },
@@ -106,47 +146,58 @@ export function AppShell({ children }: { children: ReactNode }) {
   ];
 
   return (
-    <div className="min-h-screen bg-muted/30 selection:bg-primary/20 selection:text-primary">
-      {/* Top bar */}
-      <header className="sticky top-0 z-40 w-full glass-card border-x-0 border-t-0 rounded-none no-print shadow-sm">
-        <div className="container flex h-16 items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-xl gradient-brand opacity-20 blur-lg group-hover:opacity-40 transition-smooth" />
-              <img src={logo} alt="Oprisma Design" className="relative h-10 w-auto drop-shadow-md" />
-            </div>
+    <div className="min-h-screen bg-background selection:bg-accent/30 selection:text-foreground">
+      {/* Top bar (Apple Translucent Header) */}
+      <header className="sticky top-0 z-40 w-full bg-card/85 backdrop-blur-xl border-b border-border no-print shadow-xs">
+        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 flex h-16 items-center justify-between gap-2 sm:gap-4">
+          <Link to="/" className="flex items-center gap-2.5 sm:gap-3.5 group shrink-0">
+            <img src={logo} alt="Impuls" className="h-10 w-auto transition-transform duration-300 group-hover:scale-105 dark:hidden" />
+            <img src="/logo-dark.png" alt="Impuls" className="h-10 w-auto transition-transform duration-300 group-hover:scale-105 hidden dark:block" />
             <div className="hidden sm:block">
-              <h1 className="text-sm font-bold text-foreground leading-tight tracking-tight">Oprisma Design</h1>
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground leading-tight mt-0.5">Évènementiel · Print · Marketing</p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-base font-bold text-foreground leading-tight tracking-tight">Impuls Design</h1>
+                <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-accent text-accent-foreground font-black">
+                  PRO
+                </span>
+              </div>
+              <p className="text-[11px] font-medium text-muted-foreground leading-tight mt-0.5">Designer Graphique · Print · Marketing</p>
             </div>
           </Link>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
+            {/* Quick action header CTA (Solid Amber) */}
+            <Button asChild size="sm" className="hidden sm:inline-flex bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-full px-4 h-9 shadow-xs text-xs gap-1.5 transition-all duration-200 hover:scale-[1.02]">
+              <Link to="/calculator">
+                <Calculator className="w-3.5 h-3.5" />
+                <span>Nouveau Devis</span>
+              </Link>
+            </Button>
+
             {/* Notifications Center */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="relative rounded-full shadow-sm border-muted-foreground/20 hover:bg-muted text-muted-foreground transition-smooth">
+                <Button variant="outline" size="icon" className="relative rounded-full shadow-xs border-border hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-smooth">
                   <Bell className="h-4 w-4" />
                   {notifications.length > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white shadow animate-pulse">
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-black text-accent-foreground">
                       {notifications.length}
                     </span>
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80 rounded-2xl shadow-xl p-2 border-muted-foreground/15">
+              <DropdownMenuContent align="end" className="w-80 rounded-2xl shadow-xl p-2 border-border/80 glass-card">
                 <div className="flex items-center justify-between p-2 border-b border-border/50">
                   <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Notifications & Alertes</span>
                   <button
                     onClick={requestNotificationPermission}
-                    className="text-[10px] text-primary hover:underline font-semibold"
+                    className="text-[10px] text-accent font-bold hover:underline"
                   >
                     Activer alertes
                   </button>
                 </div>
                 <div className="py-1 space-y-1">
                   {notifications.length === 0 ? (
-                    <div className="p-4 text-center text-xs text-muted-foreground">
+                    <div className="p-4 text-center text-xs text-muted-foreground font-medium">
                       ✨ Tout est à jour ! Aucune alerte active.
                     </div>
                   ) : (
@@ -156,7 +207,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                         to={n.link}
                         className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-muted/60 transition-colors text-xs"
                       >
-                        <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${n.type === 'warning' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400'}`}>
+                        <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${n.type === 'warning' ? 'bg-accent/15 text-accent' : 'bg-primary/10 text-primary'}`}>
                           <AlertTriangle className="w-3.5 h-3.5" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -170,85 +221,121 @@ export function AppShell({ children }: { children: ReactNode }) {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Language Switcher */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2 rounded-full border-muted-foreground/20 hover:bg-muted transition-smooth shadow-sm">
-                  <Globe className="h-4 w-4 text-primary" />
-                  <span className="font-medium hidden sm:inline-block">{i18n.language === "ar" ? "العربية" : i18n.language === "fr" ? "Français" : "English"}</span>
+                <Button variant="outline" size="sm" className="gap-2 rounded-full border-border hover:bg-muted/80 transition-smooth shadow-xs">
+                  <Globe className="h-4 w-4 text-accent" />
+                  <span className="font-bold text-xs hidden sm:inline-block">{i18n.language === "ar" ? "العربية" : i18n.language === "fr" ? "Français" : "English"}</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-[140px] rounded-xl shadow-lg border-muted-foreground/10">
+              <DropdownMenuContent align="end" className="min-w-[140px] rounded-xl shadow-lg border-border glass-card">
                 {langs.map((l) => (
-                  <DropdownMenuItem key={l.code} onClick={() => i18n.changeLanguage(l.code)} className={i18n.language === l.code ? "font-semibold text-primary" : "font-medium"}>
+                  <DropdownMenuItem key={l.code} onClick={() => i18n.changeLanguage(l.code)} className={i18n.language === l.code ? "font-bold text-primary dark:text-accent" : "font-medium"}>
                     {l.label}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="outline" size="icon" className="rounded-full shadow-sm border-muted-foreground/20 hover:bg-muted text-muted-foreground transition-smooth" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+
+            {/* Dark / Light Toggle */}
+            <Button variant="outline" size="icon" className="rounded-full shadow-xs border-border hover:bg-muted/80 text-muted-foreground transition-smooth" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+              {theme === "dark" ? <Sun className="h-4 w-4 text-accent" /> : <Moon className="h-4 w-4 text-primary" />}
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="container flex gap-8 py-8">
+      <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 flex gap-6 lg:gap-8 py-4 sm:py-8">
         {/* Sidebar */}
         <aside className="hidden lg:block w-64 shrink-0 no-print">
-          <div className="sticky top-28 flex flex-col h-[calc(100vh-9rem)] glass-card rounded-2xl p-4 shadow-sm border-white/40 dark:border-white/5">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 mb-4 px-2">Menu Principal</div>
-            <nav className="space-y-1.5 flex-1 overflow-y-auto pr-2 pb-4 scrollbar-thin">
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.to === "/"}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-smooth relative overflow-hidden group ${
-                      isActive
-                        ? "text-primary shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                    }`
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      {isActive && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent pointer-events-none border-l-4 border-primary"></div>
-                      )}
-                      <item.icon className={`h-4 w-4 relative z-10 transition-transform duration-300 group-hover:scale-110 ${isActive ? 'text-primary' : ''}`} />
-                      <span className="relative z-10">{item.label}</span>
-                    </>
-                  )}
-                </NavLink>
-              ))}
+          <div className="sticky top-28 flex flex-col h-[calc(100vh-9rem)] glass-card rounded-2xl p-3 shadow-md border-border/80">
+            <nav className="space-y-4 flex-1 overflow-y-auto pr-1 pb-4 scrollbar-thin">
+              {navGroups.map((group, gIdx) => {
+                const visibleItems = group.items.filter(item => !item.adminOnly || isAdmin);
+                if (visibleItems.length === 0) return null;
+
+                return (
+                  <div key={gIdx} className="space-y-1">
+                    <div className="px-3 py-1 flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                        {group.title}
+                      </span>
+                    </div>
+                    {visibleItems.map((item) => (
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        end={item.to === "/"}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 relative group ${
+                            isActive
+                              ? "bg-primary text-primary-foreground shadow-brand"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/65"
+                          }`
+                        }
+                      >
+                        {({ isActive }) => (
+                          <>
+                            <item.icon className={`h-4 w-4 relative z-10 transition-transform duration-300 group-hover:scale-110 ${isActive ? 'text-accent' : ''}`} />
+                            <span className="relative z-10 truncate">{item.label}</span>
+                            {isActive ? (
+                              <span className="ml-auto w-2 h-2 rounded-full bg-accent shadow-glow shrink-0 animate-pulse"></span>
+                            ) : (item as any).badgeCount > 0 ? (
+                              <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-accent text-accent-foreground font-black animate-pulse">
+                                {(item as any).badgeCount}
+                              </span>
+                            ) : (item as any).isCta ? (
+                              <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded-full bg-accent/15 text-accent font-black uppercase">
+                                Calcul
+                              </span>
+                            ) : null}
+                          </>
+                        )}
+                      </NavLink>
+                    ))}
+                  </div>
+                );
+              })}
             </nav>
 
-            <div className="pt-4 mt-auto border-t border-border/50">
-              <button
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  window.location.href = "/auth";
-                }}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold text-destructive hover:bg-destructive/10 transition-smooth group"
-              >
-                <LogOut className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-1" />
-                Déconnexion
-              </button>
+            {/* Sidebar User Identity & Logout */}
+            <div className="pt-3 mt-auto border-t border-border/60 space-y-2">
+              <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl bg-muted/40">
+                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-black text-xs shrink-0 shadow-xs">
+                  {email ? email[0].toUpperCase() : 'O'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold text-foreground truncate">{email || "Utilisateur"}</div>
+                  <div className="text-[10px] font-extrabold uppercase text-accent truncate">
+                    {isAdmin ? "Admin Atelier" : "Opérateur"}
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    window.location.href = "/auth";
+                  }}
+                  title="Déconnexion"
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
         </aside>
 
-        {/* Mobile nav */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass border-t no-print">
-          <div className="flex justify-around py-2 px-1">
-            {navItems.slice(0, 4).map((item) => (
+        {/* Mobile nav (with iOS/Android safe area support) */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass border-t no-print pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-1 shadow-lg">
+          <div className="flex justify-around items-center px-1">
+            {flatNavItems.slice(0, 4).map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 end={item.to === "/"}
                 className={({ isActive }) =>
-                  `flex flex-col items-center gap-1 w-16 py-1.5 rounded-lg text-[11px] transition-smooth ${
+                  `flex flex-col items-center gap-1 w-16 py-1.5 rounded-lg text-[11px] transition-smooth font-bold ${
                     isActive ? "text-primary bg-primary/10" : "text-muted-foreground"
                   }`
                 }
@@ -264,30 +351,35 @@ export function AppShell({ children }: { children: ReactNode }) {
                   className={`flex flex-col items-center gap-1 w-16 py-1.5 rounded-lg text-[11px] transition-smooth text-muted-foreground hover:text-primary ${isMobileMenuOpen ? "text-primary bg-primary/10" : ""}`}
                 >
                   <Menu className="h-[22px] w-[22px] shrink-0" />
-                  <span className="truncate w-full text-center px-1">Plus</span>
+                  <span className="truncate w-full text-center px-1 font-bold">Plus</span>
                 </button>
               </SheetTrigger>
               <SheetContent side="bottom" className="h-[75vh] rounded-t-3xl flex flex-col pt-10 px-0 pb-0 no-print">
                 <SheetHeader className="px-6 pb-4 border-b text-left">
-                  <SheetTitle>Menu Principal</SheetTitle>
+                  <SheetTitle className="font-black text-foreground">Menu Principal</SheetTitle>
                 </SheetHeader>
                 <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 scrollbar-thin">
-                  {navItems.map((item) => (
+                  {flatNavItems.map((item) => (
                     <NavLink
                       key={item.to}
                       to={item.to}
                       end={item.to === "/"}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={({ isActive }) =>
-                        `flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-semibold transition-smooth ${
+                        `flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-bold transition-smooth ${
                           isActive
-                            ? "text-primary bg-primary/10"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                            ? "text-primary-foreground bg-primary shadow-brand"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                         }`
                       }
                     >
                       <item.icon className="h-5 w-5" />
                       <span>{item.label}</span>
+                      {(item as any).badgeCount > 0 && (
+                        <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-accent text-accent-foreground font-black">
+                          {(item as any).badgeCount}
+                        </span>
+                      )}
                     </NavLink>
                   ))}
                   
@@ -310,7 +402,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
 
         {/* Main */}
-        <main className="flex-1 min-w-0 pb-20 lg:pb-0 animate-fade-in">{children}</main>
+        <main className="flex-1 min-w-0 pb-28 lg:pb-8 animate-fade-in">{children}</main>
       </div>
     </div>
   );

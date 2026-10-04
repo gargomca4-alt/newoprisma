@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { formatDZD } from "@/lib/calc";
 import { PageHeader } from "@/components/PageHeader";
 import {
   Users, Plus, Search, Phone, Mail, MapPin, FileText,
-  ChevronDown, ChevronUp, Trash2, Pencil, Download,
+  ChevronDown, ChevronUp, Trash2, Pencil, Download, Calendar, Filter, X, ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { showSuccess, confirmDelete } from "@/lib/alerts";
@@ -21,6 +21,12 @@ import {
 import { Link } from "react-router-dom";
 import { useRole } from "@/lib/useRole";
 import { logAction } from "@/lib/logger";
+import { getUserClientsKey, isQuoteOwnedByUser } from "@/lib/userPricing";
+
+const MONTH_NAMES = [
+  "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+  "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+];
 
 type Client = {
   id: string;
@@ -55,7 +61,7 @@ type ClientAgg = {
 
 export default function ClientsPage() {
   const { t } = useTranslation();
-  const { email, role } = useRole();
+  const { email, role, userId, isAdmin } = useRole();
   const [clients, setClients] = useState<Client[]>([]);
   const [quotes, setQuotes] = useState<QuoteRow[]>([]);
   const [search, setSearch] = useState("");
@@ -63,30 +69,40 @@ export default function ClientsPage() {
   const [editing, setEditing] = useState<Client | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", company: "", phone: "", email: "", address: "", notes: "" });
+  const [monthFilter, setMonthFilter] = useState<string>("all"); // "all" or "YYYY-MM"
+
+  const clientKey = getUserClientsKey(userId, email, isAdmin);
 
   const loadClients = async () => {
     const { data } = await supabase
       .from("settings")
       .select("*")
-      .eq("key", "clients_list")
+      .eq("key", clientKey)
       .maybeSingle();
     if (data?.value) {
       try {
         const parsed = typeof data.value === "string" ? JSON.parse(data.value) : data.value;
         setClients(Array.isArray(parsed) ? parsed : []);
       } catch { setClients([]); }
+    } else {
+      setClients([]);
     }
   };
 
   const loadQuotes = async () => {
     const { data } = await supabase.from("quotes").select("*").order("created_at", { ascending: false });
-    setQuotes((data as QuoteRow[]) || []);
+    const allQuotes: QuoteRow[] = (data as QuoteRow[]) || [];
+    const myQuotes = !isAdmin ? allQuotes.filter((q) => isQuoteOwnedByUser(q, userId, email)) : allQuotes;
+    setQuotes(myQuotes);
   };
 
-  useEffect(() => { loadClients(); loadQuotes(); }, []);
+  useEffect(() => {
+    loadClients();
+    loadQuotes();
+  }, [clientKey, userId, email, isAdmin]);
 
   const saveClients = async (updated: Client[]) => {
-    await supabase.from("settings").upsert({ key: "clients_list", value: JSON.stringify(updated) as any });
+    await supabase.from("settings").upsert({ key: clientKey, value: JSON.stringify(updated) as any });
     setClients(updated);
   };
 
@@ -134,11 +150,63 @@ export default function ClientsPage() {
     setDialogOpen(true);
   };
 
+  // Build unique month options from all quotes
+  const availableMonths = useMemo(() => {
+    const set = new Set<string>();
+    quotes.forEach(q => {
+      if (q.created_at) {
+        const d = new Date(q.created_at);
+        set.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+      }
+    });
+    return Array.from(set).sort().reverse();
+  }, [quotes]);
+
+  const filterByMonth = (list: QuoteRow[]) => {
+    if (monthFilter === "all") return list;
+    const [y, m] = monthFilter.split("-").map(Number);
+    return list.filter(q => {
+      const d = new Date(q.created_at);
+      return d.getFullYear() === y && d.getMonth() + 1 === m;
+    });
+  };
+
+  // Merge explicitly registered clients with any clients found in quotes
+  const allDistinctClients: Client[] = useMemo(() => {
+    const map = new Map<string, Client>();
+    clients.forEach(c => {
+      if (c.name?.trim()) {
+        map.set(c.name.trim().toLowerCase(), c);
+      }
+    });
+
+    quotes.forEach(q => {
+      if (q.client_name?.trim()) {
+        const key = q.client_name.trim().toLowerCase();
+        if (!map.has(key)) {
+          map.set(key, {
+            id: `quote-client-${key}`,
+            name: q.client_name.trim(),
+            company: q.client_company || "",
+            phone: q.details?.clientPhone || q.details?.client?.phone || "",
+            email: q.details?.clientEmail || q.details?.client?.email || "",
+            address: q.details?.clientAddress || "",
+            notes: "",
+            created_at: q.created_at,
+          });
+        }
+      }
+    });
+
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [clients, quotes]);
+
   // Aggregate: match quotes to clients by name (case-insensitive)
-  const aggregated: ClientAgg[] = clients.map(client => {
-    const matched = quotes.filter(q =>
+  const aggregated: ClientAgg[] = allDistinctClients.map(client => {
+    const allMatched = quotes.filter(q =>
       q.client_name?.toLowerCase().trim() === client.name.toLowerCase().trim()
     );
+    const matched = filterByMonth(allMatched);
     const totalAmount = matched.reduce((s, q) => s + (Number(q.total) || 0), 0);
     const totalPaid = matched.reduce((s, q) => s + (Number(q.details?.paidAmount) || 0), 0);
     return {
@@ -164,6 +232,11 @@ export default function ClientsPage() {
   const totalClients = clients.length;
   const activeClients = aggregated.filter(a => a.totalOrders > 0).length;
   const totalBusiness = aggregated.reduce((s, a) => s + a.totalAmount, 0);
+
+  const formatMonthLabel = (val: string) => {
+    const [y, m] = val.split("-").map(Number);
+    return `${MONTH_NAMES[m - 1]} ${y}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -216,16 +289,57 @@ export default function ClientsPage() {
         </Card>
       </div>
 
-      {/* Search */}
+      {/* Search + Month Filter */}
       {clients.length > 0 && (
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder={t("clients.searchPlaceholder")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="relative max-w-sm flex-1 w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder={t("clients.searchPlaceholder")}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          {/* Month Filter */}
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <select
+                value={monthFilter}
+                onChange={(e) => setMonthFilter(e.target.value)}
+                className="h-9 pl-8 pr-8 rounded-lg border border-input bg-background text-sm appearance-none cursor-pointer hover:bg-accent/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+              >
+                <option value="all">Tous les mois</option>
+                {availableMonths.map(m => (
+                  <option key={m} value={m}>{formatMonthLabel(m)}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            </div>
+            {monthFilter !== "all" && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                onClick={() => setMonthFilter("all")}
+                title="Effacer le filtre"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Active filter badge */}
+      {monthFilter !== "all" && (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="gap-1.5 bg-primary/10 text-primary px-3 py-1">
+            <Filter className="w-3.5 h-3.5" />
+            Filtré par : {formatMonthLabel(monthFilter)}
+          </Badge>
         </div>
       )}
 
@@ -287,14 +401,28 @@ export default function ClientsPage() {
                     {/* Actions */}
                     <div className="flex items-center gap-1 shrink-0">
                       {totalOrders > 0 && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => setExpandedId(isExpanded ? null : client.id)}
-                        >
-                          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                        </Button>
+                        <>
+                          <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs gap-1.5 hidden sm:inline-flex"
+                          >
+                            <Link to={`/quotes?client=${encodeURIComponent(client.name)}`}>
+                              <ExternalLink className="w-3.5 h-3.5 text-primary" />
+                              <span>Tous ses devis</span>
+                            </Link>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => setExpandedId(isExpanded ? null : client.id)}
+                            title={isExpanded ? "Réduire" : "Voir l'historique ici"}
+                          >
+                            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                          </Button>
+                        </>
                       )}
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(client)}>
                         <Pencil className="w-3.5 h-3.5" />
@@ -306,10 +434,19 @@ export default function ClientsPage() {
                   </div>
 
                   {/* Mobile stats */}
-                  <div className="sm:hidden px-4 pb-3 flex gap-3 text-xs">
-                    <span><strong>{totalOrders}</strong> {t("clients.orders")}</span>
-                    <span>Total: <strong>{formatDZD(totalAmount)}</strong></span>
-                    <span className="text-emerald-600">{t("clients.paid")}: <strong>{formatDZD(totalPaid)}</strong></span>
+                  <div className="sm:hidden px-4 pb-3 pt-2 border-t border-border/50 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-3">
+                      <span><strong>{totalOrders}</strong> {t("clients.orders")}</span>
+                      <span>Total: <strong>{formatDZD(totalAmount)}</strong></span>
+                      <span className="text-emerald-600 font-semibold">{formatDZD(totalPaid)}</span>
+                    </div>
+                    {totalOrders > 0 && (
+                      <Button asChild variant="outline" size="sm" className="h-7 text-[11px] gap-1 px-2.5">
+                        <Link to={`/quotes?client=${encodeURIComponent(client.name)}`}>
+                          <ExternalLink className="w-3 h-3 text-primary" /> Devis
+                        </Link>
+                      </Button>
+                    )}
                   </div>
 
                   {/* Expanded: quote history */}

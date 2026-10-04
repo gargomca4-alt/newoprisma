@@ -13,9 +13,11 @@ import { toast } from "sonner";
 import { showSuccess, confirmDelete } from "@/lib/alerts";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader, Field, Stat } from "@/components/PageHeader";
+import { useRole } from "@/lib/useRole";
 
 export default function ProductsPage() {
   const { t } = useTranslation();
+  const { isAdmin } = useRole();
   const [items, setItems] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
@@ -47,9 +49,11 @@ export default function ProductsPage() {
   return (
     <div className="space-y-6">
       <PageHeader icon={Package} title={t("products.title")} action={
-        <Button onClick={() => { setEditing(null); setOpen(true); }} className="gradient-brand text-white border-0">
-          <Plus className="w-4 h-4 mr-1.5" />{t("products.new")}
-        </Button>
+        isAdmin ? (
+          <Button onClick={() => { setEditing(null); setOpen(true); }} className="gradient-brand text-white border-0">
+            <Plus className="w-4 h-4 mr-1.5" />{t("products.new")}
+          </Button>
+        ) : null
       } />
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -71,7 +75,7 @@ export default function ProductsPage() {
                     <div className="text-xs text-muted-foreground">{p.name_ar} · {p.name_en}</div>
                   </div>
                   {p.category === 'ui_ux' ? (
-                    <Badge className="bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 text-white border-0 shadow-sm text-[11px]">
+                    <Badge className="gradient-brand text-white border-0 shadow-sm text-[11px]">
                       🎨 UI/UX Digital
                     </Badge>
                   ) : (
@@ -107,8 +111,16 @@ export default function ProductsPage() {
                 )}
 
                 <div className="flex gap-2 mt-4 opacity-70 group-hover:opacity-100 transition-smooth">
-                  <Button variant="outline" size="sm" className="flex-1" onClick={() => { setEditing(p); setOpen(true); }}><Pencil className="w-3.5 h-3.5 mr-1" />{t("common.edit")}</Button>
-                  <Button variant="outline" size="sm" onClick={() => remove(p.id)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
+                  {isAdmin && (
+                    <Button variant="outline" size="sm" className="flex-1" onClick={() => { setEditing(p); setOpen(true); }}>
+                      <Pencil className="w-3.5 h-3.5 mr-1" />{t("common.edit")}
+                    </Button>
+                  )}
+                  {isAdmin && (
+                    <Button variant="outline" size="sm" onClick={() => remove(p.id)}>
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
