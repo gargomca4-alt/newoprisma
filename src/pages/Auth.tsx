@@ -72,21 +72,21 @@ export default function Auth() {
           }
         }
 
-        // Register the stagiaire as auto-approved so they can access the app immediately
+        // Register the stagiaire as pending approval by admin
         try {
           await createStagiaireManual({
             email: cleanEmail,
             name: cleanName,
             role: "stagiaire",
-            status: "approved",
+            status: "pending",
           });
         } catch (err) {
-          console.warn("Stagiaire auto-registration fallback:", err);
+          console.warn("Stagiaire registration fallback:", err);
         }
 
         showSuccess(
           "Compte créé avec succès !",
-          "Bienvenue ! Votre compte est activé et vous pouvez commencer à utiliser la plateforme."
+          "Votre compte a été créé. Il est actuellement en attente de validation par l'administrateur."
         );
 
         // Small delay to let the session propagate before navigating
@@ -208,9 +208,9 @@ export default function Auth() {
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
-                    <span>Votre compte sera activé immédiatement après l'inscription.</span>
+                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-700 dark:text-amber-400 font-medium flex items-center gap-2">
+                    <Clock className="w-4 h-4 shrink-0 text-amber-500 animate-pulse" />
+                    <span>L'accès nécessite l'approbation préalable d'un administrateur.</span>
                   </div>
 
                   <Button
@@ -510,9 +510,9 @@ export default function Auth() {
               )}
 
               {isSignUp && (
-                <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
-                  <span>Accès immédiat après inscription — commencez à travailler directement.</span>
+                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-700 dark:text-amber-400 font-medium flex items-center gap-2">
+                  <Clock className="w-4 h-4 shrink-0 text-amber-500 animate-pulse" />
+                  <span>Validation par l'administrateur requise avant l'accès.</span>
                 </div>
               )}
 
