@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { showSuccess, showError } from "@/lib/alerts";
 import { Loader2, Sparkles, ArrowRight, Eye, EyeOff, CheckCircle2, Clock } from "lucide-react";
-import { createStagiaireManual } from "@/lib/useRole";
+import { createStagiaireManual, getStagiairesList } from "@/lib/useRole";
 
 export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -39,17 +39,47 @@ export default function Auth() {
         showSuccess("Email envoyé", "Vérifiez votre boîte mail pour réinitialiser le mot de passe.");
         setIsForgot(false);
       } else if (!isSignUp) {
+        const cleanEmail = email.trim().toLowerCase();
         const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
+          email: cleanEmail,
           password,
         });
         if (error) throw error;
+
+        // Verify account exists and is not deleted/rejected by admin
+        const list = await getStagiairesList();
+        if (list.length > 0) {
+          const userEntry = list.find((u) => u.email.toLowerCase() === cleanEmail);
+          if (!userEntry) {
+            await supabase.auth.signOut();
+            throw new Error(
+              "Ce compte a été supprimé par l'administrateur. Vous ne pouvez plus vous connecter. Veuillez créer un nouveau compte via l'onglet Inscription."
+            );
+          }
+          if (userEntry.status === "rejected") {
+            await supabase.auth.signOut();
+            throw new Error("Ce compte a été suspendu ou refusé par l'administrateur. Veuillez contacter le responsable.");
+          }
+        }
+
         showSuccess("Connexion réussie", "Bienvenue sur votre espace Impuls Design.");
         navigate("/");
       } else {
         const cleanEmail = email.trim().toLowerCase();
         const cleanName = fullName.trim() || cleanEmail.split("@")[0];
 
+        // Check existing stagiaires list
+        const list = await getStagiairesList();
+        const existingInList = list.find((u) => u.email.toLowerCase() === cleanEmail);
+        if (existingInList) {
+          if (existingInList.status === "approved") {
+            throw new Error("Un compte actif existe déjà avec cette adresse email. Veuillez vous connecter.");
+          } else if (existingInList.status === "pending") {
+            throw new Error("Votre inscription est déjà enregistrée et est en attente de validation par l'administrateur.");
+          }
+        }
+
+        let activeSession: any = null;
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: cleanEmail,
           password,
@@ -59,16 +89,36 @@ export default function Auth() {
             },
           },
         });
-        if (signUpError) throw signUpError;
 
-        let activeSession = signUpData?.session;
-        if (!activeSession) {
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email: cleanEmail,
-            password,
-          });
-          if (!signInError && signInData?.session) {
-            activeSession = signInData.session;
+        if (signUpError) {
+          const errMsg = (signUpError.message || "").toLowerCase();
+          // If auth user exists from previous deleted account, sign in and re-activate
+          if (errMsg.includes("already registered") || errMsg.includes("already exists")) {
+            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+              email: cleanEmail,
+              password,
+            });
+            if (signInError) {
+              throw new Error("Cet email possède un ancien compte. Veuillez saisir votre mot de passe pour vous réinscrire ou utilisez 'Mot de passe oublié'.");
+            }
+            activeSession = signInData?.session;
+            await supabase.auth.updateUser({
+              password,
+              data: { full_name: cleanName },
+            });
+          } else {
+            throw signUpError;
+          }
+        } else {
+          activeSession = signUpData?.session;
+          if (!activeSession) {
+            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+              email: cleanEmail,
+              password,
+            });
+            if (!signInError && signInData?.session) {
+              activeSession = signInData.session;
+            }
           }
         }
 
@@ -86,7 +136,7 @@ export default function Auth() {
 
         showSuccess(
           "Compte créé avec succès !",
-          "Votre compte a été créé. Il est actuellement en attente de validation par l'administrateur."
+          "Votre inscription a bien été enregistrée. Votre compte est en attente de validation par l'administrateur."
         );
 
         // Small delay to let the session propagate before navigating

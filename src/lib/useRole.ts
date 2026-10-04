@@ -204,7 +204,18 @@ export async function updateStagiaireRole(emailOrId: string, newRole: "admin" | 
 export async function deleteStagiaire(emailOrId: string): Promise<boolean> {
   const list = await getStagiairesList();
   const target = emailOrId.toLowerCase().trim();
+  const targetUser = list.find((item) => item.id === emailOrId || item.email.toLowerCase() === target);
   const updated = list.filter((item) => item.id !== emailOrId && item.email.toLowerCase() !== target);
+
+  // If RPC function delete_auth_user is deployed, clean up Supabase auth.users as well
+  if (targetUser?.email) {
+    try {
+      await supabase.rpc("delete_auth_user", { user_email: targetUser.email.toLowerCase() });
+    } catch {
+      // Ignored if RPC is not installed in database
+    }
+  }
+
   return await saveStagiairesList(updated);
 }
 
@@ -229,7 +240,14 @@ export async function createStagiaireManual(entry: {
   const exists = list.find((s) => s.email.toLowerCase() === normalizedEmail);
   if (exists) {
     if (!isCallerAdmin) {
-      // Non-admin callers CANNOT overwrite an existing user's role or status
+      if (exists.status === "rejected") {
+        // Allow rejected users to re-submit registration for admin review
+        exists.status = "pending";
+        exists.name = entry.name || exists.name;
+        exists.createdAt = new Date().toISOString();
+        return await saveStagiairesList(list, true);
+      }
+      // Non-admin callers CANNOT overwrite an existing active user's role or status
       return true;
     }
     return await saveStagiairesList(
@@ -326,19 +344,12 @@ export function useRole(): RoleInfo {
         setStatus(existing.status);
         if (existing.name) setUserName(existing.name);
       } else {
-        // User not in list yet -> register as pending stagiaire (requires admin approval)
-        const newStagiaire: StagiaireAccount = {
-          id: uId || `user-${Date.now()}`,
-          email: userEmail,
-          name: metaName,
-          role: "stagiaire",
-          status: "pending",
-          createdAt: new Date().toISOString(),
-        };
-        list.push(newStagiaire);
-        await saveStagiairesList(list, true);
+        // User is not in list (e.g. Account was deleted by admin)
+        // Never auto-recreate! Disconnect and set status as rejected
         setRole("stagiaire");
-        setStatus("pending");
+        setStatus("rejected");
+        await supabase.auth.signOut();
+        return;
       }
     } catch (err) {
       console.error("Error in useRole:", err);
