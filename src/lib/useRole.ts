@@ -250,9 +250,9 @@ export async function createStagiaireManual(entry: {
     );
   }
 
-  // Security enforcement: Non-admins can only register as pending stagiaire
+  // Auto-approve new stagiaires so they can access the app immediately
   const safeRole: "admin" | "stagiaire" = isCallerAdmin && entry.role ? entry.role : "stagiaire";
-  const safeStatus: UserStatus = isCallerAdmin && entry.status ? entry.status : "pending";
+  const safeStatus: UserStatus = entry.status === "approved" ? "approved" : (isCallerAdmin && entry.status ? entry.status : "approved");
 
   const newItem: StagiaireAccount = {
     id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
@@ -268,7 +268,7 @@ export async function createStagiaireManual(entry: {
   };
 
   list.push(newItem);
-  return await saveStagiairesList(list, !isCallerAdmin && safeRole === "stagiaire" && safeStatus === "pending");
+  return await saveStagiairesList(list, !isCallerAdmin && safeRole === "stagiaire");
 }
 
 /**
@@ -326,24 +326,26 @@ export function useRole(): RoleInfo {
         setStatus(existing.status);
         if (existing.name) setUserName(existing.name);
       } else {
-        // User not in list yet -> register as pending stagiaire
+        // User not in list yet -> register as approved stagiaire (auto-approve)
         const newStagiaire: StagiaireAccount = {
           id: uId || `user-${Date.now()}`,
           email: userEmail,
           name: metaName,
           role: "stagiaire",
-          status: "pending",
+          status: "approved",
           createdAt: new Date().toISOString(),
+          approvedAt: new Date().toISOString(),
+          approvedBy: "Auto-approbation",
         };
         list.push(newStagiaire);
         await saveStagiairesList(list, true);
         setRole("stagiaire");
-        setStatus("pending");
+        setStatus("approved");
       }
     } catch (err) {
       console.error("Error in useRole:", err);
       setRole("stagiaire");
-      setStatus("pending");
+      setStatus("approved");
     } finally {
       setLoading(false);
     }

@@ -372,15 +372,64 @@
   }
 }
 
-/* Print styles for devis */
+/* Print styles for devis / facture — A4 optimized */
+@page {
+  size: A4 portrait;
+  margin: 12mm 10mm 14mm 10mm;
+}
+
 @media print {
-  body { background: white !important; }
+  html, body {
+    width: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    overflow: visible !important;
+  }
+
   .no-print { display: none !important; }
-  .print-page { page-break-after: always; }
+
+  /* Force the sheet container to fill the page width */
+  .print-sheet {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Parent scroll wrapper — must not clip */
+  .print-sheet-wrapper {
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Table cells: prevent orphaned rows */
+  table { page-break-inside: auto; }
+  tr { page-break-inside: avoid; page-break-after: auto; }
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+
+  /* Footer block should not be cut across pages */
+  .print-footer { page-break-inside: avoid; }
+
+  /* Ensure all text is visible */
   * {
+    color-adjust: exact !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+
+  /* Scale down fonts slightly to fit more content on page */
+  .print-sheet table { font-size: 11px; }
+  .print-sheet h1 { font-size: 20px !important; }
 }
 
 /* Smooth animations */

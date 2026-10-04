@@ -72,22 +72,25 @@ export default function Auth() {
           }
         }
 
+        // Register the stagiaire as auto-approved so they can access the app immediately
         try {
           await createStagiaireManual({
             email: cleanEmail,
             name: cleanName,
             role: "stagiaire",
-            status: "pending",
+            status: "approved",
           });
         } catch (err) {
-          console.warn("Pending stagiaire registration fallback:", err);
+          console.warn("Stagiaire auto-registration fallback:", err);
         }
 
         showSuccess(
           "Compte créé avec succès !",
-          "Votre compte est ouvert. Il est en attente d'approbation par le superviseur."
+          "Bienvenue ! Votre compte est activé et vous pouvez commencer à utiliser la plateforme."
         );
 
+        // Small delay to let the session propagate before navigating
+        await new Promise((r) => setTimeout(r, 300));
         navigate("/");
       }
     } catch (error: any) {
@@ -205,9 +208,9 @@ export default function Auth() {
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-accent/10 border border-accent/20 text-[11px] text-accent-foreground dark:text-accent font-medium flex items-center gap-2">
-                    <Clock className="w-4 h-4 shrink-0 text-accent" />
-                    <span>Le compte sera en attente d'approbation par le superviseur.</span>
+                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                    <span>Votre compte sera activé immédiatement après l'inscription.</span>
                   </div>
 
                   <Button
@@ -507,9 +510,9 @@ export default function Auth() {
               )}
 
               {isSignUp && (
-                <div className="p-2.5 rounded-xl bg-accent/10 border border-accent/20 text-[11px] text-accent-foreground dark:text-accent font-medium flex items-center gap-2">
-                  <Clock className="w-4 h-4 shrink-0 text-accent" />
-                  <span>En attente d'approbation par le superviseur après inscription.</span>
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                  <span>Accès immédiat après inscription — commencez à travailler directement.</span>
                 </div>
               )}
 

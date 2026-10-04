@@ -134,28 +134,48 @@ export default function DevisPage() {
     if (!sheetRef.current) return;
     setExporting(true);
     try {
-      const canvas = await html2canvas(sheetRef.current, {
-        scale: 3, // Safe high-res scale that won't crash memory
+      const el = sheetRef.current;
+      // Temporarily force A4-width rendering for accurate capture
+      const origMinWidth = el.style.minWidth;
+      const origMaxWidth = el.style.maxWidth;
+      const origWidth = el.style.width;
+      const origPadding = el.style.padding;
+      el.style.minWidth = "0";
+      el.style.maxWidth = "794px";   // A4 @ 96dpi minus margins
+      el.style.width = "794px";
+      el.style.padding = "32px";
+
+      const canvas = await html2canvas(el, {
+        scale: 2,
         backgroundColor: "#ffffff",
         useCORS: true,
         logging: false,
+        windowWidth: 830,
       });
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+
+      // Restore original styles
+      el.style.minWidth = origMinWidth;
+      el.style.maxWidth = origMaxWidth;
+      el.style.width = origWidth;
+      el.style.padding = origPadding;
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const margin = 5; // 5mm margins
+      const contentWidth = pageWidth - margin * 2;
+      const imgHeight = (canvas.height * contentWidth) / canvas.width;
 
       let heightLeft = imgHeight;
-      let position = 0;
-      pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight, undefined, "FAST");
-      heightLeft -= pageHeight;
+      let position = margin;
+      pdf.addImage(imgData, "JPEG", margin, position, contentWidth, imgHeight, undefined, "FAST");
+      heightLeft -= (pageHeight - margin * 2);
       while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
+        position = margin - (imgHeight - heightLeft);
         pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight, undefined, "FAST");
-        heightLeft -= pageHeight;
+        pdf.addImage(imgData, "JPEG", margin, position, contentWidth, imgHeight, undefined, "FAST");
+        heightLeft -= (pageHeight - margin * 2);
       }
       const safeName = (clientName || "client").replace(/[^a-z0-9]/gi, "_");
       pdf.save(`${docTitle}_${ref}_${safeName}.pdf`);
@@ -206,8 +226,8 @@ export default function DevisPage() {
       <div className="sm:hidden text-center text-[11px] text-gray-500 pb-2 no-print font-medium">
         ↔ Glissez avec le doigt pour voir toute la largeur
       </div>
-      <div className="overflow-x-auto pb-8 print:pb-0 print:overflow-visible">
-        <div ref={sheetRef} className="relative w-full min-w-[800px] max-w-4xl mx-auto bg-white p-6 sm:p-12 print:p-0 shadow-md print:shadow-none rounded-2xl print:rounded-none border border-gray-200 print:border-none">
+      <div className="overflow-x-auto pb-8 print-sheet-wrapper">
+        <div ref={sheetRef} className="print-sheet relative w-full min-w-[800px] max-w-4xl mx-auto bg-white p-6 sm:p-12 print:p-0 shadow-md print:shadow-none rounded-2xl print:rounded-none border border-gray-200 print:border-none">
         {/* Header */}
         <div className="flex items-start justify-between border-b-4 pb-6 print:pb-4 relative z-10" style={{ borderColor: "hsl(262 56% 25%)" }}>
           <div className="flex items-center gap-4">
@@ -450,7 +470,7 @@ export default function DevisPage() {
         </div>
 
         {/* Footer (Terms & Signature) */}
-        <div className="pt-8 mt-12 border-t grid grid-cols-2 gap-8 relative z-10 break-inside-avoid">
+        <div className="print-footer pt-8 mt-12 border-t grid grid-cols-2 gap-8 relative z-10 break-inside-avoid">
           <div className="text-[11px] text-muted-foreground">
             <div className="font-semibold text-black mb-1">Conditions :</div>
             <p className="whitespace-pre-wrap leading-relaxed">{settings.terms}</p>

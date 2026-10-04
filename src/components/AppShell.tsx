@@ -16,6 +16,32 @@ import { useRole, getStagiairesList } from "@/lib/useRole";
 import { isQuoteOwnedByUser } from "@/lib/userPricing";
 import { toast } from "sonner";
 
+function playNotificationSound() {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sine";
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    const now = ctx.currentTime;
+    osc.frequency.setValueAtTime(587.33, now); // D5
+    osc.frequency.exponentialRampToValueAtTime(880, now + 0.12); // A5
+
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+    osc.start(now);
+    osc.stop(now + 0.45);
+  } catch {
+    // Audio context not allowed or supported
+  }
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
@@ -24,12 +50,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [pendingStagiairesCount, setPendingStagiairesCount] = useState(0);
   const [notifications, setNotifications] = useState<{ id: string; title: string; desc: string; link: string; type: 'warning' | 'info' }[]>([]);
 
+  // Load notifications & subscribe to realtime changes for new stagiaires
   useEffect(() => {
-    (async () => {
+    let previousPendingIds: Set<string> = new Set();
+
+    const loadNotifications = async () => {
       try {
         const notifs: any[] = [];
 
-        // If admin, check for pending stagiaires
+        // If admin, check for pending stagiaires (or newly registered)
         if (isAdmin) {
           const list = await getStagiairesList();
           const pending = list.filter((s) => s.status === "pending" && s.role !== "admin");
@@ -42,6 +71,42 @@ export function AppShell({ children }: { children: ReactNode }) {
               link: "/stagiaires",
               type: "warning",
             });
+          }
+
+          // Detect newly registered stagiaires (approved auto)
+          const recentlyRegistered = list.filter((s) => {
+            const createdTime = new Date(s.createdAt).getTime();
+            const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
+            return s.role !== "admin" && createdTime > twoHoursAgo;
+          });
+          if (recentlyRegistered.length > 0) {
+            const newOnes = recentlyRegistered.filter((s) => !previousPendingIds.has(s.id));
+            if (newOnes.length > 0 && previousPendingIds.size > 0) {
+              // Play chime sound for new registrations
+              playNotificationSound();
+
+              for (const newStagiaire of newOnes) {
+                toast.info(`Nouveau stagiaire inscrit: ${newStagiaire.name || newStagiaire.email}`, {
+                  description: "Un nouveau membre a rejoint la plateforme.",
+                  action: {
+                    label: "Voir",
+                    onClick: () => window.location.href = "/stagiaires",
+                  },
+                  duration: 8000,
+                });
+
+                // Browser notification if granted
+                if ("Notification" in window && Notification.permission === "granted") {
+                  try {
+                    new Notification("Nouveau Stagiaire — Impuls Design", {
+                      body: `${newStagiaire.name || newStagiaire.email} vient de s'inscrire sur la plateforme.`,
+                      icon: logo,
+                    });
+                  } catch {}
+                }
+              }
+            }
+            previousPendingIds = new Set(recentlyRegistered.map((s) => s.id));
           }
         }
 
@@ -85,7 +150,36 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         setNotifications(notifs);
       } catch (e) {}
-    })();
+    };
+
+    loadNotifications();
+
+    // Supabase Realtime: listen for changes to settings table (stagiaires_list updates)
+    let realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
+    if (isAdmin) {
+      realtimeChannel = supabase
+        .channel("stagiaires-realtime")
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "settings",
+            filter: "key=eq.stagiaires_list",
+          },
+          () => {
+            // Reload notifications when stagiaires list changes
+            loadNotifications();
+          }
+        )
+        .subscribe();
+    }
+
+    return () => {
+      if (realtimeChannel) {
+        supabase.removeChannel(realtimeChannel);
+      }
+    };
   }, [isAdmin, email, userId]);
 
   const requestNotificationPermission = async () => {

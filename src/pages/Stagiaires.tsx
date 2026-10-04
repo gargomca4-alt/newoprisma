@@ -33,7 +33,7 @@ export default function StagiairesPage() {
   const [quotes, setQuotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState("pending");
+  const [activeTab, setActiveTab] = useState("approved");
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -55,6 +55,10 @@ export default function StagiairesPage() {
       ]);
       setStagiaires(list);
       setQuotes(quotesRes.data || []);
+      const pending = list.filter((s) => s.status === "pending" && s.role !== "admin");
+      if (pending.length > 0) {
+        setActiveTab("pending");
+      }
     } catch (err) {
       console.error("Error loading stagiaires:", err);
     } finally {
