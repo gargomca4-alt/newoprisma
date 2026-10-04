@@ -87,10 +87,36 @@ export async function getStagiairesList(): Promise<StagiaireAccount[]> {
 }
 
 /**
- * Save stagiaires list to settings and keep user_roles legacy key in sync.
+ * Security helper: verify that the caller is an active, approved admin.
  */
-export async function saveStagiairesList(list: StagiaireAccount[]): Promise<boolean> {
+async function verifyAdminCaller(): Promise<boolean> {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !user.email) return false;
+    const currentList = await getStagiairesList();
+    if (currentList.length === 0) return true; // Initial bootstrap setup only
+    const currentEmail = user.email.toLowerCase().trim();
+    const caller = currentList.find(u => u.email.toLowerCase() === currentEmail);
+    return !!(caller && caller.role === "admin" && caller.status === "approved");
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Save stagiaires list to settings and keep user_roles legacy key in sync.
+ * Secured: Only verified approved admins can execute modifications.
+ */
+export async function saveStagiairesList(list: StagiaireAccount[], bypassAdminCheck: boolean = false): Promise<boolean> {
+  try {
+    if (!bypassAdminCheck) {
+      const isAllowed = await verifyAdminCaller();
+      if (!isAllowed) {
+        console.error("Security: Non-admin attempt to modify user permissions blocked.");
+        return false;
+      }
+    }
+
     // 1. Save main list
     await supabase.from("settings").upsert({
       key: SETTINGS_KEY,
@@ -184,6 +210,7 @@ export async function deleteStagiaire(emailOrId: string): Promise<boolean> {
 
 /**
  * Add or pre-approve a stagiaire manually.
+ * Enforces role="stagiaire" and status="pending" for any unverified registration.
  */
 export async function createStagiaireManual(entry: {
   email: string;
@@ -196,10 +223,15 @@ export async function createStagiaireManual(entry: {
 }): Promise<boolean> {
   const list = await getStagiairesList();
   const normalizedEmail = entry.email.toLowerCase().trim();
+  const isCallerAdmin = await verifyAdminCaller();
 
-  // If already exists, update
+  // If already exists:
   const exists = list.find((s) => s.email.toLowerCase() === normalizedEmail);
   if (exists) {
+    if (!isCallerAdmin) {
+      // Non-admin callers CANNOT overwrite an existing user's role or status
+      return true;
+    }
     return await saveStagiairesList(
       list.map((s) =>
         s.email.toLowerCase() === normalizedEmail
@@ -213,25 +245,30 @@ export async function createStagiaireManual(entry: {
               approvedBy: entry.approvedBy ?? s.approvedBy,
             }
           : s
-      )
+      ),
+      true
     );
   }
+
+  // Security enforcement: Non-admins can only register as pending stagiaire
+  const safeRole: "admin" | "stagiaire" = isCallerAdmin && entry.role ? entry.role : "stagiaire";
+  const safeStatus: UserStatus = isCallerAdmin && entry.status ? entry.status : "pending";
 
   const newItem: StagiaireAccount = {
     id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
     email: normalizedEmail,
     name: entry.name || normalizedEmail.split("@")[0],
-    role: entry.role || "stagiaire",
-    status: entry.status || "approved",
+    role: safeRole,
+    status: safeStatus,
     createdAt: new Date().toISOString(),
     phone: entry.phone || "",
     notes: entry.notes || "",
-    approvedBy: entry.approvedBy,
-    approvedAt: entry.status === "approved" ? new Date().toISOString() : undefined,
+    approvedBy: isCallerAdmin ? entry.approvedBy : undefined,
+    approvedAt: safeStatus === "approved" ? new Date().toISOString() : undefined,
   };
 
   list.push(newItem);
-  return await saveStagiairesList(list);
+  return await saveStagiairesList(list, !isCallerAdmin && safeRole === "stagiaire" && safeStatus === "pending");
 }
 
 /**
@@ -299,7 +336,7 @@ export function useRole(): RoleInfo {
           createdAt: new Date().toISOString(),
         };
         list.push(newStagiaire);
-        await saveStagiairesList(list);
+        await saveStagiairesList(list, true);
         setRole("stagiaire");
         setStatus("pending");
       }

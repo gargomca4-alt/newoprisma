@@ -61,6 +61,10 @@ export default function SettingsPage() {
   }, []);
 
   const save = async () => {
+    if (!isAdmin) {
+      toast.error("Action réservée à l'administrateur");
+      return;
+    }
     await Promise.all([
       supabase.from("settings").upsert({ key: "design_percentage", value: designPct as any }),
       supabase.from("settings").upsert({ key: "company_name", value: JSON.stringify(companyName) as any }),
@@ -73,6 +77,10 @@ export default function SettingsPage() {
   };
 
   const saveRoles = async (updated: RoleEntry[]) => {
+    if (!isAdmin) {
+      toast.error("Action réservée à l'administrateur");
+      return;
+    }
     const map: Record<string, string> = {};
     updated.forEach(r => { map[r.email.toLowerCase()] = r.role; });
     await supabase.from("settings").upsert({

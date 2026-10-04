@@ -28,7 +28,7 @@ import { logAction } from "@/lib/logger";
 
 export default function StagiairesPage() {
   const { t } = useTranslation();
-  const { email: adminEmail, isAdmin, role: currentRole } = useRole();
+  const { email: adminEmail, isAdmin, role: currentRole, loading: roleLoading } = useRole();
   const [stagiaires, setStagiaires] = useState<StagiaireAccount[]>([]);
   const [quotes, setQuotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -171,6 +171,25 @@ export default function StagiairesPage() {
       showError("Erreur", "Une erreur est survenue lors de l'ajout.");
     }
   };
+
+  if (!roleLoading && !isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] p-6 text-center space-y-4">
+        <div className="w-16 h-16 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center border border-destructive/20">
+          <ShieldAlert className="w-8 h-8" />
+        </div>
+        <div className="space-y-1.5 max-w-md">
+          <h2 className="text-xl font-bold text-foreground">Accès Réservé à l'Administration</h2>
+          <p className="text-xs text-muted-foreground">
+            La gestion des accès stagiaires et autorisations est strictement réservée au superviseur de l'atelier Impuls Design.
+          </p>
+        </div>
+        <Button onClick={() => window.location.href = "/"} variant="outline" className="rounded-xl">
+          Retour au tableau de bord
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-12 selection:bg-accent/30 selection:text-foreground">
