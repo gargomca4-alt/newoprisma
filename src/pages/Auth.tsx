@@ -176,7 +176,7 @@ export default function Auth() {
                     <Label className="text-xs font-semibold">Adresse email</Label>
                     <Input
                       type="email"
-                      placeholder="nom@oprisma.com"
+                      placeholder="nom@impuls.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -244,7 +244,7 @@ export default function Auth() {
                     <Label className="text-xs font-semibold">Adresse email</Label>
                     <Input
                       type="email"
-                      placeholder="nom@oprisma.com"
+                      placeholder="nom@impuls.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -464,7 +464,7 @@ export default function Auth() {
                 <Label className="text-xs font-semibold">Adresse email</Label>
                 <Input
                   type="email"
-                  placeholder="nom@oprisma.com"
+                  placeholder="nom@impuls.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required

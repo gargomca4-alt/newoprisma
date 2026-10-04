@@ -584,7 +584,7 @@ export default function StagiairesPage() {
               <Label className="text-xs">Email *</Label>
               <Input
                 type="email"
-                placeholder="stagiaire@oprisma.com"
+                placeholder="stagiaire@impuls.com"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 className="h-10 rounded-xl"
