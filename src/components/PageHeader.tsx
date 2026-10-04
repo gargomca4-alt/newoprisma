@@ -9,14 +9,18 @@ interface PageHeaderProps {
 
 export function PageHeader({ icon: Icon, title, action }: PageHeaderProps) {
   return (
-    <div className="flex items-center justify-between gap-4 flex-wrap">
-      <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-2xl gradient-brand-soft flex items-center justify-center">
-          <Icon className="w-6 h-6 text-primary" />
+    <div className="flex items-center justify-between gap-3 sm:gap-4 flex-wrap">
+      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+        <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl gradient-brand-soft flex items-center justify-center shrink-0">
+          <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
         </div>
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+        <h1 className="text-lg sm:text-2xl font-extrabold tracking-tight truncate text-foreground">{title}</h1>
       </div>
-      {action}
+      {action && (
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-end">
+          {action}
+        </div>
+      )}
     </div>
   );
 }

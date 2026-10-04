@@ -40,3 +40,6 @@ coverage/
 check-*.mjs
 test-*.mjs
 convert-logo.cjs
+
+.vercel
+.env*

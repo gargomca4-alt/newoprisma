@@ -730,15 +730,15 @@ export default function QuotesPage() {
                   </div>
 
                   {/* Right: Total + Actions */}
-                  <div className="flex items-center gap-1.5 sm:gap-2 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-2.5 md:pt-0">
-                    <Badge className="gradient-brand text-white border-0 text-xs sm:text-sm tabular-nums font-bold px-2 sm:px-2.5 py-0.5 sm:py-1">
+                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-2.5 md:pt-0">
+                    <Badge className="gradient-brand text-white border-0 text-xs sm:text-sm tabular-nums font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 shrink-0">
                       {formatDZD(Number(q.total))}
                     </Badge>
-                    <div className="flex items-center gap-1 sm:gap-1.5">
+                    <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
+                        className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground shrink-0"
                         onClick={() => openNoteDialog(q)}
                         title="Ajouter/Modifier une note"
                       >
@@ -747,7 +747,7 @@ export default function QuotesPage() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-primary"
+                        className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-primary shrink-0"
                         onClick={() => copyClientPortalLink(q.id)}
                         title="Copier lien portail client"
                       >
@@ -756,19 +756,19 @@ export default function QuotesPage() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-7 w-7 sm:h-8 sm:w-8 text-emerald-600 hover:text-emerald-700"
+                        className="h-7 w-7 sm:h-8 sm:w-8 text-emerald-600 hover:text-emerald-700 shrink-0"
                         onClick={() => shareWhatsApp(q)}
                         title="Partager via WhatsApp"
                       >
                         <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </Button>
-                      <Button asChild variant="outline" size="sm" className="h-7 sm:h-8 px-2 sm:px-3 text-xs">
+                      <Button asChild variant="outline" size="sm" className="h-7 sm:h-8 px-1.5 sm:px-3 text-xs shrink-0">
                         <Link to={`/devis?id=${q.id}`} title="Voir devis / imprimer">
-                          <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
+                          <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 sm:mr-1.5" />
                           <span className="hidden sm:inline">Ouvrir</span>
                         </Link>
                       </Button>
-                      <Button asChild variant="secondary" size="sm" className="h-7 sm:h-8 text-xs gap-1 px-2 hidden sm:inline-flex">
+                      <Button asChild variant="secondary" size="sm" className="h-7 sm:h-8 text-xs gap-1 px-2 hidden sm:inline-flex shrink-0">
                         <Link to={`/invoices?quoteId=${q.id}`}>
                           <Receipt className="w-3.5 h-3.5 text-primary" />
                           <span>Facture</span>
@@ -779,7 +779,7 @@ export default function QuotesPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 sm:h-8 sm:w-8 text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        className="h-7 w-7 sm:h-8 sm:w-8 text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
                         onClick={() => setQuoteToDelete(q)}
                         title="Supprimer ce devis"
                       >

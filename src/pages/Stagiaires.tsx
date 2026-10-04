@@ -323,28 +323,28 @@ export default function StagiairesPage() {
               <Card key={stagiaire.id} className="rounded-2xl border border-accent/40 shadow-xs bg-card hover:border-accent transition-all overflow-hidden">
                 <div className="h-1 w-full bg-accent" />
                 <CardContent className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-accent/15 border border-accent/30 text-accent font-black text-base flex items-center justify-center shrink-0">
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-accent/15 border border-accent/30 text-accent font-black text-sm sm:text-base flex items-center justify-center shrink-0">
                       {stagiaire.name.charAt(0).toUpperCase()}
                     </div>
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-base text-foreground">{stagiaire.name}</h4>
-                        <Badge variant="outline" className="bg-accent/15 text-accent border-accent/30 text-[10px] font-bold">
+                    <div className="space-y-0.5 min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-bold text-sm sm:text-base text-foreground truncate">{stagiaire.name}</h4>
+                        <Badge variant="outline" className="bg-accent/15 text-accent border-accent/30 text-[10px] font-bold shrink-0">
                           Nouveau compte
                         </Badge>
                       </div>
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Mail className="w-3.5 h-3.5" /> {stagiaire.email}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1 min-w-0 truncate">
+                          <Mail className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">{stagiaire.email}</span>
                         </span>
                         {stagiaire.phone && (
-                          <span className="flex items-center gap-1">
-                            <Phone className="w-3.5 h-3.5" /> {stagiaire.phone}
+                          <span className="flex items-center gap-1 shrink-0">
+                            <Phone className="w-3.5 h-3.5 shrink-0" /> {stagiaire.phone}
                           </span>
                         )}
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" /> Inscrit le {new Date(stagiaire.createdAt).toLocaleDateString()}
+                        <span className="flex items-center gap-1 shrink-0">
+                          <Clock className="w-3.5 h-3.5 shrink-0" /> Inscrit le {new Date(stagiaire.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
@@ -391,26 +391,26 @@ export default function StagiairesPage() {
               const isCurrent = stagiaire.email.toLowerCase() === adminEmail.toLowerCase();
               return (
                 <Card key={stagiaire.id} className="rounded-2xl border border-border shadow-xs bg-card hover:border-primary/40 transition-all">
-                  <CardContent className="p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-base shrink-0 ${
+                  <CardContent className="p-4 sm:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center font-bold text-sm sm:text-base shrink-0 ${
                         stagiaire.role === "admin"
                           ? "bg-primary/10 text-primary border border-primary/20"
                           : "bg-muted text-foreground border border-border"
                       }`}>
                         {stagiaire.name.charAt(0).toUpperCase()}
                       </div>
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-base text-foreground">{stagiaire.name}</h4>
+                      <div className="space-y-0.5 min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-bold text-sm sm:text-base text-foreground truncate">{stagiaire.name}</h4>
                           {isCurrent && (
-                            <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                            <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0">
                               (Vous)
                             </span>
                           )}
                           <Badge
                             variant="outline"
-                            className={`text-[10px] font-bold ${
+                            className={`text-[10px] font-bold shrink-0 ${
                               stagiaire.role === "admin"
                                 ? "bg-primary/10 text-primary border-primary/30"
                                 : "bg-muted text-muted-foreground border-border"
@@ -419,16 +419,16 @@ export default function StagiairesPage() {
                             {stagiaire.role === "admin" ? "Administrateur" : "Stagiaire"}
                           </Badge>
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Mail className="w-3.5 h-3.5" /> {stagiaire.email}
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1 min-w-0 truncate">
+                            <Mail className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">{stagiaire.email}</span>
                           </span>
                           {stagiaire.phone && (
-                            <span className="flex items-center gap-1">
-                              <Phone className="w-3.5 h-3.5" /> {stagiaire.phone}
+                            <span className="flex items-center gap-1 shrink-0">
+                              <Phone className="w-3.5 h-3.5 shrink-0" /> {stagiaire.phone}
                             </span>
                           )}
-                          <span>
+                          <span className="shrink-0">
                             Actif depuis le {new Date(stagiaire.createdAt).toLocaleDateString()}
                           </span>
                         </div>

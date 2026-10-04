@@ -478,27 +478,27 @@ export default function DashboardPage() {
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-[1400px] mx-auto animate-fade-in relative pb-10">
       {/* Hero Apple Style */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-[1.5rem] bg-card border border-border p-5 sm:p-8 md:p-10 shadow-sm">
-        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 z-10">
-          <div className="flex items-center gap-3 sm:gap-6">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-xl sm:rounded-2xl bg-primary flex items-center justify-center text-white shadow-sm shrink-0">
-              <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-white" />
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-[1.5rem] bg-card border border-border p-4 sm:p-6 md:p-8 shadow-sm">
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 z-10">
+          <div className="flex items-start sm:items-center gap-3 sm:gap-5 min-w-0">
+            <div className="w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl bg-primary flex items-center justify-center text-white shadow-sm shrink-0">
+              <BarChart3 className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
             </div>
-            <div>
-              <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-foreground pb-1">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold tracking-tight text-foreground truncate">
                 {t("dashboard.title")}
               </h1>
-              <p className="text-sm sm:text-base text-muted-foreground font-medium max-w-2xl mt-0.5 sm:mt-1">{t("dashboard.subtitle")}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate mt-0.5">{t("dashboard.subtitle")}</p>
 
               {/* Scope Switcher - Admin only */}
               {isAdmin && (
-                <div className="flex items-center gap-2 mt-4">
-                  <span className="text-xs font-bold text-muted-foreground">Données :</span>
-                  <div className="flex gap-1 bg-background/80 backdrop-blur-sm p-1 rounded-xl border border-border shadow-xs">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-2.5 sm:mt-3">
+                  <span className="text-[11px] sm:text-xs font-bold text-muted-foreground shrink-0">Données :</span>
+                  <div className="inline-flex max-w-full overflow-x-auto p-0.5 sm:p-1 bg-background/80 backdrop-blur-sm rounded-xl border border-border shadow-xs">
                     <Button
                       variant={scopeFilter === "all" ? "default" : "ghost"}
                       size="sm"
-                      className="h-7 text-xs px-3 rounded-lg font-bold"
+                      className="h-6 sm:h-7 text-[11px] sm:text-xs px-2 sm:px-3 rounded-lg font-bold shrink-0"
                       onClick={() => setScopeFilter("all")}
                     >
                       Vue Globale ({quotes.length})
@@ -506,7 +506,7 @@ export default function DashboardPage() {
                     <Button
                       variant={scopeFilter === "mine" ? "default" : "ghost"}
                       size="sm"
-                      className="h-7 text-xs px-3 rounded-lg font-bold"
+                      className="h-6 sm:h-7 text-[11px] sm:text-xs px-2 sm:px-3 rounded-lg font-bold shrink-0"
                       onClick={() => setScopeFilter("mine")}
                     >
                       Mes Devis ({myQuotesCount})
@@ -517,14 +517,14 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <Button asChild variant="outline" size="sm" className="rounded-xl border-border shadow-xs gap-1.5 font-bold hover:bg-muted/80 text-xs">
+          <div className="flex items-center gap-2 flex-wrap shrink-0 pt-1 md:pt-0">
+            <Button asChild variant="outline" size="sm" className="rounded-xl border-border shadow-xs gap-1.5 font-bold hover:bg-muted/80 text-xs h-8 sm:h-9">
               <Link to="/invoices">
                 <Receipt className="w-3.5 h-3.5 text-primary dark:text-accent" />
                 <span className="hidden sm:inline">Facturation</span> ({stats.invoicedCount})
               </Link>
             </Button>
-            <Button asChild size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground font-extrabold border-0 rounded-xl shadow-glow gap-1.5 transition-all duration-200 hover:scale-[1.02] text-xs">
+            <Button asChild size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground font-extrabold border-0 rounded-xl shadow-glow gap-1.5 transition-all duration-200 hover:scale-[1.02] text-xs h-8 sm:h-9">
               <Link to="/calculator">
                 <span>Nouveau Devis</span>
               </Link>
@@ -536,33 +536,33 @@ export default function DashboardPage() {
       {/* Outstanding Debts Alert */}
       {stats.outstandingDebts.length > 0 && (
         <Card className="border-2 border-accent/30 bg-accent/5 backdrop-blur-sm rounded-2xl shadow-xs overflow-hidden animate-fade-in">
-          <CardContent className="p-4 sm:p-5 flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center shrink-0 mt-0.5 text-accent">
-              <AlertTriangle className="w-5 h-5" />
+          <CardContent className="p-3 sm:p-4 md:p-5 flex items-start gap-3 sm:gap-4">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-accent/20 flex items-center justify-center shrink-0 mt-0.5 text-accent">
+              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h4 className="font-bold text-sm text-foreground">
+                <h4 className="font-bold text-xs sm:text-sm text-foreground">
                   Dettes & Créances en Retard (+15 jours)
                 </h4>
                 <Badge variant="outline" className="text-[10px] px-2 py-0.5 font-bold border-accent/40 text-accent bg-accent/10">
                   {stats.outstandingDebts.length} dossiers
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
                 Certains devis acceptés attendent leur règlement depuis plus de 2 semaines.
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-2.5 flex flex-wrap gap-1.5 sm:gap-2">
                 {stats.outstandingDebts.slice(0, 6).map(q => {
                   const rem = Math.max(0, (Number(q.total) || 0) - (Number(q.details?.paidAmount) || 0));
                   return (
                     <Link
                       key={q.id}
                       to="/payment"
-                      className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg bg-background hover:bg-muted/80 border border-border shadow-xs transition-colors"
+                      className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs px-2 sm:px-2.5 py-1 rounded-lg bg-background hover:bg-muted/80 border border-border shadow-xs transition-colors max-w-full truncate"
                     >
-                      <span className="font-medium text-foreground">{q.client_name}</span>
-                      <span className="font-extrabold text-accent">{formatDZD(rem)}</span>
+                      <span className="font-medium text-foreground truncate">{q.client_name}</span>
+                      <span className="font-extrabold text-accent shrink-0">{formatDZD(rem)}</span>
                     </Link>
                   );
                 })}
@@ -573,96 +573,96 @@ export default function DashboardPage() {
       )}
 
       {/* KPI Cards — 6-Card High-Impact Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-4">
         {/* Total Revenue */}
         <Card className="glass-card border-border/80 shadow-xs rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
-          <CardContent className="p-3 sm:p-4">
+          <CardContent className="p-2.5 sm:p-4 min-w-0">
             <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-accent/15 flex items-center justify-center">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-accent/15 flex items-center justify-center shrink-0">
                 <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
               </div>
               {stats.revenueGrowth !== 0 && (
-                <Badge variant="secondary" className={`text-[9px] px-1.5 py-0 font-bold ${stats.revenueGrowth > 0 ? "bg-accent/20 text-accent" : "bg-destructive/15 text-destructive"}`}>
+                <Badge variant="secondary" className={`text-[9px] px-1.5 py-0 font-bold shrink-0 ${stats.revenueGrowth > 0 ? "bg-accent/20 text-accent" : "bg-destructive/15 text-destructive"}`}>
                   {stats.revenueGrowth > 0 ? "+" : ""}{stats.revenueGrowth.toFixed(0)}%
                 </Badge>
               )}
             </div>
-            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">CA du mois</div>
-            <div className="text-sm sm:text-lg font-black mt-0.5 sm:mt-1 tabular-nums text-foreground">{formatDZD(stats.monthRevenue)}</div>
+            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold truncate">CA du mois</div>
+            <div className="text-xs min-[380px]:text-sm sm:text-lg font-black mt-0.5 sm:mt-1 tabular-nums text-foreground truncate min-w-0">{formatDZD(stats.monthRevenue)}</div>
           </CardContent>
         </Card>
 
         {/* Conversion Rate */}
         <Card className="glass-card border-border/80 shadow-xs rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
-          <CardContent className="p-3 sm:p-4">
+          <CardContent className="p-2.5 sm:p-4 min-w-0">
             <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary dark:text-accent" />
               </div>
-              <Badge className="bg-primary/15 text-primary dark:bg-primary/30 dark:text-primary-foreground border-0 text-[9px] sm:text-[10px] font-extrabold">
+              <Badge className="bg-primary/15 text-primary dark:bg-primary/30 dark:text-primary-foreground border-0 text-[9px] sm:text-[10px] font-extrabold shrink-0">
                 {stats.conversionRate}%
               </Badge>
             </div>
-            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Conversion</div>
-            <div className="text-sm sm:text-lg font-black mt-0.5 sm:mt-1 text-foreground">{stats.accepted}/{stats.totalQuotes}</div>
+            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold truncate">Conversion</div>
+            <div className="text-xs min-[380px]:text-sm sm:text-lg font-black mt-0.5 sm:mt-1 text-foreground truncate min-w-0">{stats.accepted}/{stats.totalQuotes}</div>
           </CardContent>
         </Card>
 
         {/* Panier Moyen */}
         <Card className="glass-card border-border/80 shadow-xs rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
-          <CardContent className="p-3 sm:p-4">
+          <CardContent className="p-2.5 sm:p-4 min-w-0">
             <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-secondary/15 flex items-center justify-center">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-secondary/15 flex items-center justify-center shrink-0">
                 <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-secondary" />
               </div>
             </div>
-            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Panier Moyen</div>
-            <div className="text-sm sm:text-lg font-black mt-0.5 sm:mt-1 tabular-nums text-foreground">{formatDZD(stats.avgOrderValue)}</div>
+            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold truncate">Panier Moyen</div>
+            <div className="text-xs min-[380px]:text-sm sm:text-lg font-black mt-0.5 sm:mt-1 tabular-nums text-foreground truncate min-w-0">{formatDZD(stats.avgOrderValue)}</div>
           </CardContent>
         </Card>
 
         {/* Total Quotes */}
         <Card className="glass-card border-border/80 shadow-xs rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
-          <CardContent className="p-3 sm:p-4">
+          <CardContent className="p-2.5 sm:p-4 min-w-0">
             <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary dark:text-accent" />
               </div>
-              <Badge variant="secondary" className="text-[9px] sm:text-[10px] px-1.5 py-0 font-bold bg-muted">
+              <Badge variant="secondary" className="text-[9px] sm:text-[10px] px-1.5 py-0 font-bold bg-muted shrink-0">
                 +{stats.monthQuotes}
               </Badge>
             </div>
-            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Total Devis</div>
-            <div className="text-base sm:text-lg font-black mt-0.5 sm:mt-1 text-foreground">{stats.totalQuotes}</div>
+            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold truncate">Total Devis</div>
+            <div className="text-xs min-[380px]:text-sm sm:text-lg font-black mt-0.5 sm:mt-1 text-foreground truncate min-w-0">{stats.totalQuotes}</div>
           </CardContent>
         </Card>
 
         {/* Invoiced Total */}
         <Card className="glass-card border-border/80 shadow-xs rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
-          <CardContent className="p-3 sm:p-4">
+          <CardContent className="p-2.5 sm:p-4 min-w-0">
             <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-secondary/15 flex items-center justify-center">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-secondary/15 flex items-center justify-center shrink-0">
                 <Receipt className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-secondary" />
               </div>
-              <Badge variant="secondary" className="text-[9px] sm:text-[10px] px-1.5 py-0 font-bold bg-muted">
+              <Badge variant="secondary" className="text-[9px] sm:text-[10px] px-1.5 py-0 font-bold bg-muted shrink-0">
                 {stats.invoicedCount}
               </Badge>
             </div>
-            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Facturé</div>
-            <div className="text-sm sm:text-lg font-black mt-0.5 sm:mt-1 tabular-nums text-foreground">{formatDZD(stats.invoicedTotal)}</div>
+            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold truncate">Facturé</div>
+            <div className="text-xs min-[380px]:text-sm sm:text-lg font-black mt-0.5 sm:mt-1 tabular-nums text-foreground truncate min-w-0">{formatDZD(stats.invoicedTotal)}</div>
           </CardContent>
         </Card>
 
         {/* Outstanding Debts */}
         <Card className="glass-card border-border/80 shadow-xs rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
-          <CardContent className="p-3 sm:p-4">
+          <CardContent className="p-2.5 sm:p-4 min-w-0">
             <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-accent/15 flex items-center justify-center">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-accent/15 flex items-center justify-center shrink-0">
                 <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
               </div>
             </div>
-            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Créances</div>
-            <div className="text-sm sm:text-lg font-black mt-0.5 sm:mt-1 tabular-nums text-accent">{formatDZD(stats.totalRemaining)}</div>
+            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold truncate">Créances</div>
+            <div className="text-xs min-[380px]:text-sm sm:text-lg font-black mt-0.5 sm:mt-1 tabular-nums text-accent truncate min-w-0">{formatDZD(stats.totalRemaining)}</div>
           </CardContent>
         </Card>
       </div>

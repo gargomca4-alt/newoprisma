@@ -237,29 +237,29 @@ export default function InvoicesPage() {
 
       {/* Admin Scope Switcher */}
       {isAdmin && (
-        <div className="flex items-center justify-between gap-3 p-2 rounded-xl bg-muted/40 border">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-muted-foreground ml-1">Affichage :</span>
-            <div className="flex gap-1 bg-background p-1 rounded-lg border shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 p-2 rounded-xl bg-muted/40 border">
+          <div className="flex flex-wrap items-center gap-2 max-w-full">
+            <span className="text-xs font-semibold text-muted-foreground ml-1 shrink-0">Affichage :</span>
+            <div className="inline-flex max-w-full overflow-x-auto gap-1 bg-background p-1 rounded-lg border shadow-sm">
               <Button
                 variant={scopeFilter === "all" ? "default" : "ghost"}
                 size="sm"
-                className="h-7 text-xs px-3 rounded-md"
+                className="h-7 text-[11px] sm:text-xs px-2.5 sm:px-3 rounded-md shrink-0"
                 onClick={() => setScopeFilter("all")}
               >
-                Toutes les factures ({quotes.filter(q => q.details?.invoiceNumber).length})
+                Toutes ({quotes.filter(q => q.details?.invoiceNumber).length})
               </Button>
               <Button
                 variant={scopeFilter === "mine" ? "default" : "ghost"}
                 size="sm"
-                className="h-7 text-xs px-3 rounded-md"
+                className="h-7 text-[11px] sm:text-xs px-2.5 sm:px-3 rounded-md shrink-0"
                 onClick={() => setScopeFilter("mine")}
               >
                 Mes factures ({myQuotesCount})
               </Button>
             </div>
           </div>
-          <span className="text-xs text-muted-foreground hidden sm:inline mr-2">
+          <span className="text-xs text-muted-foreground hidden md:inline mr-2">
             Connecté en tant qu'administrateur
           </span>
         </div>
@@ -409,10 +409,10 @@ export default function InvoicesPage() {
                       >
                         <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </Button>
-                      <Button asChild variant="outline" size="sm" className="h-7 sm:h-8 gap-1 sm:gap-1.5 text-xs px-2 sm:px-3">
+                      <Button asChild variant="outline" size="sm" className="h-7 sm:h-8 gap-1 sm:gap-1.5 text-xs px-2 sm:px-3 shrink-0">
                         <Link to={`/devis?id=${q.id}&type=facture`}>
                           <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                          <span>Imprimer / PDF</span>
+                          <span><span className="hidden sm:inline">Imprimer / </span>PDF</span>
                         </Link>
                       </Button>
                     </div>

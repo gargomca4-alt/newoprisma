@@ -383,12 +383,12 @@ export default function PaymentPage() {
 
                     {/* Total + actions */}
                     <div className="flex md:flex-col items-center md:items-end justify-between md:justify-center border-t md:border-t-0 pt-2 md:pt-0 gap-2 shrink-0">
-                      <div className="text-base sm:text-lg font-bold tabular-nums">{formatDZD(total)}</div>
-                      <div className="flex gap-1 sm:gap-1.5 justify-end items-center flex-wrap">
+                      <div className="text-sm min-[380px]:text-base sm:text-lg font-bold tabular-nums shrink-0">{formatDZD(total)}</div>
+                      <div className="flex gap-1 sm:gap-1.5 justify-end items-center flex-wrap shrink-0">
                         {status !== "paid" && (
                           <Button
                             size="sm"
-                            className="gradient-brand text-white border-0 text-xs h-7 sm:h-8 px-2 sm:px-3"
+                            className="gradient-brand text-white border-0 text-xs h-7 sm:h-8 px-2 sm:px-3 shrink-0"
                             onClick={() => {
                               setPayDialog(q);
                               setPayAmount("");
@@ -402,7 +402,7 @@ export default function PaymentPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
+                            className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground shrink-0"
                             onClick={() => resetPayment(q)}
                             title={t("payment.reset")}
                           >
@@ -414,7 +414,7 @@ export default function PaymentPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 sm:h-8 sm:w-8 text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          className="h-7 w-7 sm:h-8 sm:w-8 text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
                           onClick={() => setQuoteToDelete(q)}
                           title="Supprimer ce devis"
                         >

@@ -578,7 +578,7 @@ export default function CalculatorPage() {
         </Button>
       </div>
 
-      <div className="grid xl:grid-cols-[1fr,400px] gap-4 sm:gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr,400px] gap-4 sm:gap-6 lg:gap-8 w-full min-w-0">
         {/* Left: form */}
         <div className="space-y-8">
           {/* Client */}
