@@ -74,6 +74,7 @@ export default function ClientPortalPage() {
     try {
       const updatedDetails = {
         ...(quote.details || {}),
+        status: "accepted",
         acceptedBy: clientSigner.trim(),
         acceptedAt: new Date().toISOString(),
       };
@@ -103,6 +104,7 @@ export default function ClientPortalPage() {
     try {
       const updatedDetails = {
         ...(quote.details || {}),
+        status: "rejected",
         rejectedAt: new Date().toISOString(),
         rejectReason: rejectReason.trim()
       };

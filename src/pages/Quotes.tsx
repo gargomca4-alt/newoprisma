@@ -194,12 +194,33 @@ export default function QuotesPage() {
     const { data } = await supabase.from("quotes").select("*").order("created_at", { ascending: false });
     const mapped = (data || []).map((q: any) => ({
       ...q,
-      status: (q.details as any)?.status || (Number((q.details as any)?.paidAmount) >= Number(q.total) && Number(q.total) > 0 ? "accepted" : "pending")
+      status: q.status || (q.details as any)?.status || (Number((q.details as any)?.paidAmount) >= Number(q.total) && Number(q.total) > 0 ? "accepted" : "pending")
     }));
     setItems(mapped);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+
+    const channel = supabase
+      .channel("quotes-live-updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "quotes",
+        },
+        () => {
+          load();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // Single quote deletion
   const handleDeleteSingle = async () => {
@@ -709,6 +730,21 @@ export default function QuotesPage() {
                         {q.details?.createdBy ? (
                           <Badge variant="outline" className={`text-[10px] px-1.5 sm:px-2 py-0.5 border ${isQuoteOwnedByUser(q, userId, email) ? "border-primary/40 text-primary bg-primary/5" : "border-muted text-muted-foreground"}`}>
                             {isQuoteOwnedByUser(q, userId, email) ? "Mon devis" : `Par: ${q.details.createdBy}`}
+                          </Badge>
+                        ) : null}
+
+                        {/* Online Client Validation Badge */}
+                        {q.status === "accepted" && q.details?.acceptedBy ? (
+                          <Badge variant="outline" className="text-[10px] px-1.5 sm:px-2 py-0.5 border border-emerald-500/40 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 font-bold flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            <span>Validé par {q.details.acceptedBy}</span>
+                          </Badge>
+                        ) : null}
+
+                        {q.status === "rejected" && q.details?.rejectReason ? (
+                          <Badge variant="outline" className="text-[10px] px-1.5 sm:px-2 py-0.5 border border-destructive/40 text-destructive bg-destructive/10 font-medium flex items-center gap-1">
+                            <XCircle className="w-3 h-3 text-destructive" />
+                            <span>Refusé: {q.details.rejectReason}</span>
                           </Badge>
                         ) : null}
 

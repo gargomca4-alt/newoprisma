@@ -46,12 +46,33 @@ export default function DashboardPage() {
   const [customStart, setCustomStart] = useState<Date>(subDays(new Date(), 7));
   const [customEnd, setCustomEnd] = useState<Date>(new Date());
 
+  const loadQuotes = async () => {
+    const { data } = await supabase.from("quotes").select("*").order("created_at", { ascending: false });
+    setQuotes((data as Quote[]) || []);
+    setDataLoading(false);
+  };
+
   useEffect(() => {
-    (async () => {
-      const { data } = await supabase.from("quotes").select("*").order("created_at", { ascending: false });
-      setQuotes((data as Quote[]) || []);
-      setDataLoading(false);
-    })();
+    loadQuotes();
+
+    const channel = supabase
+      .channel("dashboard-quotes-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "quotes",
+        },
+        () => {
+          loadQuotes();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const scopedQuotes = useMemo(() => {

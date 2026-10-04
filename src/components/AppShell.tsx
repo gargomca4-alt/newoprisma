@@ -14,6 +14,7 @@ import logo from "@/assets/oprisma-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useRole, getStagiairesList } from "@/lib/useRole";
 import { isQuoteOwnedByUser } from "@/lib/userPricing";
+import { formatDZD } from "@/lib/calc";
 import { toast } from "sonner";
 
 function playNotificationSound() {
@@ -148,6 +149,25 @@ export function AppShell({ children }: { children: ReactNode }) {
           });
         }
 
+        // 3. Recently accepted quotes by client (last 7 days)
+        const recentlyAccepted = myQuotes.filter(q => {
+          if (q.status !== "accepted") return false;
+          const acceptedAt = (q.details as any)?.acceptedAt;
+          if (!acceptedAt) return false;
+          return (now - new Date(acceptedAt).getTime()) < 7 * 24 * 3600 * 1000;
+        });
+
+        for (const q of recentlyAccepted.slice(0, 5)) {
+          const signer = (q.details as any)?.acceptedBy || q.client_name || "Client";
+          notifs.push({
+            id: `accepted-${q.id}`,
+            title: `✅ Devis validé : ${q.client_name}`,
+            desc: `Validé par ${signer} (${formatDZD(Number(q.total || 0))})`,
+            link: "/quotes",
+            type: "info"
+          });
+        }
+
         setNotifications(notifs);
       } catch (e) {}
     };
@@ -168,17 +188,68 @@ export function AppShell({ children }: { children: ReactNode }) {
             filter: "key=eq.stagiaires_list",
           },
           () => {
-            // Reload notifications when stagiaires list changes
             loadNotifications();
           }
         )
         .subscribe();
     }
 
+    // Supabase Realtime: listen for quote updates (e.g. client validates online)
+    const quotesChannel = supabase
+      .channel("quotes-realtime-notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "quotes",
+        },
+        (payload) => {
+          const newQ = payload.new as any;
+          const oldQ = payload.old as any;
+
+          // When a client validates a quote
+          if (newQ.status === "accepted" && oldQ?.status !== "accepted") {
+            playNotificationSound();
+            const client = newQ.client_name || "Client";
+            const signer = newQ.details?.acceptedBy || client;
+            const totalStr = formatDZD(Number(newQ.total || 0));
+
+            toast.success(`🎉 Devis Validé en Ligne !`, {
+              description: `${client} a validé son devis (${totalStr}). Validé par : ${signer}`,
+              action: {
+                label: "Voir devis",
+                onClick: () => { window.location.href = "/quotes"; },
+              },
+              duration: 12000,
+            });
+
+            if ("Notification" in window && Notification.permission === "granted") {
+              try {
+                new Notification("🎉 Devis Validé en Ligne — Impuls Design", {
+                  body: `${client} a validé son devis de ${totalStr}. Signataire : ${signer}`,
+                  icon: logo,
+                });
+              } catch {}
+            }
+          } else if (newQ.status === "rejected" && oldQ?.status !== "rejected") {
+            const client = newQ.client_name || "Client";
+            toast.error(`❌ Devis refusé par le client`, {
+              description: `${client} a refusé le devis.`,
+              duration: 8000,
+            });
+          }
+
+          loadNotifications();
+        }
+      )
+      .subscribe();
+
     return () => {
       if (realtimeChannel) {
         supabase.removeChannel(realtimeChannel);
       }
+      supabase.removeChannel(quotesChannel);
     };
   }, [isAdmin, email, userId]);
 
