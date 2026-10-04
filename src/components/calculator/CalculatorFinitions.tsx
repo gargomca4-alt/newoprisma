@@ -20,12 +20,14 @@ export function CalculatorFinitions({
   const { t } = useTranslation();
 
   return (
-    <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-[1.5rem] overflow-hidden">
-      <CardHeader className="pb-3"><CardTitle className="text-base">{t("calc.finitions")} &amp; {t("calc.pelliculages")}</CardTitle></CardHeader>
-      <CardContent className="space-y-5">
+    <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-xl sm:rounded-[1.5rem] overflow-hidden">
+      <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6">
+        <CardTitle className="text-sm sm:text-base">{t("calc.finitions")} &amp; {t("calc.pelliculages")}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 sm:space-y-5 px-4 sm:px-6 pb-4 sm:pb-6">
         <div>
           <Label className="text-xs text-muted-foreground uppercase tracking-wider">{t("calc.finitions")}</Label>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
             {finitions.map((f: any) => (
               <label key={f.id} className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-smooth ${selectedFinitions.includes(f.id) ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
                 <Checkbox checked={selectedFinitions.includes(f.id)} onCheckedChange={(c) => setSelectedFinitions(c ? [...selectedFinitions, f.id] : selectedFinitions.filter((id: string) => id !== f.id))} />
@@ -40,7 +42,7 @@ export function CalculatorFinitions({
         <Separator />
         <div>
           <Label className="text-xs text-muted-foreground uppercase tracking-wider">{t("calc.pelliculages")}</Label>
-          <div className="grid md:grid-cols-2 gap-2 mt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
             {pelliculages.map((p: any) => (
               <label key={p.id} className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-smooth ${selectedPelliculages.includes(p.id) ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
                 <Checkbox checked={selectedPelliculages.includes(p.id)} onCheckedChange={(c) => setSelectedPelliculages(c ? [...selectedPelliculages, p.id] : selectedPelliculages.filter((id: string) => id !== p.id))} />
@@ -53,17 +55,17 @@ export function CalculatorFinitions({
           </div>
         </div>
         <Separator />
-        <label className="flex items-center justify-between p-3 rounded-xl border-2 border-dashed cursor-pointer hover:bg-muted/30">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg gradient-brand flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
+        <label className="flex items-center justify-between p-3 rounded-xl border-2 border-dashed cursor-pointer hover:bg-muted/30 gap-2">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg gradient-brand flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <div>
-              <div className="font-medium text-sm">{t("calc.addDesign")}</div>
-              <div className="text-xs text-muted-foreground">{t("calc.designNote")}</div>
+            <div className="min-w-0">
+              <div className="font-medium text-xs sm:text-sm truncate">{t("calc.addDesign")}</div>
+              <div className="text-[10px] sm:text-xs text-muted-foreground truncate">{t("calc.designNote")}</div>
             </div>
           </div>
-          <Switch checked={addDesign} onCheckedChange={setAddDesign} />
+          <Switch checked={addDesign} onCheckedChange={setAddDesign} className="shrink-0" />
         </label>
       </CardContent>
     </Card>

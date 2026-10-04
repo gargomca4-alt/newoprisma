@@ -268,48 +268,48 @@ export default function ClientsPage() {
       } />
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="border-2">
-          <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t("clients.totalClients")}</div>
-            <div className="text-2xl font-bold mt-1">{totalClients}</div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
+        <Card className="border-2 rounded-xl sm:rounded-2xl">
+          <CardContent className="p-3 sm:p-4">
+            <div className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider font-semibold truncate">{t("clients.totalClients")}</div>
+            <div className="text-lg sm:text-2xl font-bold mt-0.5 sm:mt-1">{totalClients}</div>
           </CardContent>
         </Card>
-        <Card className="border-2">
-          <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t("clients.activeClients")}</div>
-            <div className="text-2xl font-bold mt-1 text-emerald-600">{activeClients}</div>
+        <Card className="border-2 rounded-xl sm:rounded-2xl">
+          <CardContent className="p-3 sm:p-4">
+            <div className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider font-semibold truncate">{t("clients.activeClients")}</div>
+            <div className="text-lg sm:text-2xl font-bold mt-0.5 sm:mt-1 text-emerald-600">{activeClients}</div>
           </CardContent>
         </Card>
-        <Card className="border-2">
-          <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t("clients.totalBusiness")}</div>
-            <div className="text-xl font-bold mt-1 tabular-nums">{formatDZD(totalBusiness)}</div>
+        <Card className="border-2 rounded-xl sm:rounded-2xl">
+          <CardContent className="p-3 sm:p-4">
+            <div className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider font-semibold truncate">{t("clients.totalBusiness")}</div>
+            <div className="text-base sm:text-xl font-bold mt-0.5 sm:mt-1 tabular-nums truncate">{formatDZD(totalBusiness)}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Search + Month Filter */}
       {clients.length > 0 && (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <div className="relative max-w-sm flex-1 w-full">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
+          <div className="relative w-full sm:max-w-sm flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder={t("clients.searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
+              className="pl-9 h-9 text-xs sm:text-sm"
             />
           </div>
 
           {/* Month Filter */}
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <div className="relative flex-1 sm:flex-none">
+              <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
               <select
                 value={monthFilter}
                 onChange={(e) => setMonthFilter(e.target.value)}
-                className="h-9 pl-8 pr-8 rounded-lg border border-input bg-background text-sm appearance-none cursor-pointer hover:bg-accent/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                className="w-full sm:w-auto h-8 sm:h-9 pl-7 pr-7 rounded-lg border border-input bg-background text-xs sm:text-sm appearance-none cursor-pointer hover:bg-accent/50 transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="all">Tous les mois</option>
                 {availableMonths.map(m => (
@@ -336,7 +336,7 @@ export default function ClientsPage() {
       {/* Active filter badge */}
       {monthFilter !== "all" && (
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="gap-1.5 bg-primary/10 text-primary px-3 py-1">
+          <Badge variant="secondary" className="gap-1.5 bg-primary/10 text-primary px-2.5 py-0.5 sm:px-3 sm:py-1 text-xs">
             <Filter className="w-3.5 h-3.5" />
             Filtré par : {formatMonthLabel(monthFilter)}
           </Badge>
@@ -345,103 +345,103 @@ export default function ClientsPage() {
 
       {/* Client list */}
       {filtered.length === 0 ? (
-        <Card>
-          <CardContent className="p-12 text-center text-muted-foreground">
+        <Card className="rounded-xl">
+          <CardContent className="p-8 sm:p-12 text-center text-xs sm:text-sm text-muted-foreground">
             {clients.length === 0 ? t("clients.empty") : t("clients.noResults")}
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5 sm:space-y-3">
           {filtered.map(({ client, quotes: clientQuotes, totalOrders, totalAmount, totalPaid, totalRemaining }) => {
             const isExpanded = expandedId === client.id;
             return (
-              <Card key={client.id} className="border-2 hover:shadow-md transition-smooth overflow-hidden">
+              <Card key={client.id} className="border-2 hover:shadow-md transition-smooth overflow-hidden rounded-xl">
                 <CardContent className="p-0">
                   {/* Main row */}
-                  <div className="p-4 flex items-center gap-4">
+                  <div className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
                     {/* Avatar */}
-                    <div className="w-12 h-12 rounded-xl gradient-brand flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-brand">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl gradient-brand flex items-center justify-center text-white font-bold text-base sm:text-lg shrink-0 shadow-brand">
                       {client.name.charAt(0).toUpperCase()}
                     </div>
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-base">{client.name}</span>
-                        {client.company && <span className="text-sm text-muted-foreground">· {client.company}</span>}
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        <span className="font-semibold text-sm sm:text-base">{client.name}</span>
+                        {client.company && <span className="text-xs sm:text-sm text-muted-foreground truncate">· {client.company}</span>}
                       </div>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
+                      <div className="flex items-center gap-2 sm:gap-3 mt-1 text-[11px] sm:text-xs text-muted-foreground flex-wrap">
                         {client.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{client.phone}</span>}
-                        {client.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{client.email}</span>}
-                        {client.address && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{client.address}</span>}
+                        {client.email && <span className="flex items-center gap-1 hidden md:flex"><Mail className="w-3 h-3" />{client.email}</span>}
+                        {client.address && <span className="flex items-center gap-1 hidden lg:flex"><MapPin className="w-3 h-3" />{client.address}</span>}
                       </div>
                     </div>
 
-                    {/* Stats */}
-                    <div className="hidden sm:flex items-center gap-4 shrink-0">
+                    {/* Stats (Desktop/Tablet) */}
+                    <div className="hidden sm:flex items-center gap-3 lg:gap-4 shrink-0">
                       <div className="text-center">
-                        <div className="text-xs text-muted-foreground">{t("clients.orders")}</div>
-                        <div className="font-bold text-lg">{totalOrders}</div>
+                        <div className="text-[10px] sm:text-xs text-muted-foreground">{t("clients.orders")}</div>
+                        <div className="font-bold text-base sm:text-lg">{totalOrders}</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-xs text-muted-foreground">Total</div>
-                        <div className="font-bold tabular-nums">{formatDZD(totalAmount)}</div>
+                        <div className="text-[10px] sm:text-xs text-muted-foreground">Total</div>
+                        <div className="font-bold text-xs sm:text-sm tabular-nums">{formatDZD(totalAmount)}</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-xs text-muted-foreground">{t("clients.paid")}</div>
-                        <div className="font-bold tabular-nums text-emerald-600">{formatDZD(totalPaid)}</div>
+                        <div className="text-[10px] sm:text-xs text-muted-foreground">{t("clients.paid")}</div>
+                        <div className="font-bold text-xs sm:text-sm tabular-nums text-emerald-600">{formatDZD(totalPaid)}</div>
                       </div>
                       {totalRemaining > 0 && (
-                        <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                        <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px]">
                           {t("clients.remaining")}: {formatDZD(totalRemaining)}
                         </Badge>
                       )}
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
                       {totalOrders > 0 && (
                         <>
                           <Button
                             asChild
                             variant="outline"
                             size="sm"
-                            className="h-8 text-xs gap-1.5 hidden sm:inline-flex"
+                            className="h-7 sm:h-8 text-xs gap-1.5 hidden sm:inline-flex px-2 sm:px-3"
                           >
                             <Link to={`/quotes?client=${encodeURIComponent(client.name)}`}>
                               <ExternalLink className="w-3.5 h-3.5 text-primary" />
-                              <span>Tous ses devis</span>
+                              <span>Devis</span>
                             </Link>
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-7 w-7 sm:h-8 sm:w-8"
                             onClick={() => setExpandedId(isExpanded ? null : client.id)}
                             title={isExpanded ? "Réduire" : "Voir l'historique ici"}
                           >
-                            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            {isExpanded ? <ChevronUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                           </Button>
                         </>
                       )}
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(client)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" onClick={() => openEdit(client)}>
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(client.id)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" onClick={() => handleDelete(client.id)}>
                         <Trash2 className="w-3.5 h-3.5 text-destructive" />
                       </Button>
                     </div>
                   </div>
 
                   {/* Mobile stats */}
-                  <div className="sm:hidden px-4 pb-3 pt-2 border-t border-border/50 flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <div className="flex items-center gap-3">
-                      <span><strong>{totalOrders}</strong> {t("clients.orders")}</span>
+                  <div className="sm:hidden px-3 pb-2.5 pt-1.5 border-t border-border/50 flex flex-wrap items-center justify-between gap-1.5 text-[11px]">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span><strong>{totalOrders}</strong> cmd</span>
                       <span>Total: <strong>{formatDZD(totalAmount)}</strong></span>
                       <span className="text-emerald-600 font-semibold">{formatDZD(totalPaid)}</span>
                     </div>
                     {totalOrders > 0 && (
-                      <Button asChild variant="outline" size="sm" className="h-7 text-[11px] gap-1 px-2.5">
+                      <Button asChild variant="outline" size="sm" className="h-6 text-[10px] gap-1 px-2">
                         <Link to={`/quotes?client=${encodeURIComponent(client.name)}`}>
                           <ExternalLink className="w-3 h-3 text-primary" /> Devis
                         </Link>

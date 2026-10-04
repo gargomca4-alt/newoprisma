@@ -149,21 +149,21 @@ export default function Auth() {
         {/* Right Side: Auth Form */}
         <Card className="w-full max-w-md mx-auto shadow-sm border border-border rounded-2xl overflow-hidden bg-card">
           <div className="h-1.5 w-full bg-accent"></div>
-          <CardHeader className="pt-8 pb-4">
-            <div className="md:hidden flex justify-center mb-6">
-              <img src="/logo-light.png" alt="Impuls" className="h-16 dark:hidden" />
-              <img src="/logo-dark.png" alt="Impuls" className="h-16 hidden dark:block" />
+          <CardHeader className="pt-5 sm:pt-8 pb-3 sm:pb-4 px-4 sm:px-6">
+            <div className="md:hidden flex justify-center mb-3 sm:mb-6">
+              <img src="/logo-light.png" alt="Impuls" className="h-10 sm:h-14 dark:hidden" />
+              <img src="/logo-dark.png" alt="Impuls" className="h-10 sm:h-14 hidden dark:block" />
             </div>
-            <CardTitle className="text-2xl text-center font-bold tracking-tight">
+            <CardTitle className="text-xl sm:text-2xl text-center font-bold tracking-tight">
               {view === 'login' ? "Connexion" : view === 'signup' ? "Créer un compte stagiaire" : "Mot de passe oublié"}
             </CardTitle>
             <CardDescription className="text-center text-xs">
-              {view === 'login' && "Entrez vos identifiants pour accéder à votre espace de travail"}
+              {view === 'login' && "Entrez vos identifiants pour accéder à votre espace"}
               {view === 'signup' && "Inscription pour stagiaires et collaborateurs d'atelier"}
               {view === 'forgot' && "Entrez votre email pour recevoir les instructions"}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 sm:px-6 pb-5 sm:pb-6">
             <form onSubmit={handleAuth} className="space-y-4">
               {view === 'signup' && (
                 <div className="space-y-1.5">

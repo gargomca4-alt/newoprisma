@@ -149,10 +149,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-background selection:bg-accent/30 selection:text-foreground">
       {/* Top bar (Apple Translucent Header) */}
       <header className="sticky top-0 z-40 w-full bg-card/85 backdrop-blur-xl border-b border-border no-print shadow-xs">
-        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 flex h-16 items-center justify-between gap-2 sm:gap-4">
-          <Link to="/" className="flex items-center gap-2.5 sm:gap-3.5 group shrink-0">
-            <img src={logo} alt="Impuls" className="h-10 w-auto transition-transform duration-300 group-hover:scale-105 dark:hidden" />
-            <img src="/logo-dark.png" alt="Impuls" className="h-10 w-auto transition-transform duration-300 group-hover:scale-105 hidden dark:block" />
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex h-14 sm:h-16 items-center justify-between gap-2 sm:gap-4">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3.5 group shrink-0">
+            <img src={logo} alt="Impuls" className="h-8 sm:h-10 w-auto transition-transform duration-300 group-hover:scale-105 dark:hidden" />
+            <img src="/logo-dark.png" alt="Impuls" className="h-8 sm:h-10 w-auto transition-transform duration-300 group-hover:scale-105 hidden dark:block" />
             <div className="hidden sm:block">
               <div className="flex items-center gap-2">
                 <h1 className="text-base font-bold text-foreground leading-tight tracking-tight">Impuls Design</h1>
@@ -164,9 +164,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </Link>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
             {/* Quick action header CTA (Solid Amber) */}
-            <Button asChild size="sm" className="hidden sm:inline-flex bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-full px-4 h-9 shadow-xs text-xs gap-1.5 transition-all duration-200 hover:scale-[1.02]">
+            <Button asChild size="sm" className="hidden sm:inline-flex bg-accent hover:bg-accent/90 text-accent-foreground font-bold rounded-full px-3 sm:px-4 h-8 sm:h-9 shadow-xs text-[11px] sm:text-xs gap-1 sm:gap-1.5 transition-all duration-200 hover:scale-[1.02]">
               <Link to="/calculator">
                 <Calculator className="w-3.5 h-3.5" />
                 <span>Nouveau Devis</span>
@@ -246,7 +246,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 flex gap-6 lg:gap-8 py-4 sm:py-8">
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex gap-4 lg:gap-8 py-3 sm:py-4 lg:py-8">
         {/* Sidebar */}
         <aside className="hidden lg:block w-64 shrink-0 no-print">
           <div className="sticky top-28 flex flex-col h-[calc(100vh-9rem)] glass-card rounded-2xl p-3 shadow-md border-border/80">
@@ -327,31 +327,42 @@ export function AppShell({ children }: { children: ReactNode }) {
         </aside>
 
         {/* Mobile nav (with iOS/Android safe area support) */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass border-t no-print pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-1 shadow-lg">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass border-t no-print pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-1.5 shadow-lg">
           <div className="flex justify-around items-center px-1">
-            {flatNavItems.slice(0, 4).map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === "/"}
-                className={({ isActive }) =>
-                  `flex flex-col items-center gap-1 w-16 py-1.5 rounded-lg text-[11px] transition-smooth font-bold ${
-                    isActive ? "text-primary bg-primary/10" : "text-muted-foreground"
-                  }`
-                }
-              >
-                <item.icon className="h-[22px] w-[22px] shrink-0" />
-                <span className="truncate w-full text-center px-1">{item.label}</span>
-              </NavLink>
-            ))}
+            {flatNavItems.slice(0, 4).map((item) => {
+              const shortLabel = item.to === "/" ? "Home" : item.to === "/calculator" ? "Calcul" : item.to === "/quotes" ? "Devis" : item.to === "/invoices" ? "Factures" : item.label;
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === "/"}
+                  className={({ isActive }) =>
+                    `flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 rounded-xl transition-smooth ${
+                      isActive ? "text-primary font-black" : "text-muted-foreground font-semibold hover:text-foreground"
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <div className={`p-1 rounded-xl transition-colors ${isActive ? "bg-primary/10 text-primary" : ""}`}>
+                        <item.icon className="h-[18px] w-[18px] sm:h-5 sm:w-5 shrink-0" />
+                      </div>
+                      <span className="text-[9px] sm:text-[10px] leading-none tracking-tight text-center">{shortLabel}</span>
+                    </>
+                  )}
+                </NavLink>
+              );
+            })}
             
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <button
-                  className={`flex flex-col items-center gap-1 w-16 py-1.5 rounded-lg text-[11px] transition-smooth text-muted-foreground hover:text-primary ${isMobileMenuOpen ? "text-primary bg-primary/10" : ""}`}
+                  className={`flex flex-col items-center justify-center gap-1 flex-1 py-1 rounded-xl transition-smooth text-muted-foreground hover:text-primary font-semibold ${isMobileMenuOpen ? "text-primary font-black" : ""}`}
                 >
-                  <Menu className="h-[22px] w-[22px] shrink-0" />
-                  <span className="truncate w-full text-center px-1 font-bold">Plus</span>
+                  <div className={`p-1 rounded-xl transition-colors ${isMobileMenuOpen ? "bg-primary/10 text-primary" : ""}`}>
+                    <Menu className="h-[18px] w-[18px] sm:h-5 sm:w-5 shrink-0" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] leading-none tracking-tight text-center">Plus</span>
                 </button>
               </SheetTrigger>
               <SheetContent side="bottom" className="h-[75vh] rounded-t-3xl flex flex-col pt-10 px-0 pb-0 no-print">
@@ -402,7 +413,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
 
         {/* Main */}
-        <main className="flex-1 min-w-0 pb-28 lg:pb-8 animate-fade-in">{children}</main>
+        <main className="flex-1 min-w-0 pb-24 sm:pb-28 lg:pb-8 animate-fade-in">{children}</main>
       </div>
     </div>
   );

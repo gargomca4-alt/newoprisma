@@ -523,18 +523,18 @@ export default function CalculatorPage() {
     window.open("/devis", "_blank");
   };
   return (
-    <div className="space-y-8 max-w-[1400px] mx-auto animate-fade-in relative pb-10">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-[1400px] mx-auto animate-fade-in relative pb-10">
       {/* Hero Apple Style */}
-      <div className="relative overflow-hidden rounded-[1.5rem] bg-card border border-border p-8 sm:p-10 shadow-sm">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-[1.5rem] bg-card border border-border p-5 sm:p-8 md:p-10 shadow-sm">
         <div className="relative flex flex-col md:flex-row md:items-center gap-6 z-10">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-primary flex items-center justify-center text-white shadow-sm shrink-0">
-            <Calculator className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+          <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-xl sm:rounded-2xl bg-primary flex items-center justify-center text-white shadow-sm shrink-0">
+            <Calculator className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground pb-1">
+            <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-foreground pb-1">
               {t("calc.title")}
             </h1>
-            <p className="text-base sm:text-lg text-muted-foreground font-medium max-w-2xl mt-1">{t("calc.subtitle")}</p>
+            <p className="text-sm sm:text-base md:text-lg text-muted-foreground font-medium max-w-2xl mt-0.5 sm:mt-1">{t("calc.subtitle")}</p>
             {hasUserPricing && (
               <Badge variant="secondary" className="mt-2 text-xs bg-primary/10 text-primary border border-primary/20 gap-1.5 py-1 px-3">
                 <Sparkles className="w-3.5 h-3.5 text-primary" />
@@ -546,7 +546,7 @@ export default function CalculatorPage() {
       </div>
 
       {/* Templates Quick Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl glass-card border border-white/40 dark:border-white/10 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl sm:rounded-2xl glass-card border border-white/40 dark:border-white/10 shadow-sm">
         <div className="flex items-center gap-2 flex-wrap">
           <Bookmark className="w-4 h-4 text-primary shrink-0" />
           <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Modèles de Devis :</span>
@@ -578,13 +578,15 @@ export default function CalculatorPage() {
         </Button>
       </div>
 
-      <div className="grid xl:grid-cols-[1fr,450px] gap-8">
+      <div className="grid xl:grid-cols-[1fr,400px] gap-4 sm:gap-6 lg:gap-8">
         {/* Left: form */}
         <div className="space-y-8">
           {/* Client */}
-          <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-[1.5rem] overflow-visible">
-            <CardHeader className="pb-3"><CardTitle className="text-base">{t("calc.client")}</CardTitle></CardHeader>
-            <CardContent className="grid md:grid-cols-2 gap-4">
+          <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-xl sm:rounded-[1.5rem] overflow-visible">
+            <CardHeader className="pb-3 px-4 sm:px-6">
+              <CardTitle className="text-sm sm:text-base">{t("calc.client")}</CardTitle>
+            </CardHeader>
+            <CardContent className="grid sm:grid-cols-2 gap-3 sm:gap-4 px-4 sm:px-6">
               <div className="space-y-1.5 relative">
                 <Label>{t("calc.clientName")} *</Label>
                 <Input 
@@ -634,26 +636,26 @@ export default function CalculatorPage() {
 
           {/* UI/UX Card OR Print Card */}
           {isUiUx ? (
-            <Card className="bg-card border border-border shadow-sm rounded-[1.5rem] overflow-hidden">
-              <CardHeader className="pb-3 border-b border-border bg-card">
-                <div className="flex items-center justify-between">
+            <Card className="bg-card border border-border shadow-sm rounded-xl sm:rounded-[1.5rem] overflow-hidden">
+              <CardHeader className="pb-3 border-b border-border bg-card px-4 sm:px-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm">
-                      <Sparkles className="w-5 h-5" />
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm shrink-0">
+                      <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                     <div>
-                      <CardTitle className="text-base font-bold">Conception UI/UX & Design Digital</CardTitle>
-                      <p className="text-xs text-muted-foreground">Facturation horaire • Maquettes Figma • Prototypes & Design System</p>
+                      <CardTitle className="text-sm sm:text-base font-bold">Conception UI/UX & Design Digital</CardTitle>
+                      <p className="text-[11px] sm:text-xs text-muted-foreground">Facturation horaire • Maquettes Figma • Prototypes</p>
                     </div>
                   </div>
-                  <Badge className="bg-accent text-accent-foreground font-bold border-0 shadow-sm text-xs">
+                  <Badge className="bg-accent text-accent-foreground font-bold border-0 shadow-sm text-[10px] sm:text-xs self-start sm:self-center">
                     🎨 Facturation aux Heures
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6 pt-5">
+              <CardContent className="space-y-4 sm:space-y-6 pt-4 sm:pt-5 px-4 sm:px-6">
                 {/* Product & Quantity */}
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="space-y-1.5">
                     <Label>{t("calc.product")} *</Label>
                     <Select value={productId} onValueChange={setProductId}>
@@ -670,10 +672,10 @@ export default function CalculatorPage() {
                 </div>
 
                 {/* Hourly Rate */}
-                <div className="space-y-2.5 p-4 rounded-2xl bg-muted/30 border">
+                <div className="space-y-2.5 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-muted/30 border">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-primary" /> Taux horaire (DA / heure)
+                    <Label className="text-xs sm:text-sm font-semibold flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" /> Taux horaire (DA / heure)
                     </Label>
                     <span className="text-xs font-mono font-bold text-primary">{formatDZD(uiUxHourlyRate)} / h</span>
                   </div>
@@ -686,14 +688,14 @@ export default function CalculatorPage() {
                       onChange={(e) => setUiUxHourlyRate(Math.max(0, +e.target.value || 0))}
                       className="text-base font-semibold"
                     />
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-1 sm:gap-1.5">
                       {[2000, 2500, 3000, 3500, 4000].map((rate) => (
                         <Button
                           key={rate}
                           type="button"
                           variant={uiUxHourlyRate === rate ? "default" : "outline"}
                           size="sm"
-                          className={`h-8 px-2.5 text-xs ${uiUxHourlyRate === rate ? "bg-primary text-white border-0 font-bold" : ""}`}
+                          className={`h-7 sm:h-8 px-2 sm:px-2.5 text-xs ${uiUxHourlyRate === rate ? "bg-primary text-white border-0 font-bold" : ""}`}
                           onClick={() => setUiUxHourlyRate(rate)}
                         >
                           {rate} DA
@@ -705,21 +707,21 @@ export default function CalculatorPage() {
 
                 {/* Estimation Method */}
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold">Mode d'estimation du temps</Label>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <Label className="text-xs sm:text-sm font-semibold">Mode d'estimation du temps</Label>
                     <Tabs value={uiUxCalcMode} onValueChange={(v: any) => setUiUxCalcMode(v)} className="w-auto">
                       <TabsList className="h-8">
-                        <TabsTrigger value="hours" className="text-xs h-6 px-3">Heures directes</TabsTrigger>
-                        <TabsTrigger value="screens" className="text-xs h-6 px-3">Par nombre d'écrans</TabsTrigger>
+                        <TabsTrigger value="hours" className="text-xs h-6 px-2.5 sm:px-3">Heures directes</TabsTrigger>
+                        <TabsTrigger value="screens" className="text-xs h-6 px-2.5 sm:px-3">Par nombre d'écrans</TabsTrigger>
                       </TabsList>
                     </Tabs>
                   </div>
 
                   {uiUxCalcMode === 'hours' ? (
-                    <div className="p-4 rounded-2xl bg-muted/30 border space-y-3">
+                    <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-muted/30 border space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Volume d'heures estimées</span>
-                        <span className="text-sm font-bold text-primary">{uiUxHours} heures</span>
+                        <span className="text-xs sm:text-sm font-medium">Volume d'heures estimées</span>
+                        <span className="text-xs sm:text-sm font-bold text-primary">{uiUxHours} heures</span>
                       </div>
                       <Input
                         type="number"
@@ -729,14 +731,14 @@ export default function CalculatorPage() {
                         onChange={(e) => setUiUxHours(Math.max(1, +e.target.value || 1))}
                         className="text-base font-semibold"
                       />
-                      <div className="flex flex-wrap gap-1.5 pt-1">
+                      <div className="flex flex-wrap gap-1 sm:gap-1.5 pt-1">
                         {[10, 20, 30, 40, 60, 80].map((h) => (
                           <Button
                             key={h}
                             type="button"
                             variant={uiUxHours === h ? "default" : "outline"}
                             size="sm"
-                            className={`h-7 px-2.5 text-xs ${uiUxHours === h ? "bg-primary text-white border-0 font-bold" : ""}`}
+                            className={`h-7 px-2 sm:px-2.5 text-xs ${uiUxHours === h ? "bg-primary text-white border-0 font-bold" : ""}`}
                             onClick={() => setUiUxHours(h)}
                           >
                             {h}h
@@ -745,8 +747,8 @@ export default function CalculatorPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="p-4 rounded-2xl bg-muted/30 border space-y-3">
-                      <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-muted/30 border space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <div className="space-y-1.5">
                           <Label className="text-xs">Nombre d'écrans / maquettes</Label>
                           <Input
@@ -780,14 +782,14 @@ export default function CalculatorPage() {
                 {/* Modules & Deliverables */}
                 <div className="space-y-3 pt-1">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold flex items-center gap-1.5">
-                      <Layers className="w-4 h-4 text-primary" /> Modules & Livrables additionnels
+                    <Label className="text-xs sm:text-sm font-semibold flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" /> Modules & Livrables
                     </Label>
                     <span className="text-xs text-muted-foreground">
-                      {selectedUiUxModules.length} module(s) sélectionné(s)
+                      {selectedUiUxModules.length} sélectionné(s)
                     </span>
                   </div>
-                  <div className="grid sm:grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
                     {UI_UX_MODULES.map((mod) => {
                       const isSelected = selectedUiUxModules.includes(mod.id);
                       return (
@@ -800,13 +802,13 @@ export default function CalculatorPage() {
                               setSelectedUiUxModules([...selectedUiUxModules, mod.id]);
                             }
                           }}
-                          className={`p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 text-left flex items-start gap-3 ${
+                          className={`p-2.5 sm:p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 text-left flex items-start gap-2.5 sm:gap-3 ${
                             isSelected
                               ? "border-primary bg-primary/10 shadow-sm"
                               : "border-border/60 hover:border-primary/40 bg-card hover:bg-muted/30"
                           }`}
                         >
-                          <div className="text-xl mt-0.5">{mod.icon}</div>
+                          <div className="text-lg sm:text-xl mt-0.5 shrink-0">{mod.icon}</div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-1">
                               <span className="font-semibold text-xs truncate">{mod.name}</span>
@@ -826,10 +828,10 @@ export default function CalculatorPage() {
           ) : (
             <>
               {/* Product */}
-              <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-[1.5rem] overflow-hidden">
-                <CardHeader className="pb-3"><CardTitle className="text-base">{t("calc.product")}</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
+              <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-xl sm:rounded-[1.5rem] overflow-hidden">
+                <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6"><CardTitle className="text-sm sm:text-base">{t("calc.product")}</CardTitle></CardHeader>
+                <CardContent className="space-y-4 px-4 sm:px-6 pb-4 sm:pb-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="space-y-1.5">
                       <Label>{t("calc.product")} *</Label>
                       <Select value={productId} onValueChange={setProductId}>
@@ -850,7 +852,7 @@ export default function CalculatorPage() {
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                     <div className="space-y-1.5">
                       <Label>{t("common.quantity")}</Label>
                       <Input type="number" min={1} value={quantity} onChange={(e) => setQuantity(Math.max(1, +e.target.value || 1))} />
@@ -869,7 +871,7 @@ export default function CalculatorPage() {
                   </div>
 
                   {(useCustomSize || isLargeFormat) && (
-                    <div className="grid md:grid-cols-2 gap-4 p-4 rounded-xl bg-muted/30 border-dashed border-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-muted/30 border-dashed border-2">
                       <div className="space-y-1.5">
                         <Label>{t("calc.widthMm")}</Label>
                         <Input type="number" value={customW} onChange={(e) => setCustomW(+e.target.value || 0)} />
@@ -886,8 +888,8 @@ export default function CalculatorPage() {
                     <div className="p-3 rounded-xl bg-muted/40 border space-y-2">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="font-medium text-sm">{t("calc.bleed")}</div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="font-medium text-xs sm:text-sm">{t("calc.bleed")}</div>
+                          <div className="text-[11px] sm:text-xs text-muted-foreground">
                             {finishedW > 0 && finishedH > 0
                               ? `${finishedW}×${finishedH}mm → ${finishedW + bleed * 2}×${finishedH + bleed * 2}mm`
                               : t("calc.bleed")}
@@ -901,7 +903,7 @@ export default function CalculatorPage() {
                             step={0.5}
                             value={bleed}
                             onChange={(e) => setBleed(+e.target.value || 0)}
-                            className="w-20 h-8 text-center text-sm font-semibold"
+                            className="w-16 sm:w-20 h-8 text-center text-xs sm:text-sm font-semibold"
                           />
                           <span className="text-xs text-muted-foreground font-medium">mm</span>
                         </div>
@@ -912,8 +914,8 @@ export default function CalculatorPage() {
                   {!isLargeFormat && (
                     <div className="flex items-center justify-between p-3 rounded-xl bg-muted/40 border">
                       <div>
-                        <div className="font-medium text-sm">{t("calc.rectoVerso")}</div>
-                        <div className="text-xs text-muted-foreground">{rectoVerso ? `×${printType?.recto_verso_multiplier || 1.7}` : t("calc.recto")}</div>
+                        <div className="font-medium text-xs sm:text-sm">{t("calc.rectoVerso")}</div>
+                        <div className="text-[11px] sm:text-xs text-muted-foreground">{rectoVerso ? `×${printType?.recto_verso_multiplier || 1.7}` : t("calc.recto")}</div>
                       </div>
                       <Switch checked={rectoVerso} onCheckedChange={setRectoVerso} />
                     </div>
@@ -923,13 +925,13 @@ export default function CalculatorPage() {
 
               {/* Paper */}
               {!isLargeFormat && (
-                <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-[1.5rem] overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">
+                <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-xl sm:rounded-[1.5rem] overflow-hidden">
+                  <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6">
+                    <CardTitle className="text-sm sm:text-base">
                       {product?.has_cover ? "Papiers du catalogue" : t("calc.paperType")}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 px-4 sm:px-6 pb-4 sm:pb-6">
                     {/* Format feuille offset (toujours visible) */}
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
@@ -949,12 +951,12 @@ export default function CalculatorPage() {
                     {product?.has_cover ? (
                       <>
                         {/* 1) Couverture */}
-                        <div className="rounded-xl bg-muted/30 border border-border p-4 space-y-4">
+                        <div className="rounded-xl bg-muted/30 border border-border p-3 sm:p-4 space-y-3 sm:space-y-4">
                           <div className="flex items-center gap-2">
                             <div className="w-1 h-5 rounded-full bg-primary" />
-                            <h4 className="text-sm font-semibold">Couverture extérieure</h4>
+                            <h4 className="text-xs sm:text-sm font-semibold">Couverture extérieure</h4>
                           </div>
-                          <div className="grid md:grid-cols-3 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                             <div className="space-y-1.5">
                               <Label>{t("calc.coverPaper")}</Label>
                               <Select value={coverPaperTypeId} onValueChange={setCoverPaperTypeId}>
@@ -979,12 +981,12 @@ export default function CalculatorPage() {
                         </div>
 
                         {/* 2) Pages intérieures (séparées, défilables) */}
-                        <div className="rounded-xl border-2 border-dashed p-4 space-y-4 max-h-[320px] overflow-y-auto">
+                        <div className="rounded-xl border-2 border-dashed p-3 sm:p-4 space-y-3 sm:space-y-4 max-h-[320px] overflow-y-auto">
                           <div className="flex items-center gap-2">
                             <div className="w-1 h-5 rounded-full bg-primary/60" />
-                            <h4 className="text-sm font-semibold">Pages intérieures</h4>
+                            <h4 className="text-xs sm:text-sm font-semibold">Pages intérieures</h4>
                           </div>
-                          <div className="grid md:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                             <div className="space-y-1.5">
                               <Label>Papier des pages intérieures</Label>
                               <Select value={paperTypeId} onValueChange={setPaperTypeId} disabled={!productId}>
@@ -1007,7 +1009,7 @@ export default function CalculatorPage() {
                         </div>
                       </>
                     ) : (
-                      <div className="grid md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <div className="space-y-1.5">
                           <Label>{t("calc.paperType")}</Label>
                           <Select value={paperTypeId} onValueChange={setPaperTypeId} disabled={!productId}>
@@ -1047,9 +1049,9 @@ export default function CalculatorPage() {
           )}
 
           {/* Remise Commerciale & Notes Card */}
-          <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-[1.5rem] overflow-hidden">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center justify-between">
+          <Card className="glass-card border-white/50 dark:border-white/10 shadow-md rounded-xl sm:rounded-[1.5rem] overflow-hidden">
+            <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6">
+              <CardTitle className="text-sm sm:text-base flex flex-wrap items-center justify-between gap-2">
                 <span className="flex items-center gap-2">
                   <Tag className="w-4 h-4 text-primary" />
                   Remise Commerciale & Notes
@@ -1061,10 +1063,10 @@ export default function CalculatorPage() {
                 )}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid sm:grid-cols-2 gap-4">
+            <CardContent className="space-y-4 px-4 sm:px-6 pb-4 sm:pb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-1.5">
-                  <Label className="flex items-center gap-1.5">
+                  <Label className="flex items-center gap-1.5 text-xs">
                     <Percent className="w-3.5 h-3.5 text-muted-foreground" />
                     Type de remise
                   </Label>
@@ -1077,7 +1079,7 @@ export default function CalculatorPage() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Valeur {discountType === 'percent' ? '(%)' : '(DA)'}</Label>
+                  <Label className="text-xs">Valeur {discountType === 'percent' ? '(%)' : '(DA)'}</Label>
                   <Input
                     type="number"
                     min={0}
@@ -1090,7 +1092,7 @@ export default function CalculatorPage() {
               </div>
 
               <div className="space-y-1.5 pt-2 border-t border-border/40">
-                <Label className="flex items-center gap-1.5">
+                <Label className="flex items-center gap-1.5 text-xs">
                   <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
                   Remarques & Notes (délai de livraison, acompte, BAT...)
                 </Label>
@@ -1099,6 +1101,7 @@ export default function CalculatorPage() {
                   rows={2}
                   value={quoteNotes}
                   onChange={(e) => setQuoteNotes(e.target.value)}
+                  className="text-xs sm:text-sm"
                 />
               </div>
             </CardContent>

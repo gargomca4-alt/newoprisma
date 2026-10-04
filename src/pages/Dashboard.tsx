@@ -286,18 +286,18 @@ export default function DashboardPage() {
     return (
       <div className="space-y-8 max-w-[1200px] mx-auto animate-fade-in pb-10">
         {/* Personal Hero */}
-        <div className="relative overflow-hidden rounded-[1.5rem] bg-card border border-border p-8 md:p-10 shadow-sm">
-          <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6 z-10">
-            <div className="flex items-center gap-6">
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-primary flex items-center justify-center text-white shadow-sm shrink-0">
-                <BarChart3 className="w-8 h-8 md:w-10 md:h-10 text-white" />
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-[1.5rem] bg-card border border-border p-5 sm:p-8 md:p-10 shadow-sm">
+          <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 z-10">
+            <div className="flex items-center gap-3 sm:gap-6">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-xl sm:rounded-2xl bg-primary flex items-center justify-center text-white shadow-sm shrink-0">
+                <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground pb-1">
+                <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-foreground pb-1">
                   Mon Tableau de Bord
                 </h1>
-                <p className="text-base text-muted-foreground font-medium max-w-2xl mt-1">
-                  Bienvenue, <span className="font-bold text-foreground">{email.split("@")[0]}</span> — Voici vos statistiques personnelles
+                <p className="text-sm sm:text-base text-muted-foreground font-medium max-w-2xl mt-0.5 sm:mt-1">
+                  Bienvenue, <span className="font-bold text-foreground">{email.split("@")[0]}</span> — Voici vos statistiques
                 </p>
               </div>
             </div>
@@ -310,9 +310,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Personal KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="glass-card border-border/80 shadow-xs rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
-            <CardContent className="p-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <Card className="glass-card border-border/80 shadow-xs rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <FileText className="w-4 h-4 text-primary dark:text-accent" />
@@ -321,25 +321,25 @@ export default function DashboardPage() {
                   +{myStats.monthQuotes} ce mois
                 </Badge>
               </div>
-              <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Mes Devis</div>
-              <div className="text-lg font-black mt-1 text-foreground">{myStats.total}</div>
+              <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Mes Devis</div>
+              <div className="text-base sm:text-lg font-black mt-0.5 sm:mt-1 text-foreground">{myStats.total}</div>
             </CardContent>
           </Card>
 
-          <Card className="glass-card border-border/80 shadow-xs rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
-            <CardContent className="p-4">
+          <Card className="glass-card border-border/80 shadow-xs rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
                   <DollarSign className="w-4 h-4 text-accent" />
                 </div>
               </div>
-              <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">CA Encaissé</div>
-              <div className="text-lg font-black mt-1 tabular-nums text-foreground">{formatDZD(myStats.totalPaid)}</div>
+              <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">CA Encaissé</div>
+              <div className="text-sm sm:text-lg font-black mt-0.5 sm:mt-1 tabular-nums text-foreground">{formatDZD(myStats.totalPaid)}</div>
             </CardContent>
           </Card>
 
-          <Card className="glass-card border-border/80 shadow-xs rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
-            <CardContent className="p-4">
+          <Card className="glass-card border-border/80 shadow-xs rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Target className="w-4 h-4 text-primary dark:text-accent" />
@@ -348,33 +348,33 @@ export default function DashboardPage() {
                   {myStats.conversionRate}%
                 </Badge>
               </div>
-              <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Taux Conversion</div>
-              <div className="text-lg font-black mt-1 text-foreground">{myStats.accepted} / {myStats.total}</div>
+              <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Conversion</div>
+              <div className="text-base sm:text-lg font-black mt-0.5 sm:mt-1 text-foreground">{myStats.accepted}/{myStats.total}</div>
             </CardContent>
           </Card>
 
-          <Card className="glass-card border-border/80 shadow-xs rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
-            <CardContent className="p-4">
+          <Card className="glass-card border-border/80 shadow-xs rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="w-8 h-8 rounded-lg bg-secondary/15 flex items-center justify-center">
                   <Users className="w-4 h-4 text-secondary" />
                 </div>
               </div>
-              <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Mes Clients</div>
-              <div className="text-lg font-black mt-1 text-foreground">{myStats.uniqueClients}</div>
+              <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Mes Clients</div>
+              <div className="text-base sm:text-lg font-black mt-0.5 sm:mt-1 text-foreground">{myStats.uniqueClients}</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Personal Chart + Status */}
-        <div className="grid lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2 glass-card border-border/80 shadow-md rounded-2xl overflow-hidden">
-            <CardContent className="p-6">
-              <div className="mb-6">
-                <h3 className="font-extrabold text-sm text-foreground">Mon Chiffre d'Affaires (6 mois)</h3>
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
+          <Card className="lg:col-span-2 glass-card border-border/80 shadow-md rounded-xl sm:rounded-2xl overflow-hidden">
+            <CardContent className="p-4 sm:p-6">
+              <div className="mb-4 sm:mb-6">
+                <h3 className="font-extrabold text-sm text-foreground">Mon CA (6 mois)</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">Progression de mes devis acceptés</p>
               </div>
-              <div className="flex gap-3 h-44 items-end pt-4 overflow-x-auto pb-2 scrollbar-none">
+              <div className="flex gap-2 sm:gap-3 h-36 sm:h-44 items-end pt-4 overflow-x-auto pb-2 scrollbar-none">
                 {myStats.chartData.map((m, i) => {
                   const h = Math.max(8, (m.revenue / myStats.maxRevenue) * 100);
                   return (
@@ -443,9 +443,9 @@ export default function DashboardPage() {
         </div>
 
         {/* My Recent Quotes */}
-        <Card className="glass-card border-border/80 shadow-md rounded-2xl overflow-hidden">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
+        <Card className="glass-card border-border/80 shadow-md rounded-xl sm:rounded-2xl overflow-hidden">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
               <h3 className="font-extrabold text-sm text-foreground">Mes Devis Récents</h3>
               <Link to="/quotes" className="text-xs text-primary dark:text-accent font-bold hover:underline">Voir tout</Link>
             </div>
@@ -454,16 +454,16 @@ export default function DashboardPage() {
                 <p className="text-xs text-muted-foreground text-center py-6 font-medium">Vous n'avez pas encore créé de devis</p>
               ) : (
                 myStats.recent.map(q => (
-                  <Link to={`/devis?id=${q.id}`} key={q.id} className="flex items-center justify-between py-3.5 hover:bg-muted/45 -mx-2 px-3 rounded-xl transition-colors">
+                  <Link to={`/devis?id=${q.id}`} key={q.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-3 sm:py-3.5 hover:bg-muted/45 -mx-2 px-3 rounded-xl transition-colors gap-1.5 sm:gap-0">
                     <div className="min-w-0 flex-1">
-                      <span className="font-bold text-sm text-foreground truncate">{q.client_name}{q.client_company ? ` · ${q.client_company}` : ""}</span>
-                      <div className="text-xs font-medium text-muted-foreground mt-0.5">{q.product_name} · {new Date(q.created_at).toLocaleDateString("fr-DZ")}</div>
+                      <span className="font-bold text-sm text-foreground truncate block">{q.client_name}{q.client_company ? ` · ${q.client_company}` : ""}</span>
+                      <div className="text-[11px] sm:text-xs font-medium text-muted-foreground mt-0.5">{q.product_name} · {new Date(q.created_at).toLocaleDateString("fr-DZ")}</div>
                     </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <Badge variant="outline" className={`text-[10px] font-bold ${q.status === 'accepted' ? 'border-primary text-primary bg-primary/10' : q.status === 'rejected' ? 'border-destructive text-destructive bg-destructive/10' : 'border-accent text-accent bg-accent/10'}`}>
-                        {q.status === 'accepted' ? 'Accepté' : q.status === 'rejected' ? 'Refusé' : 'En attente'}
+                    <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                      <Badge variant="outline" className={`text-[9px] sm:text-[10px] font-bold ${q.status === 'accepted' ? 'border-primary text-primary bg-primary/10' : q.status === 'rejected' ? 'border-destructive text-destructive bg-destructive/10' : 'border-accent text-accent bg-accent/10'}`}>
+                        {q.status === 'accepted' ? 'Accepté' : q.status === 'rejected' ? 'Refusé' : 'Attente'}
                       </Badge>
-                      <span className="font-black tabular-nums text-sm text-foreground">{formatDZD(Number(q.total) || 0)}</span>
+                      <span className="font-black tabular-nums text-xs sm:text-sm text-foreground">{formatDZD(Number(q.total) || 0)}</span>
                     </div>
                   </Link>
                 ))
@@ -476,19 +476,19 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-[1400px] mx-auto animate-fade-in relative pb-10">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-[1400px] mx-auto animate-fade-in relative pb-10">
       {/* Hero Apple Style */}
-      <div className="relative overflow-hidden rounded-[1.5rem] bg-card border border-border p-8 md:p-10 shadow-sm">
-        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6 z-10">
-          <div className="flex items-center gap-6">
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-primary flex items-center justify-center text-white shadow-sm shrink-0">
-              <BarChart3 className="w-8 h-8 md:w-10 md:h-10 text-white" />
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-[1.5rem] bg-card border border-border p-5 sm:p-8 md:p-10 shadow-sm">
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 z-10">
+          <div className="flex items-center gap-3 sm:gap-6">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-xl sm:rounded-2xl bg-primary flex items-center justify-center text-white shadow-sm shrink-0">
+              <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground pb-1">
+              <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-foreground pb-1">
                 {t("dashboard.title")}
               </h1>
-              <p className="text-base text-muted-foreground font-medium max-w-2xl mt-1">{t("dashboard.subtitle")}</p>
+              <p className="text-sm sm:text-base text-muted-foreground font-medium max-w-2xl mt-0.5 sm:mt-1">{t("dashboard.subtitle")}</p>
 
               {/* Scope Switcher - Admin only */}
               {isAdmin && (
@@ -517,14 +517,14 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button asChild variant="outline" size="sm" className="rounded-xl border-border shadow-xs gap-1.5 font-bold hover:bg-muted/80">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button asChild variant="outline" size="sm" className="rounded-xl border-border shadow-xs gap-1.5 font-bold hover:bg-muted/80 text-xs">
               <Link to="/invoices">
-                <Receipt className="w-4 h-4 text-primary dark:text-accent" />
-                <span>Facturation ({stats.invoicedCount})</span>
+                <Receipt className="w-3.5 h-3.5 text-primary dark:text-accent" />
+                <span className="hidden sm:inline">Facturation</span> ({stats.invoicedCount})
               </Link>
             </Button>
-            <Button asChild size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground font-extrabold border-0 rounded-xl shadow-glow gap-1.5 transition-all duration-200 hover:scale-[1.02]">
+            <Button asChild size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground font-extrabold border-0 rounded-xl shadow-glow gap-1.5 transition-all duration-200 hover:scale-[1.02] text-xs">
               <Link to="/calculator">
                 <span>Nouveau Devis</span>
               </Link>
@@ -573,13 +573,13 @@ export default function DashboardPage() {
       )}
 
       {/* KPI Cards — 6-Card High-Impact Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         {/* Total Revenue */}
-        <Card className="glass-card border-border/80 shadow-xs rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
-                <DollarSign className="w-4 h-4 text-accent" />
+        <Card className="glass-card border-border/80 shadow-xs rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-accent/15 flex items-center justify-center">
+                <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
               </div>
               {stats.revenueGrowth !== 0 && (
                 <Badge variant="secondary" className={`text-[9px] px-1.5 py-0 font-bold ${stats.revenueGrowth > 0 ? "bg-accent/20 text-accent" : "bg-destructive/15 text-destructive"}`}>
@@ -587,103 +587,103 @@ export default function DashboardPage() {
                 </Badge>
               )}
             </div>
-            <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">CA du mois</div>
-            <div className="text-lg font-black mt-1 tabular-nums text-foreground">{formatDZD(stats.monthRevenue)}</div>
+            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">CA du mois</div>
+            <div className="text-sm sm:text-lg font-black mt-0.5 sm:mt-1 tabular-nums text-foreground">{formatDZD(stats.monthRevenue)}</div>
           </CardContent>
         </Card>
 
         {/* Conversion Rate */}
-        <Card className="glass-card border-border/80 shadow-xs rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Target className="w-4 h-4 text-primary dark:text-accent" />
+        <Card className="glass-card border-border/80 shadow-xs rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary dark:text-accent" />
               </div>
-              <Badge className="bg-primary/15 text-primary dark:bg-primary/30 dark:text-primary-foreground border-0 text-[10px] font-extrabold">
+              <Badge className="bg-primary/15 text-primary dark:bg-primary/30 dark:text-primary-foreground border-0 text-[9px] sm:text-[10px] font-extrabold">
                 {stats.conversionRate}%
               </Badge>
             </div>
-            <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Taux Conversion</div>
-            <div className="text-lg font-black mt-1 text-foreground">{stats.accepted} / {stats.totalQuotes} devis</div>
+            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Conversion</div>
+            <div className="text-sm sm:text-lg font-black mt-0.5 sm:mt-1 text-foreground">{stats.accepted}/{stats.totalQuotes}</div>
           </CardContent>
         </Card>
 
         {/* Panier Moyen */}
-        <Card className="glass-card border-border/80 shadow-xs rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-8 h-8 rounded-lg bg-secondary/15 flex items-center justify-center">
-                <Award className="w-4 h-4 text-secondary" />
+        <Card className="glass-card border-border/80 shadow-xs rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-secondary/15 flex items-center justify-center">
+                <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-secondary" />
               </div>
             </div>
-            <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Panier Moyen</div>
-            <div className="text-lg font-black mt-1 tabular-nums text-foreground">{formatDZD(stats.avgOrderValue)}</div>
+            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Panier Moyen</div>
+            <div className="text-sm sm:text-lg font-black mt-0.5 sm:mt-1 tabular-nums text-foreground">{formatDZD(stats.avgOrderValue)}</div>
           </CardContent>
         </Card>
 
         {/* Total Quotes */}
-        <Card className="glass-card border-border/80 shadow-xs rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <FileText className="w-4 h-4 text-primary dark:text-accent" />
+        <Card className="glass-card border-border/80 shadow-xs rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary dark:text-accent" />
               </div>
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-bold bg-muted">
-                +{stats.monthQuotes} ce mois
+              <Badge variant="secondary" className="text-[9px] sm:text-[10px] px-1.5 py-0 font-bold bg-muted">
+                +{stats.monthQuotes}
               </Badge>
             </div>
-            <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Total Devis</div>
-            <div className="text-lg font-black mt-1 text-foreground">{stats.totalQuotes}</div>
+            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Total Devis</div>
+            <div className="text-base sm:text-lg font-black mt-0.5 sm:mt-1 text-foreground">{stats.totalQuotes}</div>
           </CardContent>
         </Card>
 
         {/* Invoiced Total */}
-        <Card className="glass-card border-border/80 shadow-xs rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-8 h-8 rounded-lg bg-secondary/15 flex items-center justify-center">
-                <Receipt className="w-4 h-4 text-secondary" />
+        <Card className="glass-card border-border/80 shadow-xs rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-secondary/15 flex items-center justify-center">
+                <Receipt className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-secondary" />
               </div>
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-bold bg-muted">
-                {stats.invoicedCount} factures
+              <Badge variant="secondary" className="text-[9px] sm:text-[10px] px-1.5 py-0 font-bold bg-muted">
+                {stats.invoicedCount}
               </Badge>
             </div>
-            <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Facturé</div>
-            <div className="text-lg font-black mt-1 tabular-nums text-foreground">{formatDZD(stats.invoicedTotal)}</div>
+            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Facturé</div>
+            <div className="text-sm sm:text-lg font-black mt-0.5 sm:mt-1 tabular-nums text-foreground">{formatDZD(stats.invoicedTotal)}</div>
           </CardContent>
         </Card>
 
         {/* Outstanding Debts */}
-        <Card className="glass-card border-border/80 shadow-xs rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-accent" />
+        <Card className="glass-card border-border/80 shadow-xs rounded-xl sm:rounded-2xl overflow-hidden hover:shadow-md transition-smooth">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-accent/15 flex items-center justify-center">
+                <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
               </div>
             </div>
-            <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Créances</div>
-            <div className="text-lg font-black mt-1 tabular-nums text-accent">{formatDZD(stats.totalRemaining)}</div>
+            <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">Créances</div>
+            <div className="text-sm sm:text-lg font-black mt-0.5 sm:mt-1 tabular-nums text-accent">{formatDZD(stats.totalRemaining)}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Charts & Analytics Row */}
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Monthly Revenue Chart (2 cols) */}
-        <Card className="lg:col-span-2 glass-card border-border/80 shadow-md rounded-2xl overflow-hidden">
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+        <Card className="lg:col-span-2 glass-card border-border/80 shadow-md rounded-xl sm:rounded-2xl overflow-hidden">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-4">
               <div>
                 <h3 className="font-extrabold text-sm text-foreground">{t("dashboard.revenueChart")}</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">Progression du chiffre d'affaires encaissé</p>
+                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Progression du CA encaissé</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Tabs value={chartRange} onValueChange={(v: any) => setChartRange(v)} className="w-auto">
-                  <TabsList className="h-8 p-1 bg-muted/60 rounded-lg">
-                    <TabsTrigger value="today" className="text-[10px] px-2 h-6 font-bold">Aujourd'hui</TabsTrigger>
-                    <TabsTrigger value="month" className="text-[10px] px-2 h-6 font-bold">Mois</TabsTrigger>
-                    <TabsTrigger value="6months" className="text-[10px] px-2 h-6 font-bold">6 Mois</TabsTrigger>
-                    <TabsTrigger value="custom" className="text-[10px] px-2 h-6 font-bold">Perso</TabsTrigger>
+                  <TabsList className="h-7 sm:h-8 p-0.5 sm:p-1 bg-muted/60 rounded-lg">
+                    <TabsTrigger value="today" className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 h-5 sm:h-6 font-bold">Ajd</TabsTrigger>
+                    <TabsTrigger value="month" className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 h-5 sm:h-6 font-bold">Mois</TabsTrigger>
+                    <TabsTrigger value="6months" className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 h-5 sm:h-6 font-bold">6M</TabsTrigger>
+                    <TabsTrigger value="custom" className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 h-5 sm:h-6 font-bold">Perso</TabsTrigger>
                   </TabsList>
                 </Tabs>
 
@@ -715,7 +715,7 @@ export default function DashboardPage() {
                 )}
               </div>
             </div>
-            <div className="flex gap-3 h-44 items-end pt-4 overflow-x-auto pb-2 scrollbar-none">
+            <div className="flex gap-2 sm:gap-3 h-32 sm:h-44 items-end pt-4 overflow-x-auto pb-2 scrollbar-none">
               {stats.chartData.map((m, i) => {
                 const h = Math.max(8, (m.revenue / maxChartRevenue) * 100);
                 return (
@@ -811,10 +811,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Leaderboards & Lists Row */}
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Top Clients Ranking */}
-        <Card className="glass-card border-border/80 shadow-md rounded-2xl overflow-hidden">
-          <CardContent className="p-6">
+        <Card className="glass-card border-border/80 shadow-md rounded-xl sm:rounded-2xl overflow-hidden">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-extrabold text-sm flex items-center gap-2 text-foreground">
                 <Users className="w-4 h-4 text-primary dark:text-accent" />
@@ -859,9 +859,9 @@ export default function DashboardPage() {
         </Card>
 
         {/* Top Products */}
-        <Card className="glass-card border-border/80 shadow-md rounded-2xl overflow-hidden">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
+        <Card className="glass-card border-border/80 shadow-md rounded-xl sm:rounded-2xl overflow-hidden">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
               <h3 className="font-extrabold text-sm flex items-center gap-2 text-foreground">
                 <Package className="w-4 h-4 text-primary dark:text-accent" />
                 {t("dashboard.topProducts")}
@@ -904,15 +904,15 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Quotes */}
-      <Card className="glass-card border-border/80 shadow-md rounded-2xl overflow-hidden">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
+      <Card className="glass-card border-border/80 shadow-md rounded-xl sm:rounded-2xl overflow-hidden">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
             <h3 className="font-extrabold text-sm text-foreground">{t("dashboard.recentQuotes")}</h3>
             <Link to="/quotes" className="text-xs text-primary dark:text-accent font-bold hover:underline">{t("dashboard.viewAll")}</Link>
           </div>
           <div className="divide-y divide-border/60">
             {stats.recent.map(q => (
-              <Link to={`/devis?id=${q.id}`} key={q.id} className="flex items-center justify-between py-3.5 hover:bg-muted/45 -mx-2 px-3 rounded-xl transition-colors">
+              <Link to={`/devis?id=${q.id}`} key={q.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-3 sm:py-3.5 hover:bg-muted/45 -mx-2 px-3 rounded-xl transition-colors gap-1.5 sm:gap-0">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-bold text-sm text-foreground truncate">{q.client_name}{q.client_company ? ` · ${q.client_company}` : ""}</span>
@@ -922,13 +922,13 @@ export default function DashboardPage() {
                       </Badge>
                     )}
                   </div>
-                  <div className="text-xs font-medium text-muted-foreground mt-0.5">{q.product_name} · {new Date(q.created_at).toLocaleDateString("fr-DZ")}</div>
+                  <div className="text-[11px] sm:text-xs font-medium text-muted-foreground mt-0.5">{q.product_name} · {new Date(q.created_at).toLocaleDateString("fr-DZ")}</div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <Badge variant="outline" className={`text-[10px] font-bold ${q.status === 'accepted' ? 'border-primary text-primary bg-primary/10' : q.status === 'rejected' ? 'border-destructive text-destructive bg-destructive/10' : 'border-accent text-accent bg-accent/10'}`}>
-                    {q.status === 'accepted' ? 'Accepté' : q.status === 'rejected' ? 'Refusé' : 'En attente'}
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                  <Badge variant="outline" className={`text-[9px] sm:text-[10px] font-bold ${q.status === 'accepted' ? 'border-primary text-primary bg-primary/10' : q.status === 'rejected' ? 'border-destructive text-destructive bg-destructive/10' : 'border-accent text-accent bg-accent/10'}`}>
+                    {q.status === 'accepted' ? 'Accepté' : q.status === 'rejected' ? 'Refusé' : 'Attente'}
                   </Badge>
-                  <span className="font-black tabular-nums text-sm text-foreground">{formatDZD(Number(q.total) || 0)}</span>
+                  <span className="font-black tabular-nums text-xs sm:text-sm text-foreground">{formatDZD(Number(q.total) || 0)}</span>
                 </div>
               </Link>
             ))}

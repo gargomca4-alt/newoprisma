@@ -204,68 +204,68 @@ export default function StagiairesPage() {
       />
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="rounded-2xl border border-border shadow-xs bg-card">
-          <CardContent className="p-5 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Total Utilisateurs
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        <Card className="rounded-xl sm:rounded-2xl border border-border shadow-xs bg-card">
+          <CardContent className="p-3 sm:p-5 flex items-center justify-between">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
+                Total Comptes
               </p>
-              <h3 className="text-2xl font-bold text-foreground mt-1">{stagiaires.length}</h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Comptes enregistrés</p>
+              <h3 className="text-lg sm:text-2xl font-bold text-foreground mt-0.5 sm:mt-1">{stagiaires.length}</h3>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">Enregistrés</p>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-              <Users className="w-6 h-6" />
+            <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Users className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className={`rounded-2xl border shadow-xs bg-card transition-all ${pendingList.length > 0 ? "border-accent ring-1 ring-accent/30" : "border-border"}`}>
-          <CardContent className="p-5 flex items-center justify-between">
-            <div>
+        <Card className={`rounded-xl sm:rounded-2xl border shadow-xs bg-card transition-all ${pendingList.length > 0 ? "border-accent ring-1 ring-accent/30" : "border-border"}`}>
+          <CardContent className="p-3 sm:p-5 flex items-center justify-between">
+            <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <p className="text-xs font-semibold text-accent uppercase tracking-wider">
+                <p className="text-[10px] sm:text-xs font-semibold text-accent uppercase tracking-wider truncate">
                   En Attente
                 </p>
                 {pendingList.length > 0 && (
-                  <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
+                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-accent animate-ping" />
                 )}
               </div>
-              <h3 className="text-2xl font-bold text-foreground mt-1">{pendingList.length}</h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Demandes à valider</p>
+              <h3 className="text-lg sm:text-2xl font-bold text-foreground mt-0.5 sm:mt-1">{pendingList.length}</h3>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">À valider</p>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-accent/15 text-accent flex items-center justify-center">
-              <Clock className="w-6 h-6" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border border-border shadow-xs bg-card">
-          <CardContent className="p-5 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-emerald-500 uppercase tracking-wider">
-                Stagiaires Actifs
-              </p>
-              <h3 className="text-2xl font-bold text-foreground mt-1">{approvedList.length}</h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Accès autorisés</p>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-              <UserCheck className="w-6 h-6" />
+            <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-accent/15 text-accent flex items-center justify-center shrink-0">
+              <Clock className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border border-border shadow-xs bg-card">
-          <CardContent className="p-5 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Devis Réalisés
+        <Card className="rounded-xl sm:rounded-2xl border border-border shadow-xs bg-card">
+          <CardContent className="p-3 sm:p-5 flex items-center justify-between">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-xs font-semibold text-emerald-500 uppercase tracking-wider truncate">
+                Actifs
               </p>
-              <h3 className="text-2xl font-bold text-foreground mt-1">{quotes.length}</h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Par toute l'équipe</p>
+              <h3 className="text-lg sm:text-2xl font-bold text-foreground mt-0.5 sm:mt-1">{approvedList.length}</h3>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">Autorisés</p>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-muted text-foreground flex items-center justify-center">
-              <FileText className="w-6 h-6" />
+            <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+              <UserCheck className="w-4 h-4 sm:w-6 sm:h-6" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-xl sm:rounded-2xl border border-border shadow-xs bg-card">
+          <CardContent className="p-3 sm:p-5 flex items-center justify-between">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
+                Devis Créés
+              </p>
+              <h3 className="text-lg sm:text-2xl font-bold text-foreground mt-0.5 sm:mt-1">{quotes.length}</h3>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">Par l'équipe</p>
+            </div>
+            <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-muted text-foreground flex items-center justify-center shrink-0">
+              <FileText className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
           </CardContent>
         </Card>
